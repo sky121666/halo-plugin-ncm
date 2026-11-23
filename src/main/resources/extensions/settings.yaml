@@ -1,0 +1,125 @@
+# Halo 从 formSchema 的顶层字段生成 ConfigMap 默认值。分区标题与表单字段并列。
+apiVersion: v1alpha1
+kind: Setting
+metadata:
+  name: plugin-ncm-settings
+spec:
+  forms:
+    - group: advanced
+      label: 网络与限流
+      formSchema:
+        - $el: nav
+          attrs:
+            aria-label: 插件设置相关入口
+            class: mb-3 flex max-w-lg flex-wrap gap-x-4 gap-y-2 text-sm
+          children:
+            - $el: a
+              attrs:
+                href: /console/plugins/plugin-ncm?tab=ncm-maintenance
+                class: text-gray-700 underline underline-offset-4
+              children: 查看运行状态
+            - $el: a
+              attrs:
+                href: /console/plugins/plugin-ncm?tab=basic
+                class: text-gray-700 underline underline-offset-4
+              children: 前往接口开放
+        - $el: h3
+          attrs:
+            class: mb-3 mt-4 max-w-lg border-t border-gray-200 pt-4 text-sm font-medium
+          children: 出站连接
+        - $formkit: text
+          name: proxy
+          label: 网易云代理地址
+          placeholder: http://proxy:7890
+          help: 填写 Halo 服务端可访问的地址。代理地址和认证密钥都留空时直连。
+          validation: matches:/^[^@]*$/
+          validation-messages:
+            matches: 请从地址中移除用户名和密码
+          value: ''
+        - $formkit: secret
+          name: proxySecret
+          label: 代理认证密钥
+          help: 代理要求认证时选择 Secret。改为直连时清空此项。
+          descriptionPreset: 网易云出站代理
+          requiredKeys:
+            - key: username
+              help: 代理用户名
+            - key: password
+              help: 代理密码
+        - $el: h3
+          attrs:
+            class: mb-3 mt-6 max-w-lg border-t border-gray-200 pt-4 text-sm font-medium
+          children: 识别访客 IP
+        - $formkit: switch
+          name: trustProxyHeaders
+          label: 使用代理转发的访客 IP
+          help: 仅接受来自可信代理的转发头。关闭后使用与 Halo 直连的来源 IP。
+          value: true
+        - $formkit: textarea
+          name: trustedProxies
+          label: 可信代理 IP 或网段
+          help: 填写与 Halo 直连的反向代理地址。逗号或换行分隔，留空信任本机与内网。
+          value: ''
+        - $formkit: number
+          name: proxyHops
+          label: 反向代理层数
+          help: 仅经 Nginx 时填 1，经 CDN 和 Nginx 时填 2。
+          value: 1
+          min: 1
+          max: 5
+        - $el: h3
+          attrs:
+            class: mb-3 mt-6 max-w-lg border-t border-gray-200 pt-4 text-sm font-medium
+          children: 请求限流
+        - $formkit: number
+          name: rateLimitPublic
+          label: 公开请求（次 / IP / 分钟）
+          value: 120
+          min: 0
+          help: 通用公开接口、歌词和音乐卡片各自计数。游客取址用此额度的 2 倍。0 表示不限流。
+        - $formkit: number
+          name: rateLimitUser
+          label: 个人请求（次 / 用户 / 分钟）
+          value: 120
+          min: 0
+          help: 通用个人及写入接口、个人曲库各自计数。登录后取址用此额度的 2 倍。0 表示不限流。
+        # 迁移前不写 value，避免 Halo 的默认值覆盖旧分组中的实际配置。
+        - $formkit: number
+          name: musicSearchPerMinute
+          label: 音乐页搜索（次 / IP / 分钟）
+          placeholder: '20'
+          min: 1
+          max: 600
+          validation: min:1|max:600
+          help: 默认 20。
+        - $formkit: number
+          name: musicSuggestPerMinute
+          label: 音乐页搜索联想（次 / IP / 分钟）
+          placeholder: '60'
+          min: 1
+          max: 600
+          validation: min:1|max:600
+          help: 默认 60。
+        - $el: h3
+          attrs:
+            class: mb-3 mt-6 max-w-lg border-t border-gray-200 pt-4 text-sm font-medium
+          children: 缓存与上传
+        - $formkit: number
+          name: siteContentCacheSeconds
+          label: 音乐页与主题查询缓存（秒）
+          placeholder: '600'
+          min: 60
+          validation: min:60
+          help: 缓存音乐页和 ncmFinder 的网易云查询结果。默认 600 秒。
+        - $formkit: number
+          name: maxUploadMb
+          label: 单文件上传上限（MB）
+          help: 适用于支持文件上传的通用接口。
+          value: 100
+          min: 1
+          max: 1024
+        - $el: a
+          attrs:
+            href: /console/plugins/plugin-ncm?tab=basic#ncm-api-request-options
+            class: mb-4 inline-block text-sm text-gray-700 underline underline-offset-4
+          children: 配置通用接口缓存与请求兼容

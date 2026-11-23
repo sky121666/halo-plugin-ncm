@@ -1,0 +1,181 @@
+apiVersion: v1alpha1
+kind: Role
+metadata:
+  name: plugin-ncm-role-public
+  labels:
+    halo.run/role-template: "true"
+    halo.run/hidden: "true"
+    rbac.authorization.halo.run/aggregate-to-anonymous: "true"
+rules:
+  - apiGroups: [ "api.ncm.halo.run" ]
+    resources: [ "public", "meta" ]
+    verbs: [ "get" ]
+---
+apiVersion: v1alpha1
+kind: Role
+metadata:
+  name: plugin-ncm-role-personal
+  labels:
+    halo.run/role-template: "true"
+    halo.run/hidden: "true"
+    rbac.authorization.halo.run/aggregate-to-authenticated: "true"
+rules:
+  - apiGroups: [ "api.ncm.halo.run" ]
+    resources: [ "personal" ]
+    verbs: [ "get" ]
+  - apiGroups: [ "uc.api.ncm.halo.run" ]
+    resources: [ "binding" ]
+    verbs: [ "list", "get", "deletecollection" ]
+  - nonResourceURLs:
+      - "/apis/uc.api.ncm.halo.run/v1alpha1/binding/qr-key"
+      - "/apis/uc.api.ncm.halo.run/v1alpha1/binding/captcha"
+      - "/apis/uc.api.ncm.halo.run/v1alpha1/binding/cellphone"
+    verbs: [ "create" ]
+  - apiGroups: [ "uc.api.ncm.halo.run" ]
+    resources: [ "binding/qr-confirm" ]
+    resourceNames: [ "-" ]
+    verbs: [ "create" ]
+  - apiGroups: [ "uc.api.ncm.halo.run" ]
+    resources: [ "me/profile", "me/playlists", "me/albums", "me/recommendations", "me/likes", "me/records", "me/subscriptions" ]
+    resourceNames: [ "-" ]
+    verbs: [ "get" ]
+  - apiGroups: [ "uc.api.ncm.halo.run" ]
+    resources: [ "me/playlists" ]
+    resourceNames: [ "-" ]
+    verbs: [ "create", "delete" ]
+  - apiGroups: [ "uc.api.ncm.halo.run" ]
+    resources: [ "playlists/tracks" ]
+    verbs: [ "get", "create", "delete" ]
+  - apiGroups: [ "uc.api.ncm.halo.run" ]
+    resources: [ "me/likes", "me/subscriptions" ]
+    resourceNames: [ "-" ]
+    verbs: [ "update", "delete" ]
+---
+apiVersion: v1alpha1
+kind: Role
+metadata:
+  name: plugin-ncm-role-manage
+  labels:
+    halo.run/role-template: "true"
+  annotations:
+    rbac.authorization.halo.run/module: "网易云音乐"
+    rbac.authorization.halo.run/display-name: "网易云音乐管理"
+    rbac.authorization.halo.run/ui-permissions: '["plugin:ncm:manage"]'
+rules:
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "site-account", "featured-playlists" ]
+    verbs: [ "list" ]
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "guest-status" ]
+    resourceNames: [ "-" ]
+    verbs: [ "get" ]
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "site-account" ]
+    resourceNames: [ "qr-check" ]
+    verbs: [ "get" ]
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "site-account" ]
+    verbs: [ "deletecollection" ]
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "site-account/qr-confirm", "featured-playlists/resolve", "featured-playlists/reorder" ]
+    resourceNames: [ "-" ]
+    verbs: [ "create" ]
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "featured-playlists/preview" ]
+    resourceNames: [ "-" ]
+    verbs: [ "get" ]
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "featured-playlists" ]
+    verbs: [ "create", "update", "delete" ]
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "featured-playlists/publish", "featured-playlists/unpublish", "featured-playlists/check" ]
+    verbs: [ "create" ]
+  - nonResourceURLs:
+      - "/apis/console.api.ncm.halo.run/v1alpha1/site-account/qr-key"
+      - "/apis/console.api.ncm.halo.run/v1alpha1/site-account/captcha"
+      - "/apis/console.api.ncm.halo.run/v1alpha1/site-account/cellphone"
+    verbs: [ "create" ]
+---
+apiVersion: v1alpha1
+kind: Role
+metadata:
+  name: plugin-ncm-role-debug
+  labels:
+    halo.run/role-template: "true"
+  annotations:
+    rbac.authorization.halo.run/module: "网易云音乐"
+    rbac.authorization.halo.run/display-name: "网易云接口调试"
+    rbac.authorization.halo.run/ui-permissions: '["plugin:ncm:debug"]'
+rules:
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "calls" ]
+    verbs: [ "get" ]
+---
+apiVersion: v1alpha1
+kind: Role
+metadata:
+  name: plugin-ncm-role-frontstage-settings
+  labels:
+    halo.run/role-template: "true"
+    halo.run/hidden: "true"
+    rbac.authorization.halo.run/aggregate-to-role-template-manage-plugins: "true"
+rules:
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "frontstage-settings" ]
+    resourceNames: [ "-" ]
+    verbs: [ "get", "update" ]
+---
+apiVersion: v1alpha1
+kind: Role
+metadata:
+  name: plugin-ncm-role-configuration
+  labels:
+    halo.run/role-template: "true"
+    halo.run/hidden: "true"
+    rbac.authorization.halo.run/aggregate-to-role-template-manage-plugins: "true"
+rules:
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "api-access-settings" ]
+    resourceNames: [ "-" ]
+    verbs: [ "get", "update" ]
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "device" ]
+    verbs: [ "list" ]
+  - nonResourceURLs:
+      - "/apis/console.api.ncm.halo.run/v1alpha1/device/refresh"
+      - "/apis/console.api.ncm.halo.run/v1alpha1/device/reset"
+    verbs: [ "create" ]
+---
+# 保留旧角色引用。新角色承担聚合与授权，别名只用于升级迁移。
+apiVersion: v1alpha1
+kind: Role
+metadata:
+  name: role-template-ncm-public
+  labels:
+    halo.run/hidden: "true"
+  annotations:
+    rbac.authorization.halo.run/dependencies: '["plugin-ncm-role-public"]'
+rules: []
+---
+apiVersion: v1alpha1
+kind: Role
+metadata:
+  name: role-template-ncm-personal
+  labels:
+    halo.run/hidden: "true"
+  annotations:
+    rbac.authorization.halo.run/dependencies: '["plugin-ncm-role-personal"]'
+rules: []
+---
+apiVersion: v1alpha1
+kind: Role
+metadata:
+  name: role-template-ncm-manage
+  labels:
+    # 保留菜单权限解析，并从新授权模板中排除旧角色。
+    halo.run/role-template: "false"
+    halo.run/hidden: "false"
+  annotations:
+    rbac.authorization.halo.run/display-name: "旧版网易云音乐管理"
+    rbac.authorization.halo.run/dependencies: '["plugin-ncm-role-manage"]'
+rules: []

@@ -1,0 +1,21 @@
+apiVersion: plugin.halo.run/v1alpha1
+kind: Plugin
+metadata:
+  name: plugin-ncm
+spec:
+  enabled: true
+  requires: ">=2.27.0"
+  author:
+    name: sky
+  settingName: plugin-ncm-settings
+  configMapName: plugin-ncm-configmap
+  displayName: "网易云音乐"
+  description: "提供独立音乐页、精选歌单管理和网易云账号绑定。"
+  homepage: https://github.com/sky121666/halo-plugin-ncm#readme
+  repo: https://github.com/sky121666/halo-plugin-ncm
+  issues: https://github.com/sky121666/halo-plugin-ncm/issues
+  license:
+    - name: "MIT"
+      url: https://github.com/sky121666/halo-plugin-ncm/blob/main/LICENSE
+    - name: "AGPL-3.0"
+      url: https://github.com/sky121666/halo-plugin-ncm/blob/main/licenses/folia-web.AGPL-3.0.txt

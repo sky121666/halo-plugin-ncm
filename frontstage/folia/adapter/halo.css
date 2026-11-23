@@ -1,0 +1,184 @@
+.halo-gallery {
+    position: absolute;
+    inset: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    color: var(--text-primary);
+    background: color-mix(in srgb, var(--bg-color, #121212) 85%, transparent);
+}
+
+.halo-gallery-inner {
+    width: min(100%, 72rem);
+    min-height: 100%;
+    margin-inline: auto;
+    padding: 0 clamp(1rem, 4vw, 3rem) 8rem;
+}
+
+.halo-gallery-header nav,
+.halo-gallery-brand,
+.halo-gallery-action {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+}
+
+.halo-gallery-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .75rem 1rem;
+    min-height: 4.25rem;
+    padding: .5rem 0;
+    border-bottom: 1px solid var(--ex-line);
+}
+
+.halo-gallery-header nav { gap: clamp(.6rem, 3vw, 1.4rem); }
+.halo-gallery-brand { font-weight: 650; overflow-wrap: anywhere; }
+.halo-library-link { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.75rem; white-space: nowrap; }
+.halo-library-link[aria-current="page"] { font-weight: 650; text-decoration: underline; }
+.halo-search-navline { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: .75rem; }
+.halo-search-navline .halo-library-link { flex: none; }
+@media (max-width: 36rem) {
+    .halo-gallery-header { grid-template-columns: minmax(0, 1fr) auto; row-gap: .125rem; }
+    .halo-gallery-header nav { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; }
+}
+.halo-gallery-header a { text-underline-offset: .25em; }
+.halo-gallery-header a:hover { text-decoration: underline; }
+
+.halo-account-controls { display: inline-flex; min-width: 0; max-width: 100%; align-items: center; }
+.halo-account-action {
+    display: inline-flex;
+    min-width: 0;
+    max-width: 13rem;
+    min-height: 2.375rem;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    padding: .25rem .75rem;
+    border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+    border-radius: 2rem;
+    color: inherit;
+    font-size: .875rem;
+    font-weight: 550;
+    white-space: nowrap;
+}
+:is(a, button).halo-account-action:hover {
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+    text-decoration: none;
+}
+.halo-account-action:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+.halo-account-action > svg, .halo-account-action > img { flex: none; }
+.halo-account-action > img { border-radius: 50%; object-fit: cover; }
+.halo-account-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.halo-account-scope { flex: none; font-size: .75rem; opacity: .75; }
+.halo-account-action--panel {
+    min-height: 2rem;
+    max-width: min(11rem, 100%);
+    background-color: var(--st-fill);
+    color: var(--st-t1);
+    border: 0;
+    border-radius: .5rem;
+    font-size: 13px;
+}
+:is(a, button).halo-account-action--panel:hover { background-color: var(--st-fill2); }
+.halo-account-identity { padding-inline: 0; border: 0; background: none; box-shadow: none; }
+@media (max-width: 36rem), (pointer: coarse) {
+    .halo-account-action { min-height: 2.75rem; }
+}
+@media (max-width: 36rem) {
+    .halo-account-action { max-width: 10rem; }
+}
+
+.halo-gallery-action {
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: .35rem .85rem;
+    border: 1px solid var(--ex-line);
+    border-radius: 2rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    transition: background-color 150ms ease;
+}
+.halo-gallery-action:hover { background-color: var(--ex-tint-strong); }
+.halo-gallery-action:disabled { opacity: .65; }
+.halo-gallery-play { background-color: var(--ex-tint); }
+.halo-gallery-status { margin-block: 1.25rem; color: var(--ex-soft); }
+.halo-gallery-status button { display: inline-flex; margin-inline-start: .5rem; }
+.halo-search-heading { flex: none; font-size: 1.375rem; font-weight: 620; }
+.halo-search-field { position: relative; isolation: auto; }
+.halo-search-submit { margin-inline-end: .85rem; color: var(--search-ink); white-space: nowrap; }
+.halo-search-submit:disabled { opacity: .45; }
+.halo-search-suggestions {
+    position: absolute;
+    inset: calc(100% + .4rem) 0 auto;
+    z-index: 10;
+    border: 1px solid color-mix(in srgb, var(--search-ink) 18%, transparent);
+    border-radius: .875rem;
+    padding: .375rem;
+    background-color: var(--search-paper);
+    color: var(--search-ink);
+    box-shadow: 0 .5rem 2rem #0002;
+}
+.halo-search-suggestions li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .75rem;
+    min-height: 2.5rem;
+    padding: .4rem .65rem;
+    border-radius: .5rem;
+    cursor: pointer;
+}
+.halo-search-suggestions li:hover, .halo-search-suggestions [aria-selected="true"] {
+    background-color: color-mix(in srgb, var(--search-ink) 11%, transparent);
+}
+.halo-search-suggestions span, .halo-search-suggestions small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.halo-search-suggestions small { flex: 0 1 auto; opacity: .65; font-size: .75rem; }
+.halo-hot-search { padding-top: 1.25rem; }
+.halo-hot-search h2 { font-size: 1rem; font-weight: 620; }
+.halo-hot-search ul { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1rem; }
+#root .search-workspace { padding-bottom: clamp(5rem, 13vh, 7rem); }
+#root .search-workspace .search-sources { display: none; }
+#root .search-workspace .search-kinds { gap: .375rem 1rem; }
+
+.halo-entry-main { padding-block: clamp(1.5rem, 5vw, 4rem); }
+.halo-entry-main h1 { font-size: clamp(1.25rem, 2.6vw, 1.75rem); font-weight: 650; }
+.halo-entry-main p { margin-block: .5rem 1rem; }
+#root .halo-entry-song {
+    --search-ink: var(--text-primary);
+    --search-accent: var(--text-primary);
+    padding: 0;
+}
+.halo-entry-song .search-row { min-height: 5.5rem; padding-block: .75rem; }
+.halo-entry-song h1 button { font: inherit; white-space: normal; overflow-wrap: anywhere; }
+.halo-entry-song .search-row-play { opacity: 1; }
+
+@media (max-width: 480px) {
+    .halo-gallery-header nav { font-size: .875rem; }
+    .halo-gallery-header nav > a { white-space: nowrap; }
+    .halo-search-suggestions { max-height: min(55vh, 21rem); overflow: auto; }
+    #root .search-workspace header { gap: .75rem; }
+    #root .search-workspace .search-kind { min-height: 2.75rem; align-items: center; padding-inline-start: .75rem; }
+    #root .search-workspace .search-kind-label { font-size: 1rem; white-space: nowrap; }
+    #root .search-workspace .search-kind-mark { width: 7px; height: 7px; margin-top: -4px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .halo-gallery-action { transition: none; }
+}
+
+.halo-surface-message {
+    position: fixed;
+    z-index: 205;
+    inset-block-start: max(1rem, env(safe-area-inset-top));
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
+    max-inline-size: calc(100vw - 2rem);
+    padding: .55rem .85rem;
+    border: 1px solid var(--ex-line, #ffffff26);
+    border-radius: .65rem;
+    background: var(--bg-color, #151515);
+    color: var(--text-primary, #f4f4f4);
+}

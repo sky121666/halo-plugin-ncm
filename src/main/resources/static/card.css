@@ -1,0 +1,347 @@
+/*
+ * 网易云音乐插件：文章插歌卡片样式。所有规则都限定在 .ncm-card[data-ncm-card] 下，不影响主题的其他内容
+ * （插件 /music 页面网格里的 li.ncm-card 没有 data-ncm-card 属性，不受影响）。
+ * 主题可以覆盖变量来适配配色，例如：.ncm-card[data-ncm-card] { --ncm-card-accent: #2563eb; }
+ * 可用变量：--ncm-card-accent、--ncm-card-bg、--ncm-card-text、--ncm-card-muted、--ncm-card-line、
+ *           --ncm-card-hover、--ncm-card-radius、--ncm-card-shadow、--ncm-card-cover
+ */
+.ncm-card[data-ncm-card] {
+  --ncm-card-accent: #ec4141;
+  --ncm-card-text: inherit;
+  --ncm-card-bg: rgba(127, 127, 127, 0.06);
+  --ncm-card-muted: rgba(127, 127, 127, 0.95);
+  --ncm-card-line: rgba(127, 127, 127, 0.22);
+  --ncm-card-hover: rgba(127, 127, 127, 0.1);
+  --ncm-card-radius: 12px;
+  --ncm-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --ncm-card-cover: 72px;
+
+  box-sizing: border-box;
+  display: block;
+  max-width: 640px;
+  margin: 1.2em 0;
+  padding: 12px 14px;
+  border: 1px solid var(--ncm-card-line);
+  border-radius: var(--ncm-card-radius);
+  background: var(--ncm-card-bg);
+  box-shadow: var(--ncm-card-shadow);
+  color: var(--ncm-card-text);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: left;
+  text-indent: 0;
+  overflow: hidden;
+}
+/* 支持 color-mix 的浏览器：颜色跟着正文文字颜色走，主题切换暗色时自动适配 */
+@supports (color: color-mix(in srgb, red 50%, transparent)) {
+  .ncm-card[data-ncm-card] {
+    --ncm-card-bg: color-mix(in srgb, currentColor 4%, transparent);
+    --ncm-card-muted: color-mix(in srgb, currentColor 60%, transparent);
+    --ncm-card-line: color-mix(in srgb, currentColor 12%, transparent);
+    --ncm-card-hover: color-mix(in srgb, currentColor 7%, transparent);
+  }
+}
+.ncm-card[data-ncm-card] *,
+.ncm-card[data-ncm-card] *::before,
+.ncm-card[data-ncm-card] *::after {
+  box-sizing: inherit;
+}
+
+/* 还没渲染（或加载失败）时显示的原始链接 */
+.ncm-card[data-ncm-card] > a {
+  color: var(--ncm-card-accent);
+  word-break: break-word;
+}
+.ncm-card[data-ncm-card].is-loading > a {
+  opacity: 0.7;
+}
+.ncm-card[data-ncm-card] .ncm-pc__note {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ncm-card-muted);
+}
+.ncm-card[data-ncm-card] .ncm-pc__retry {
+  padding: 0 6px;
+  font: inherit;
+  color: var(--ncm-card-accent);
+  background: none;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* 卡片 */
+.ncm-card[data-ncm-card] .ncm-pc__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ncm-card[data-ncm-card] .ncm-pc__cover {
+  flex: 0 0 var(--ncm-card-cover);
+  width: var(--ncm-card-cover);
+  height: var(--ncm-card-cover);
+  border-radius: 8px;
+  background: var(--ncm-card-hover);
+  overflow: hidden;
+}
+.ncm-card[data-ncm-card] .ncm-pc__cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  object-fit: cover;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.ncm-card[data-ncm-card].is-playing .ncm-pc__cover img {
+  transform: scale(1.04);
+  transition: transform 0.3s;
+}
+.ncm-card[data-ncm-card] .ncm-pc__body {
+  flex: 1;
+  min-width: 0;
+}
+.ncm-card[data-ncm-card] .ncm-pc__top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.ncm-card[data-ncm-card] .ncm-pc__kind {
+  flex: none;
+  padding: 0 6px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ncm-card-accent);
+  border: 1px solid var(--ncm-card-accent);
+  border-radius: 4px;
+}
+.ncm-card[data-ncm-card] .ncm-pc__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+  border: 0;
+  box-shadow: none;
+}
+.ncm-card[data-ncm-card] a.ncm-pc__title:hover {
+  color: var(--ncm-card-accent);
+}
+.ncm-card[data-ncm-card] .ncm-pc__sub {
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ncm-card-muted);
+}
+.ncm-card[data-ncm-card] .ncm-pc__state {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ncm-card-accent);
+}
+.ncm-card[data-ncm-card] .ncm-pc__state:empty {
+  display: none;
+}
+
+/* 播放按钮 */
+.ncm-card[data-ncm-card] .ncm-pc__play {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  color: #fff;
+  background: var(--ncm-card-accent);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.ncm-card[data-ncm-card] .ncm-pc__play:hover {
+  transform: scale(1.06);
+}
+.ncm-card[data-ncm-card] .ncm-pc__play:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+.ncm-card[data-ncm-card] .ncm-pc__play svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+.ncm-card[data-ncm-card] button:focus-visible,
+.ncm-card[data-ncm-card] a:focus-visible {
+  outline: 2px solid var(--ncm-card-accent);
+  outline-offset: 2px;
+}
+
+/* 标记：试听 / 不可播 */
+.ncm-card[data-ncm-card] .ncm-pc__badge {
+  flex: none;
+  padding: 0 4px;
+  font-size: 11px;
+  line-height: 16px;
+  border-radius: 3px;
+}
+.ncm-card[data-ncm-card] .ncm-pc__badge:empty {
+  display: none;
+}
+.ncm-card[data-ncm-card] .ncm-pc__badge.is-trial {
+  color: #d97706;
+  border: 1px solid currentColor;
+}
+.ncm-card[data-ncm-card] .ncm-pc__badge.is-failed {
+  color: var(--ncm-card-muted);
+  border: 1px solid currentColor;
+}
+.ncm-card[data-ncm-card] .ncm-pc__badge.is-predict {
+  border-style: dashed;
+}
+
+/* 歌单 / 专辑的前几首 */
+.ncm-card[data-ncm-card] .ncm-pc__list {
+  margin: 10px 0 0;
+  padding: 6px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--ncm-card-line);
+}
+.ncm-card[data-ncm-card] .ncm-pc__track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 2px 4px;
+  border-radius: 6px;
+}
+.ncm-card[data-ncm-card] .ncm-pc__track::before,
+.ncm-card[data-ncm-card] .ncm-pc__track::marker {
+  content: none;
+}
+.ncm-card[data-ncm-card] .ncm-pc__track:hover {
+  background: var(--ncm-card-hover);
+}
+.ncm-card[data-ncm-card] .ncm-pc__track.is-current .ncm-pc__tname {
+  color: var(--ncm-card-accent);
+}
+.ncm-card[data-ncm-card] .ncm-pc__tplay {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ncm-card-muted);
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.ncm-card[data-ncm-card] .ncm-pc__tplay svg {
+  display: none;
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+.ncm-card[data-ncm-card] .ncm-pc__track:hover .ncm-pc__tplay,
+.ncm-card[data-ncm-card] .ncm-pc__track.is-current .ncm-pc__tplay {
+  color: var(--ncm-card-accent);
+}
+.ncm-card[data-ncm-card] .ncm-pc__track:hover .ncm-pc__no,
+.ncm-card[data-ncm-card] .ncm-pc__track.is-current .ncm-pc__no,
+.ncm-card[data-ncm-card] .ncm-pc__tplay:focus-visible .ncm-pc__no {
+  display: none;
+}
+.ncm-card[data-ncm-card] .ncm-pc__track:hover .ncm-pc__tplay svg,
+.ncm-card[data-ncm-card] .ncm-pc__track.is-current .ncm-pc__tplay svg,
+.ncm-card[data-ncm-card] .ncm-pc__tplay:focus-visible svg {
+  display: block;
+}
+.ncm-card[data-ncm-card] .ncm-pc__tmain {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ncm-card[data-ncm-card] .ncm-pc__tartist {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--ncm-card-muted);
+}
+.ncm-card[data-ncm-card] .ncm-pc__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--ncm-card-muted);
+}
+.ncm-card[data-ncm-card] .ncm-pc__more {
+  color: inherit;
+  text-decoration: none;
+  border: 0;
+}
+.ncm-card[data-ncm-card] .ncm-pc__more:hover {
+  color: var(--ncm-card-accent);
+}
+
+/* 暗色：跟随系统，或主题在 html / body 上加的常见暗色标记 */
+@media (prefers-color-scheme: dark) {
+  .ncm-card[data-ncm-card] {
+    --ncm-card-accent: #f05a5a;
+    --ncm-card-shadow: none;
+  }
+}
+html.dark .ncm-card[data-ncm-card],
+html[data-theme='dark'] .ncm-card[data-ncm-card],
+html[data-color-scheme='dark'] .ncm-card[data-ncm-card],
+body.dark .ncm-card[data-ncm-card] {
+  --ncm-card-accent: #f05a5a;
+  --ncm-card-shadow: none;
+}
+html.light .ncm-card[data-ncm-card],
+html[data-theme='light'] .ncm-card[data-ncm-card],
+html[data-color-scheme='light'] .ncm-card[data-ncm-card] {
+  --ncm-card-accent: #ec4141;
+  --ncm-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* 窄屏 */
+@media (max-width: 480px) {
+  .ncm-card[data-ncm-card] {
+    --ncm-card-cover: 56px;
+    padding: 10px;
+  }
+  .ncm-card[data-ncm-card] .ncm-pc__title {
+    font-size: 15px;
+  }
+  .ncm-card[data-ncm-card] .ncm-pc__play {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ncm-card[data-ncm-card] .ncm-pc__play,
+  .ncm-card[data-ncm-card].is-playing .ncm-pc__cover img {
+    transition: none;
+    transform: none;
+  }
+}

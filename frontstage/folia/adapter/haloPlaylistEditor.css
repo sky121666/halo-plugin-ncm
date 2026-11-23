@@ -1,0 +1,108 @@
+.halo-playlist-form { display: grid; gap: .8rem; }
+.halo-playlist-form label:first-child { display: grid; gap: .4rem; }
+.halo-playlist-form input:not([type="checkbox"]), .halo-playlist-search input {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: .5rem .65rem;
+    border: 1px solid var(--st-line);
+    border-radius: .55rem;
+    color: var(--st-t1);
+    background: var(--st-fill);
+}
+.halo-playlist-checkbox, .halo-playlist-search { display: flex; align-items: center; gap: .6rem; }
+.halo-playlist-checkbox { min-height: 2.75rem; }
+[data-halo-playlist-button] { min-height: 2.75rem; }
+.halo-playlist-checkbox input, .halo-playlist-track-options input {
+    accent-color: var(--st-accent);
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: none;
+}
+.halo-playlist-search button {
+    display: grid;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    place-items: center;
+    border: 1px solid var(--st-line);
+    border-radius: .55rem;
+    background: var(--st-fill);
+}
+.halo-playlist-error, .halo-playlist-note { margin-block: .65rem; font-size: .85rem; }
+.halo-playlist-error { color: var(--st-t1); }
+.halo-playlist-note { color: var(--st-t2); }
+.halo-playlist-description {
+    margin-block-end: .75rem;
+    color: var(--st-t2);
+    font-size: .875rem;
+    overflow-wrap: anywhere;
+}
+.halo-playlist-feedback {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: .55rem;
+    padding: .65rem .75rem;
+    border: 1px solid color-mix(in srgb, var(--st-warn) 34%, var(--st-line));
+    border-radius: .65rem;
+    background: color-mix(in srgb, var(--st-warn) 8%, var(--st-win));
+    font-size: .85rem;
+    overflow-wrap: anywhere;
+}
+.halo-playlist-feedback > svg { margin-block-start: .18rem; color: var(--st-warn); }
+.halo-playlist-description + .halo-playlist-feedback { margin-block-end: .7rem; }
+.halo-playlist-feedback-actions { display: flex; flex-wrap: wrap; gap: 0 .8rem; }
+.halo-playlist-feedback-actions > * {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    min-height: 2.75rem;
+    text-decoration: underline;
+    text-underline-offset: .2em;
+}
+.halo-playlist-selection {
+    margin-block: .75rem;
+    border: 1px solid var(--st-line2);
+    border-radius: .55rem;
+    font-size: .875rem;
+}
+.halo-playlist-selection summary {
+    min-height: 2.75rem;
+    padding: .6rem .75rem;
+    cursor: pointer;
+}
+.halo-playlist-selection ul { max-height: 10rem; overflow: auto; padding-inline: .65rem; }
+.halo-playlist-selection li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .5rem;
+    border-top: 1px solid var(--st-line);
+}
+.halo-playlist-selection li span { min-width: 0; overflow-wrap: anywhere; }
+.halo-playlist-selection li button { display: grid; flex: none; width: 2.75rem; height: 2.75rem; place-items: center; }
+.halo-playlist-error a, .halo-playlist-error button, .halo-playlist-more {
+    text-decoration: underline;
+    text-underline-offset: .2em;
+}
+.halo-playlist-error a, .halo-playlist-error button { margin-inline-start: .45em; }
+.halo-playlist-more { min-height: 2.75rem; }
+.halo-playlist-track-options { margin-block: .7rem; }
+.halo-playlist-track-options li { border-bottom: 1px solid var(--st-line); }
+.halo-playlist-track-options label {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    min-height: 2.85rem;
+    padding: .35rem .25rem;
+    cursor: pointer;
+}
+.halo-playlist-track-options label:hover { background: var(--st-fill); }
+.halo-playlist-track-options label > span { display: grid; min-width: 0; }
+.halo-playlist-track-options strong { font-size: .875rem; overflow-wrap: anywhere; }
+.halo-playlist-track-options small { color: var(--st-t2); overflow-wrap: anywhere; }
+.halo-playlist-form :focus-visible, .halo-playlist-search :focus-visible,
+.halo-playlist-track-options :focus-visible {
+    outline: 2px solid var(--st-accent);
+    outline-offset: 2px;
+}

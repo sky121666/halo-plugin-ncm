@@ -1,0 +1,113 @@
+plugins {
+    id 'java'
+    id 'io.freefair.lombok' version '9.2.0'
+    // 与 create-halo-plugin（Halo 2.27）脚手架保持一致
+    id 'run.halo.plugin.devtools' version '0.9.0'
+}
+
+group = 'cn.sky.ncm'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation platform('run.halo.tools.platform:plugin:2.27.0')
+    compileOnly 'run.halo.app:api'
+
+    testImplementation 'run.halo.app:api'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.named('processResources') {
+    from('LICENSE') { into 'META-INF' }
+    from('licenses') { into 'META-INF/licenses' }
+}
+
+// 把 ui/ 构建出的完整产物目录打进插件包的 ui/ 目录（Halo 2.25+ 从这里加载插件前端，ESM 需要整个目录）
+tasks.register('processUiResources', Copy) {
+    from project(':ui').layout.buildDirectory.dir('dist')
+    into layout.buildDirectory.dir('resources/main/ui')
+    dependsOn project(':ui').tasks.named('assemble')
+    shouldRunAfter tasks.named('processResources')
+}
+
+// 生成 OpenAPI 文档 / API Client / 角色模板时不构建前端：这些任务依赖 build，
+// 而前端又依赖生成出来的 API Client，第一次生成时会形成循环。也可以手动加 -PskipUi 跳过前端。
+def generatingApi = gradle.startParameter.taskNames.any {
+    it.contains('generateApiClient') || it.contains('generateOpenApiDocs') || it.contains('generateRoleTemplates')
+}
+def skipUi = generatingApi || providers.gradleProperty('skipUi').isPresent()
+
+if (!generatingApi) {
+    def foliaSources = layout.projectDirectory.dir('frontstage/folia')
+    def foliaResources = layout.buildDirectory.dir('folia/resources')
+    def buildFolia = tasks.register('buildFolia', Exec) {
+        description = 'Build the pinned Folia Web client for the public music pages'
+        group = 'build'
+        inputs.dir(foliaSources)
+        inputs.files(fileTree('ui/src/api/generated/models') {
+            include 'ncm-account-view.ts', 'ncm-me-*.ts', 'ncm-qr-*.ts', 'ncm-login-result.ts',
+                'ncm-captcha-request.ts', 'ncm-cellphone-login-request.ts'
+        })
+        outputs.dir(foliaResources)
+        commandLine 'node', foliaSources.file('build.mjs').asFile.absolutePath
+    }
+    tasks.named('processResources') {
+        dependsOn buildFolia
+        from(foliaResources)
+    }
+}
+
+if (!skipUi) {
+    tasks.named('classes') {
+        dependsOn tasks.named('processUiResources')
+    }
+}
+
+tasks.named('generatePluginComponentsIdx') {
+    notCompatibleWithConfigurationCache('This task invokes "Task.project" at execution time, which is not supported with configuration cache.')
+}
+
+halo {
+    version = '2.27'
+}
+
+haloPlugin {
+    openApi {
+        groupingRules {
+            ncmApis {
+                displayName = 'Extension API for plugin-ncm'
+                pathsToMatch = [
+                    '/apis/api.ncm.halo.run/v1alpha1/**',
+                    '/apis/console.api.ncm.halo.run/v1alpha1/**',
+                    '/apis/uc.api.ncm.halo.run/v1alpha1/**',
+                ]
+            }
+        }
+        groupedApiMappings = [
+            '/v3/api-docs/ncmApis': 'ncmApis.json'
+        ]
+        generator {
+            // 专用目录：generateApiClient 每次会先清空它，请勿放其他文件
+            outputDir = file("${projectDir}/ui/src/api/generated")
+        }
+    }
+}

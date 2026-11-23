@@ -1,0 +1,209 @@
+.halo-gallery[data-halo-entry="library"] { scroll-padding-block-end: 7rem; }
+.halo-library {
+    min-width: 0;
+    padding-block: clamp(1.25rem, 4vw, 2.75rem) 1rem;
+}
+.halo-library-heading, .halo-library-row-heading,
+.halo-library-tabs, .halo-library-range, .halo-library-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem 1rem;
+}
+.halo-library-heading, .halo-library-row-heading { justify-content: space-between; }
+.halo-library-edit-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .65rem; }
+.halo-library-edit-actions button, [data-halo-new-playlist] { min-height: 2.75rem; }
+.halo-library-breadcrumb + .halo-library-songs { margin-block-start: .35rem; }
+.halo-library-song-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .65rem 1.1rem;
+    margin-block-end: .65rem;
+}
+.halo-library-song-heading h2 { flex: 1 1 12rem; min-width: 0; }
+.halo-library-icon-button {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    color: var(--text-primary);
+    transition: background-color 150ms ease;
+}
+.halo-library-edit-actions .halo-library-icon-button { border: 1px solid var(--ex-line); }
+.halo-library-icon-button:is(:hover, :focus-visible, [aria-expanded="true"]) {
+    background: var(--ex-tint-strong);
+}
+[data-halo-entry="library"] [role="menu"] button { min-height: 2.75rem; }
+.halo-library h1 { font-size: clamp(1.65rem, 4vw, 2.6rem); font-weight: 650; }
+.halo-library h2 { font-size: 1.125rem; font-weight: 650; overflow-wrap: anywhere; }
+.halo-library a:focus-visible, .halo-library button:focus-visible,
+.halo-library-link:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+.halo-library-tabs {
+    margin-block: 1.25rem .75rem;
+    border-bottom: 1px solid var(--ex-line);
+}
+.halo-library-tabs a, .halo-library-range a, .halo-library-back {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    min-height: 2.75rem;
+}
+.halo-library-tabs a {
+    color: var(--ex-soft);
+    border-bottom: 2px solid transparent;
+    padding-inline: .3rem;
+    white-space: nowrap;
+}
+.halo-library-tabs a[aria-current] {
+    color: var(--text-primary);
+    border-color: currentColor;
+    font-weight: 650;
+}
+.halo-library-range a { color: var(--ex-soft); }
+.halo-library-range a[aria-current] { color: var(--text-primary); text-decoration: underline; text-underline-offset: .25rem; }
+.halo-library-section { margin-block: 1.25rem; }
+.halo-library-empty-state, .halo-library-loading {
+    margin-block: .65rem;
+    color: var(--ex-soft);
+}
+.halo-library-empty-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem .75rem;
+    min-height: 3rem;
+    padding: .55rem .75rem;
+    border: 1px dashed var(--st-line2);
+    border-radius: .65rem;
+}
+.halo-library-loading p {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    min-height: 2.25rem;
+}
+.halo-library-spin { flex: none; animation: halo-library-spin 900ms linear infinite; }
+@keyframes halo-library-spin { to { transform: rotate(360deg); } }
+.halo-library-skeleton {
+    display: grid;
+    gap: .45rem;
+    animation: halo-library-reveal 150ms ease 180ms both;
+}
+@keyframes halo-library-reveal { from { opacity: 0; } to { opacity: 1; } }
+.halo-library-skeleton > div {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    min-height: 3.6rem;
+    padding: .55rem .65rem;
+    border: 1px solid var(--st-line);
+    border-radius: .65rem;
+}
+.halo-library-skeleton i { display: block; border-radius: .3rem; background: var(--st-fill); }
+.halo-library-skeleton > div > i { width: 2.15rem; height: 2.15rem; flex: none; }
+.halo-library-skeleton span { display: grid; gap: .4rem; flex: 1; min-width: 0; }
+.halo-library-skeleton span i { width: min(60%, 15rem); height: .6rem; }
+.halo-library-skeleton span i + i { width: min(35%, 8rem); }
+.halo-library-empty-state .halo-gallery-action, .halo-library-state .halo-gallery-action { min-height: 2.75rem; }
+.halo-library-subscription { min-width: 0; max-width: min(100%, 22rem); }
+.halo-library-subscription > button { min-inline-size: 7.75rem; }
+.halo-library-subscription .halo-playlist-feedback, .halo-library-track-slot > .halo-playlist-feedback {
+    margin-block: .5rem;
+}
+.halo-library-state {
+    margin-block: 1.25rem;
+    padding: clamp(1rem, 5vw, 2rem);
+    border: 1px solid var(--ex-line);
+    border-radius: 1rem;
+    background: var(--ex-tint);
+}
+.halo-library-state p { margin-block: .4rem .8rem; color: var(--ex-soft); }
+.halo-library-state .halo-gallery-action { display: inline-flex; margin-inline-end: .5rem; }
+.halo-library-playlists {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: .75rem;
+    margin-block-start: .75rem;
+}
+.halo-library-list-link {
+    display: grid;
+    grid-template-columns: 2.875rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .65rem;
+    min-height: 4.15rem;
+    padding: .5rem .65rem;
+    border: 1px solid var(--ex-line);
+    border-radius: .65rem;
+    transition: background-color 150ms ease;
+}
+.halo-library-list-link:hover { background: var(--ex-tint); }
+.halo-library-list-link img { width: 2.875rem; aspect-ratio: 1; object-fit: cover; border-radius: .35rem; }
+.halo-library-list-label { display: grid; gap: .15rem; }
+.halo-library-list-label strong { overflow-wrap: anywhere; }
+.halo-library-list-label small { color: var(--ex-soft); }
+#root .halo-library-songs {
+    --search-ink: var(--text-primary);
+    --search-accent: var(--text-primary);
+    --search-hairline: var(--ex-line);
+    padding: 0;
+    overflow: visible;
+}
+.halo-library-songs .search-row { min-height: 4.25rem; padding-block: .25rem; }
+.halo-library-songs .search-row-cover, .halo-library-songs .search-row-action {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+}
+#root .halo-library-heart { opacity: 1; }
+.halo-library-heart[aria-pressed="true"] { color: var(--st-err); }
+#root .halo-library-heart[aria-disabled="true"],
+.halo-library-subscription [aria-disabled="true"] { opacity: .6; cursor: default; }
+.halo-library-pagination { justify-content: center; margin-block-start: .75rem; color: var(--ex-soft); }
+@media (max-width: 34rem) {
+    .halo-library-tabs { gap: 0 .45rem; font-size: .875rem; }
+    .halo-library-tabs a { padding-inline: .2rem; }
+    .halo-library-songs .search-row { gap: .375rem; padding-inline: .1rem; }
+    .halo-library-song-heading { align-items: stretch; flex-direction: column; gap: .5rem; }
+    .halo-library-song-heading h2 { flex: none; }
+    .halo-library-edit-actions > .halo-gallery-action { padding-inline: .75rem; }
+    .halo-library-songs .search-row-title {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        line-height: 1.25;
+    }
+}
+@media (orientation: landscape) and (max-height: 26rem) {
+    :root[data-capsule]:not([data-capsule="none"]) .halo-gallery[data-halo-entry="library"] {
+        --halo-library-dock-space: min(8rem, 40dvh);
+        inset-block-end: var(--halo-library-dock-space);
+        scroll-padding-block-end: .75rem;
+        /* Continue the library surface behind the dock, outside the scrollport. */
+        box-shadow: 0 var(--halo-library-dock-space) 0 color-mix(in srgb, var(--bg-color, #121212) 85%, transparent);
+    }
+    :root[data-capsule]:not([data-capsule="none"]) [data-halo-entry="library"] > .halo-gallery-inner {
+        padding-block-end: 1.5rem;
+    }
+    [data-halo-entry="library"] .halo-gallery-header { min-height: 3rem; padding-block: .125rem; }
+    .halo-library { padding-block-start: .45rem; }
+    .halo-library h1 { font-size: 1.45rem; }
+    .halo-library-tabs { margin-block: 0; }
+    .halo-library-breadcrumb + .halo-library-songs { margin-block-start: 0; }
+}
+@media (orientation: landscape) and (min-width: 30rem) and (max-height: 26rem) {
+    .halo-library-song-heading { align-items: flex-start; flex-direction: row; }
+    .halo-library-song-heading h2 { flex: 1 1 8rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .halo-library-list-link, .halo-library-icon-button { transition: none; }
+    .halo-library-spin, .halo-library-skeleton { animation: none; }
+}

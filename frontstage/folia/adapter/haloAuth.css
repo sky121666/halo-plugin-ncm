@@ -1,0 +1,54 @@
+.halo-auth-dialog {
+    color-scheme: light dark;
+    position: fixed;
+    inset: 0;
+    width: min(28rem, calc(100% - 1.5rem));
+    height: fit-content;
+    max-height: calc(100dvh - 1.25rem);
+    margin: auto;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid light-dark(#dadce2, #3b3b43);
+    border-radius: 1rem;
+    background: light-dark(#fbfbfc, #1c1c22);
+    color: light-dark(#18181e, #f3f3f5);
+    box-shadow: 0 1.25rem 4rem rgb(0 0 0 / 35%);
+}
+.halo-auth-dialog::backdrop { background: rgb(13 13 19 / 55%); }
+.halo-auth-header {
+    display: flex;
+    min-height: 3.25rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding-inline: 1rem .5rem;
+    border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+.halo-auth-header h2 { font-size: 1rem; font-weight: 650; }
+.halo-auth-close {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    border-radius: .6rem;
+}
+.halo-auth-close:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.halo-auth-close:focus-visible { outline: 2px solid currentColor; outline-offset: -3px; }
+.halo-auth-body { position: relative; }
+.halo-auth-frame {
+    display: block;
+    width: 100%;
+    height: min(31rem, calc(100dvh - 4.65rem));
+    border: 0;
+}
+.halo-auth-body:not([data-halo-auth-phase="ready"]) .halo-auth-frame { visibility: hidden; }
+.halo-auth-status {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: .75rem;
+    padding: 1rem;
+    text-align: center;
+}

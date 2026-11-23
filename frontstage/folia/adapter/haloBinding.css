@@ -1,0 +1,78 @@
+[role="dialog"]:has([data-halo-binding]) {
+    width: 33.5rem;
+}
+
+[data-halo-binding-landing="true"] {
+    opacity: 0;
+}
+
+.halo-binding-tile {
+    position: relative;
+    isolation: isolate;
+    width: 200px;
+    height: 200px;
+}
+
+/* The encoded image already includes the quiet zone. */
+.halo-binding-tile .login-code,
+.halo-binding-tile [data-halo-binding-picture="expired"] button > img {
+    width: 100%;
+    height: 100%;
+}
+
+.halo-binding-rings {
+    --login-rip: .24;
+    position: absolute;
+    inset: 50% auto auto 50%;
+    z-index: -1;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.halo-binding-authorization {
+    display: grid;
+    width: 5.25rem;
+    height: 5.25rem;
+    place-items: center;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--login-pc) 12%, var(--st-card));
+    color: color-mix(in srgb, var(--login-pc) 72%, var(--st-t1));
+}
+
+.halo-binding-steps {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    color: var(--st-t2);
+    font-size: .75rem;
+    line-height: 1.125rem;
+}
+
+.halo-binding-steps li + li::before {
+    display: inline-block;
+    width: .75rem;
+    margin-inline: .375rem;
+    vertical-align: middle;
+    border-top: 1px solid var(--st-line2);
+    content: "";
+}
+
+.halo-binding-steps [aria-current="step"] {
+    color: color-mix(in srgb, var(--login-pc) 70%, var(--st-t1));
+    font-weight: 650;
+}
+
+@media (max-width: 539px) {
+    [role="dialog"]:has([data-halo-binding]) header button {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    .halo-binding-steps {
+        justify-content: center;
+    }
+
+    .halo-binding-rings {
+        display: none;
+    }
+}

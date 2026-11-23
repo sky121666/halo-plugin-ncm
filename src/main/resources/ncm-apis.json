@@ -1,0 +1,4016 @@
+{
+ "activate_init_profile": {
+  "tier": "auth",
+  "status": "ready",
+  "uri": "/api/activate/initProfile",
+  "crypto": "default",
+  "fields": {
+   "nickname": "query.nickname"
+  }
+ },
+ "ad_get": {
+  "tier": "personal",
+  "status": "custom"
+ },
+ "ad_listening_rights": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/ad/homepage/free/tab/extend/v2",
+  "crypto": "xeapi",
+  "fields": {
+   "entrance": "'FREE_LISTEN_RN'"
+  }
+ },
+ "ad_listening_rights_gain": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "aidj_content_rcmd": {
+  "tier": "personal",
+  "status": "custom"
+ },
+ "album": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/album/${query.id}",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "album_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/vipmall/albumproduct/detail",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "album_detail_dynamic": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/album/detail/dynamic",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "album_list": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/vipmall/albumproduct/list",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0",
+   "total": "true",
+   "area": "query.area || 'ALL'",
+   "type": "query.type"
+  }
+ },
+ "album_list_style": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/vipmall/appalbum/album/style",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 10",
+   "offset": "query.offset || 0",
+   "total": "true",
+   "area": "query.area || 'Z_H'"
+  }
+ },
+ "album_new": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/album/new",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0",
+   "total": "true",
+   "area": "query.area || 'ALL'"
+  }
+ },
+ "album_newest": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/discovery/newAlbum",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "album_privilege": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/album/privilege",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "album_songsaleboard": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "album_sub": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/album/${query.t}",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.id"
+  },
+  "pre": [
+   [
+    "t",
+    "query.t == 1 ? 'sub' : 'unsub'"
+   ]
+  ]
+ },
+ "album_sublist": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/album/sublist",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 25",
+   "offset": "query.offset || 0",
+   "total": "true"
+  }
+ },
+ "api": {
+  "tier": "admin",
+  "status": "custom"
+ },
+ "artist_album": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/artist/albums/${query.id}",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0",
+   "total": "true"
+  }
+ },
+ "artist_desc": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/artist/introduction",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "artist_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/artist/head/info/get",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "artist_detail_dynamic": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/artist/detail/dynamic",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "artist_fans": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/artist/fans/get",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.id",
+   "limit": "query.limit || 20",
+   "offset": "query.offset || 0"
+  }
+ },
+ "artist_follow_count": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/artist/follow/count/get",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "artist_list": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "artist_mv": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/artist/mvs",
+  "crypto": "weapi",
+  "fields": {
+   "artistId": "query.id",
+   "limit": "query.limit",
+   "offset": "query.offset",
+   "total": "true"
+  }
+ },
+ "artist_new_mv": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/sub/artist/new/works/mv/list",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 20",
+   "startTimestamp": "query.before || Date.now()"
+  }
+ },
+ "artist_new_song": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/sub/artist/new/works/song/list",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 20",
+   "startTimestamp": "query.before || Date.now()"
+  }
+ },
+ "artist_new_song_mv_list_v2": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/sub/artist/new/works/song-mv/list/v2",
+  "crypto": "eapi",
+  "fields": {
+   "startTimestamp": "query.startTimestamp || query.before || Date.now()",
+   "sourceType": "query.sourceType || 1",
+   "limit": "query.limit || 10",
+   "firstRequest": "query.firstRequest ?? true"
+  }
+ },
+ "artist_new_song_playall": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/sub/artist/new/works/song/playall",
+  "crypto": "eapi",
+  "fields": {}
+ },
+ "artist_songs": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/artist/songs",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "private_cloud": "'true'",
+   "work_type": "1",
+   "order": "query.order || 'hot'",
+   "offset": "query.offset || 0",
+   "limit": "query.limit || 100"
+  }
+ },
+ "artist_sub": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/artist/${query.t}",
+  "crypto": "weapi",
+  "fields": {
+   "artistId": "query.id",
+   "artistIds": "'[' + query.id + ']'"
+  },
+  "pre": [
+   [
+    "t",
+    "query.t == 1 ? 'sub' : 'unsub'"
+   ]
+  ]
+ },
+ "artist_sublist": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/artist/sublist",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 25",
+   "offset": "query.offset || 0",
+   "total": "true"
+  }
+ },
+ "artist_top_song": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/artist/top/song",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "artist_video": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/mlog/artist/video",
+  "crypto": "weapi",
+  "fields": {
+   "artistId": "query.id",
+   "page": "JSON.stringify({\n      size: query.size || 10,\n      cursor: query.cursor || 0,\n    })",
+   "tab": "0",
+   "order": "query.order || 0"
+  }
+ },
+ "artists": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/artist/${query.id}",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "audio_match": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "avatar_upload": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "banner": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "banner_v3": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/banner/get/v3",
+  "crypto": "weapi",
+  "fields": {
+   "clientType": "query.clientType || 'android'"
+  }
+ },
+ "batch": {
+  "tier": "admin",
+  "status": "custom"
+ },
+ "broadcast_category_region_get": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/voice/broadcast/category/region/get",
+  "crypto": "default",
+  "fields": {}
+ },
+ "broadcast_channel_collect_list": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/content/channel/collect/list",
+  "crypto": "default",
+  "fields": {
+   "contentType": "'BROADCAST'",
+   "limit": "query.limit || '99999'",
+   "timeReverseOrder": "'true'",
+   "startDate": "'4762584922000'"
+  }
+ },
+ "broadcast_channel_currentinfo": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/voice/broadcast/channel/currentinfo",
+  "crypto": "default",
+  "fields": {
+   "channelId": "query.id"
+  }
+ },
+ "broadcast_channel_list": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/voice/broadcast/channel/list",
+  "crypto": "default",
+  "fields": {
+   "categoryId": "query.categoryId || '0'",
+   "regionId": "query.regionId || '0'",
+   "limit": "query.limit || '20'",
+   "lastId": "query.lastId || '0'",
+   "score": "query.score || '-1'"
+  }
+ },
+ "broadcast_sub": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/content/interact/collect",
+  "crypto": "default",
+  "fields": {
+   "contentType": "'BROADCAST'",
+   "contentId": "query.id",
+   "cancelCollect": "query.t"
+  },
+  "pre": [
+   [
+    "t",
+    "query.t == 1 ? 'false' : 'true'"
+   ]
+  ]
+ },
+ "calendar": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/mcalendar/detail",
+  "crypto": "weapi",
+  "fields": {
+   "startTime": "query.startTime || Date.now()",
+   "endTime": "query.endTime || Date.now()"
+  }
+ },
+ "captcha_safe_sent": {
+  "tier": "auth",
+  "status": "ready",
+  "uri": "/api/sms/captcha/safe/sent",
+  "crypto": "eapi",
+  "fields": {
+   "ctcode": "query.ctcode || '86'"
+  }
+ },
+ "captcha_sent": {
+  "tier": "auth",
+  "status": "ready",
+  "uri": "/api/sms/captcha/sent",
+  "crypto": "weapi",
+  "fields": {
+   "ctcode": "query.ctcode || '86'",
+   "secrete": "'music_middleuser_pclogin'",
+   "cellphone": "query.phone"
+  }
+ },
+ "captcha_sent_v1": {
+  "tier": "auth",
+  "status": "ready",
+  "uri": "/api/middle/captcha/sent/v1",
+  "crypto": "eapi",
+  "fields": {
+   "ctcode": "query.ctcode || '86'",
+   "secrete": "'music_middleuser_pclogin'",
+   "cellphone": "query.phone",
+   "scene": "'0'"
+  }
+ },
+ "captcha_verify": {
+  "tier": "auth",
+  "status": "ready",
+  "uri": "/api/sms/captcha/verify",
+  "crypto": "weapi",
+  "fields": {
+   "ctcode": "query.ctcode || '86'",
+   "cellphone": "query.phone",
+   "captcha": "query.captcha"
+  }
+ },
+ "cellphone_existence_check": {
+  "tier": "auth",
+  "status": "ready",
+  "uri": "/api/cellphone/existence/check",
+  "crypto": "eapi",
+  "fields": {
+   "cellphone": "query.phone",
+   "countrycode": "query.countrycode"
+  }
+ },
+ "chart_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/chart/detail",
+  "crypto": "default",
+  "fields": {
+   "chartCode": "query.chartCode",
+   "targetId": "query.targetId",
+   "targetType": "query.targetType"
+  }
+ },
+ "chart_song_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/chart/song/detail",
+  "crypto": "default",
+  "fields": {
+   "chartCode": "query.chartCode",
+   "targetId": "query.targetId",
+   "targetType": "query.targetType"
+  }
+ },
+ "check_music": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "cloud": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "cloud_import": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "cloud_lyric_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/cloud/lyric/get",
+  "crypto": "eapi",
+  "fields": {
+   "userId": "query.uid",
+   "songId": "query.sid",
+   "lv": "-1",
+   "kv": "-1"
+  }
+ },
+ "cloud_match": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/cloud/user/song/match",
+  "crypto": "weapi",
+  "fields": {
+   "userId": "query.uid",
+   "songId": "query.sid",
+   "adjustSongId": "query.asid"
+  }
+ },
+ "cloud_upload_complete": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "cloud_upload_token": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "cloudsearch": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/cloudsearch/pc",
+  "crypto": "default",
+  "fields": {
+   "s": "query.keywords",
+   "type": "query.type || 1",
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0",
+   "total": "true"
+  }
+ },
+ "comment": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "comment_add": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/resource/comments/add",
+  "crypto": "xeapi",
+  "fields": {
+   "threadId": "resourceTypeMap[query.type] + query.id",
+   "content": "query.content",
+   "resourceType": "'0'",
+   "expressionPicId": "'-1'",
+   "bubbleId": "'-1'"
+  },
+  "checkToken": "v3"
+ },
+ "comment_album": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/resource/comments/R_AL_3_${query.id}",
+  "crypto": "weapi",
+  "fields": {
+   "rid": "query.id",
+   "limit": "query.limit || 20",
+   "offset": "query.offset || 0",
+   "beforeTime": "query.before || 0"
+  }
+ },
+ "comment_default_text": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/comment/default/text",
+  "crypto": "weapi",
+  "fields": {
+   "threadId": "query.threadId"
+  }
+ },
+ "comment_delete": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/resource/comments/delete",
+  "crypto": "xeapi",
+  "fields": {
+   "commentId": "query.cid",
+   "threadId": "resourceTypeMap[query.type] + query.id"
+  }
+ },
+ "comment_dj": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/resource/comments/A_DJ_1_${query.id}",
+  "crypto": "weapi",
+  "fields": {
+   "rid": "query.id",
+   "limit": "query.limit || 20",
+   "offset": "query.offset || 0",
+   "beforeTime": "query.before || 0"
+  }
+ },
+ "comment_event": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/resource/comments/${query.threadId}",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 20",
+   "offset": "query.offset || 0",
+   "beforeTime": "query.before || 0"
+  }
+ },
+ "comment_floor": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/resource/comment/floor/get",
+  "crypto": "weapi",
+  "fields": {
+   "parentCommentId": "query.parentCommentId",
+   "threadId": "query.type + query.id",
+   "time": "query.time || -1",
+   "limit": "query.limit || 20"
+  },
+  "pre": [
+   [
+    "type",
+    "resourceTypeMap[query.type]"
+   ]
+  ]
+ },
+ "comment_hot": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/resource/hotcomments/${query.type}${query.id}",
+  "crypto": "weapi",
+  "fields": {
+   "rid": "query.id",
+   "limit": "query.limit || 20",
+   "offset": "query.offset || 0",
+   "beforeTime": "query.before || 0"
+  },
+  "pre": [
+   [
+    "type",
+    "resourceTypeMap[query.type]"
+   ]
+  ]
+ },
+ "comment_hotwall_square_info": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/comment/hotwall/today/squareinfo/get",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "comment_hug_list": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "comment_info_list": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "comment_like": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "comment_music": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/resource/comments/R_SO_4_${query.id}",
+  "crypto": "weapi",
+  "fields": {
+   "rid": "query.id",
+   "limit": "query.limit || 20",
+   "offset": "query.offset || 0",
+   "beforeTime": "query.before || 0"
+  }
+ },
+ "comment_mv": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/resource/comments/R_MV_5_${query.id}",
+  "crypto": "weapi",
+  "fields": {
+   "rid": "query.id",
+   "limit": "query.limit || 20",
+   "offset": "query.offset || 0",
+   "beforeTime": "query.before || 0"
+  }
+ },
+ "comment_new": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "comment_playlist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/resource/comments/A_PL_0_${query.id}",
+  "crypto": "weapi",
+  "fields": {
+   "rid": "query.id",
+   "limit": "query.limit || 20",
+   "offset": "query.offset || 0",
+   "beforeTime": "query.before || 0"
+  }
+ },
+ "comment_reply": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/v1/resource/comments/reply",
+  "crypto": "xeapi",
+  "fields": {
+   "threadId": "resourceTypeMap[query.type] + query.id",
+   "commentId": "query.cid",
+   "content": "query.content",
+   "resourceType": "'0'"
+  },
+  "checkToken": "v3"
+ },
+ "comment_report": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/report/reportcomment",
+  "crypto": "default",
+  "fields": {
+   "threadId": "'R_SO_4_' + query.id",
+   "commentId": "query.cid",
+   "reason": "query.reason"
+  }
+ },
+ "comment_video": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/resource/comments/R_VI_62_${query.id}",
+  "crypto": "weapi",
+  "fields": {
+   "rid": "query.id",
+   "limit": "query.limit || 20",
+   "offset": "query.offset || 0",
+   "beforeTime": "query.before || 0"
+  }
+ },
+ "countries_code_list": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/lbs/countries/v1",
+  "crypto": "default",
+  "fields": {}
+ },
+ "creator_authinfo_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/user/creator/authinfo/get",
+  "crypto": "default",
+  "fields": {}
+ },
+ "daily_signin": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/point/dailyTask",
+  "crypto": "default",
+  "fields": {
+   "type": "query.type || 0"
+  }
+ },
+ "decrypt": {
+  "tier": "admin",
+  "status": "custom"
+ },
+ "device_kickoff": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/middle/user/security/device/kickoff",
+  "crypto": "eapi",
+  "fields": {
+   "key": "query.deviceKey",
+   "captcha": "query.captcha || ''"
+  }
+ },
+ "device_list": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/middle/user/device/list",
+  "crypto": "eapi",
+  "fields": {
+   "excStatus": "'9'"
+  }
+ },
+ "deviceinfo_center_upload": {
+  "tier": "admin",
+  "status": "custom"
+ },
+ "digitalAlbum_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/vipmall/albumproduct/detail",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "digitalAlbum_ordering": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/ordering/web/digital",
+  "crypto": "weapi",
+  "fields": {
+   "business": "'Album'",
+   "paymentMethod": "query.payment",
+   "digitalResources": "JSON.stringify([\n      {\n        business: 'Album',\n        resourceID: query.id,\n        quantity: query.quantity,\n      },\n    ])",
+   "from": "'web'"
+  }
+ },
+ "digitalAlbum_purchased": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/digitalAlbum/purchased",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0",
+   "total": "true"
+  }
+ },
+ "digitalAlbum_sales": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/vipmall/albumproduct/album/query/sales",
+  "crypto": "weapi",
+  "fields": {
+   "albumIds": "query.ids"
+  }
+ },
+ "dislike_list": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/music/dislike/get",
+  "crypto": "xeapi",
+  "fields": {}
+ },
+ "djRadio_top": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/expert/worksdata/works/top/get",
+  "crypto": "default",
+  "fields": {
+   "djRadioId": "query.djRadioId || null",
+   "sortIndex": "query.sortIndex || 1",
+   "dataGapDays": "query.dataGapDays || 7",
+   "dataType": "query.dataType || 3"
+  }
+ },
+ "dj_banner": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/banner/get",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "dj_category_excludehot": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/category/excludehot",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "dj_category_list": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/dj/radio/category/list",
+  "crypto": "xeapi",
+  "fields": {}
+ },
+ "dj_category_recommend": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/home/category/recommend",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "dj_catelist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/category/get",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "dj_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/v2/get",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.rid"
+  }
+ },
+ "dj_difm_all_style_channel": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/dj/difm/all/style/channel/v2",
+  "crypto": "default",
+  "fields": {
+   "sources": "query.sources || '[0]'"
+  }
+ },
+ "dj_difm_channel_subscribe": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/dj/difm/channel/subscribe",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "dj_difm_channel_unsubscribe": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/dj/difm/channel/unsubscribe",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "dj_difm_playing_tracks_list": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/dj/difm/playing/tracks/list",
+  "crypto": "default",
+  "fields": {
+   "limit": "query.limit || 5",
+   "source": "query.source || 0",
+   "channelId": "query.channelId"
+  }
+ },
+ "dj_difm_subscribe_channels_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/dj/difm/subscribe/channels/get/v2",
+  "crypto": "default",
+  "fields": {
+   "sources": "query.sources || '[0]'"
+  }
+ },
+ "dj_hot": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/hot/v1",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0"
+  }
+ },
+ "dj_paygift": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/home/paygift/list",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0",
+   "_nmclfl": "1"
+  }
+ },
+ "dj_personalize_recommend": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/personalize/rcmd",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 6"
+  }
+ },
+ "dj_program": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "dj_program_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/dj/program/detail",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "dj_program_toplist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/program/toplist/v1",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 100",
+   "offset": "query.offset || 0"
+  }
+ },
+ "dj_program_toplist_hours": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djprogram/toplist/hours",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 100"
+  }
+ },
+ "dj_radio_hot": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/hot",
+  "crypto": "weapi",
+  "fields": {
+   "cateId": "query.cateId",
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0"
+  }
+ },
+ "dj_recommend": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/recommend/v1",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "dj_recommend_type": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/recommend",
+  "crypto": "weapi",
+  "fields": {
+   "cateId": "query.type"
+  }
+ },
+ "dj_sub": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/djradio/${query.t}",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.rid"
+  },
+  "pre": [
+   [
+    "t",
+    "query.t == 1 ? 'sub' : 'unsub'"
+   ]
+  ]
+ },
+ "dj_sublist": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/djradio/get/subed",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0",
+   "total": "true"
+  }
+ },
+ "dj_subscriber": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/subscriber",
+  "crypto": "weapi",
+  "fields": {
+   "time": "query.time || '-1'",
+   "id": "query.id",
+   "limit": "query.limit || '20'",
+   "total": "'true'"
+  }
+ },
+ "dj_today_perfered": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/home/today/perfered",
+  "crypto": "weapi",
+  "fields": {
+   "page": "query.page || 0"
+  }
+ },
+ "dj_toplist": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "dj_toplist_hours": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/dj/toplist/hours",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 100"
+  }
+ },
+ "dj_toplist_newcomer": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/dj/toplist/newcomer",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 100",
+   "offset": "query.offset || 0"
+  }
+ },
+ "dj_toplist_pay": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/toplist/pay",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 100"
+  }
+ },
+ "dj_toplist_popular": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/dj/toplist/popular",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 100"
+  }
+ },
+ "eapi_decrypt": {
+  "tier": "admin",
+  "status": "custom"
+ },
+ "event": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/event/get",
+  "crypto": "weapi",
+  "fields": {
+   "pagesize": "query.pagesize || 20",
+   "lasttime": "query.lasttime || -1"
+  }
+ },
+ "event_del": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/event/delete",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.evId"
+  }
+ },
+ "event_forward": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/event/forward",
+  "crypto": "default",
+  "fields": {
+   "forwards": "query.forwards",
+   "id": "query.evId",
+   "eventUserId": "query.uid"
+  }
+ },
+ "event_privacy": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "event_search": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/event/search/list/get/v1",
+  "crypto": "weapi",
+  "fields": {
+   "keyword": "query.keyword || query.keywords || ''",
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0"
+  }
+ },
+ "fans_group_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/social/fansgroup/bff/detail/get",
+  "crypto": "eapi",
+  "fields": {
+   "groupId": "query.groupId || query.id || ''",
+   "scene": "query.scene || ''"
+  }
+ },
+ "fans_group_feed_recommend": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/fans/group/feed/recommend/get",
+  "crypto": "eapi",
+  "fields": {
+   "artistSelf": "query.artistSelf || '0'",
+   "fansGroupId": "query.fansGroupId || query.groupId || ''",
+   "cursor": "query.cursor || '0'",
+   "size": "String(query.size || 10)"
+  }
+ },
+ "fans_group_user_group_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/social/fansgroup/bff/user/group/detail/get",
+  "crypto": "eapi",
+  "fields": {
+   "groupId": "query.groupId || query.id || ''"
+  }
+ },
+ "fans_group_user_groups": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/social/fansgroup/bff/user/groups/get",
+  "crypto": "eapi",
+  "fields": {}
+ },
+ "fanscenter_basicinfo_age_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/fanscenter/basicinfo/age/get",
+  "crypto": "default",
+  "fields": {}
+ },
+ "fanscenter_basicinfo_gender_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/fanscenter/basicinfo/gender/get",
+  "crypto": "default",
+  "fields": {}
+ },
+ "fanscenter_basicinfo_province_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/fanscenter/basicinfo/province/get",
+  "crypto": "default",
+  "fields": {}
+ },
+ "fanscenter_overview_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/fanscenter/overview/get",
+  "crypto": "default",
+  "fields": {}
+ },
+ "fanscenter_trend_list": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/fanscenter/trend/list",
+  "crypto": "default",
+  "fields": {
+   "startTime": "query.startTime || Date.now() - 7 * 24 * 3600 * 1000",
+   "endTime": "query.endTime || Date.now()",
+   "type": "query.type || 0"
+  }
+ },
+ "fm_trash": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/radio/trash/add",
+  "crypto": "weapi",
+  "fields": {
+   "songId": "query.id",
+   "alg": "'RT'",
+   "time": "query.time || 25"
+  }
+ },
+ "follow": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/user/${query.t}/${query.id}",
+  "crypto": "weapi",
+  "fields": {},
+  "pre": [
+   [
+    "t",
+    "query.t == 1 ? 'follow' : 'delfollow'"
+   ]
+  ]
+ },
+ "get_userids": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/user/getUserIds",
+  "crypto": "weapi",
+  "fields": {
+   "nicknames": "query.nicknames"
+  }
+ },
+ "history_recommend_songs": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/discovery/recommend/songs/history/recent",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "history_recommend_songs_detail": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/discovery/recommend/songs/history/detail",
+  "crypto": "weapi",
+  "fields": {
+   "date": "query.date || ''"
+  }
+ },
+ "homepage_block_page": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/homepage/block/page",
+  "crypto": "weapi",
+  "fields": {
+   "refresh": "query.refresh || false",
+   "cursor": "query.cursor"
+  }
+ },
+ "homepage_dragon_ball": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/homepage/dragon/ball/static",
+  "crypto": "default",
+  "fields": {}
+ },
+ "hot_topic": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/act/hot",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 20",
+   "offset": "query.offset || 0"
+  }
+ },
+ "hug_comment": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "inner_version": {
+  "tier": "admin",
+  "status": "custom"
+ },
+ "lbs_city_code": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/lbs/city/code",
+  "crypto": "default",
+  "fields": {
+   "bizCode": "query.bizCode || ''"
+  }
+ },
+ "like": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/radio/like",
+  "crypto": "weapi",
+  "fields": {
+   "alg": "'itembased'",
+   "trackId": "query.id",
+   "like": "query.like",
+   "time": "'3'"
+  },
+  "pre": [
+   [
+    "like",
+    "query.like == 'false' ? false : true"
+   ]
+  ]
+ },
+ "like_v1": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/v1/radio/like",
+  "crypto": "xeapi",
+  "fields": {
+   "alg": "'itembased'",
+   "trackId": "query.id",
+   "like": "query.like",
+   "time": "'3'"
+  },
+  "checkToken": "v3",
+  "pre": [
+   [
+    "like",
+    "query.like == 'false' ? false : true"
+   ]
+  ]
+ },
+ "likelist": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/song/like/get",
+  "crypto": "default",
+  "fields": {
+   "uid": "query.uid"
+  }
+ },
+ "listen_data_realtime_report": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/content/activity/listen/data/realtime/report",
+  "crypto": "default",
+  "fields": {
+   "type": "query.type || 'week'"
+  }
+ },
+ "listen_data_report": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/content/activity/listen/data/report",
+  "crypto": "default",
+  "fields": {
+   "type": "query.type || 'week'",
+   "endTime": "query.endTime"
+  }
+ },
+ "listen_data_song_play_rank": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/content/activity/listen/data/song/play/rank",
+  "crypto": "default",
+  "fields": {
+   "type": "query.type || 'month'",
+   "endTime": "query.endTime"
+  }
+ },
+ "listen_data_today_song": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/content/activity/listen/data/today/song/play/rank",
+  "crypto": "default",
+  "fields": {}
+ },
+ "listen_data_total": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/content/activity/listen/data/total",
+  "crypto": "default",
+  "fields": {}
+ },
+ "listen_data_year_report": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/content/activity/listen/data/year/report",
+  "crypto": "default",
+  "fields": {}
+ },
+ "listentogether_accept": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/listen/together/play/invitation/accept",
+  "crypto": "default",
+  "fields": {
+   "refer": "'inbox_invite'",
+   "roomId": "query.roomId",
+   "inviterId": "query.inviterId"
+  }
+ },
+ "listentogether_end": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/listen/together/end/v2",
+  "crypto": "default",
+  "fields": {
+   "roomId": "query.roomId"
+  }
+ },
+ "listentogether_heatbeat": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/listen/together/heartbeat",
+  "crypto": "default",
+  "fields": {
+   "roomId": "query.roomId",
+   "songId": "query.songId",
+   "playStatus": "query.playStatus",
+   "progress": "query.progress"
+  }
+ },
+ "listentogether_play_command": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/listen/together/play/command/report",
+  "crypto": "default",
+  "fields": {
+   "roomId": "query.roomId",
+   "commandInfo": "JSON.stringify({\n      commandType: query.commandType,\n      progress: query.progress || 0,\n      playStatus: query.playStatus,\n      formerSongId: query.formerSongId,\n      targetSongId: query.targetSongId,\n      clientSeq: query.clientSeq,\n    })"
+  }
+ },
+ "listentogether_room_check": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/listen/together/room/check",
+  "crypto": "default",
+  "fields": {
+   "roomId": "query.roomId"
+  }
+ },
+ "listentogether_room_create": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/listen/together/room/create",
+  "crypto": "default",
+  "fields": {
+   "refer": "'songplay_more'"
+  }
+ },
+ "listentogether_status": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/listen/together/status/get",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "listentogether_sync_list_command": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "listentogether_sync_playlist_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/listen/together/sync/playlist/get",
+  "crypto": "default",
+  "fields": {
+   "roomId": "query.roomId"
+  }
+ },
+ "login": {
+  "tier": "auth",
+  "status": "custom"
+ },
+ "login_cellphone": {
+  "tier": "auth",
+  "status": "custom"
+ },
+ "login_qr_check": {
+  "tier": "auth",
+  "status": "custom"
+ },
+ "login_qr_create": {
+  "tier": "auth",
+  "status": "custom"
+ },
+ "login_qr_key": {
+  "tier": "auth",
+  "status": "custom"
+ },
+ "login_refresh": {
+  "tier": "auth",
+  "status": "custom"
+ },
+ "login_status": {
+  "tier": "auth",
+  "status": "custom"
+ },
+ "logout": {
+  "tier": "auth",
+  "status": "custom"
+ },
+ "lyric": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/song/lyric",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "tv": "-1",
+   "lv": "-1",
+   "rv": "-1",
+   "kv": "-1",
+   "_nmclfl": "1"
+  }
+ },
+ "lyric_new": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/song/lyric/v1",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "cp": "false",
+   "tv": "0",
+   "lv": "0",
+   "rv": "0",
+   "kv": "0",
+   "yv": "0",
+   "ytv": "0",
+   "yrv": "0"
+  }
+ },
+ "middle_play_do_lottery": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/middle/play/do/lottery",
+  "crypto": "eapi",
+  "fields": {
+   "activityId": "query.activityId || '6501202'",
+   "drawCount": "query.drawCount || '1'"
+  },
+  "checkToken": "v2"
+ },
+ "middle_play_lottery_remain_chance": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/middle/play/lottery/remain/chance",
+  "crypto": "eapi",
+  "fields": {
+   "activityId": "query.activityId || '6501202'"
+  }
+ },
+ "mlog_music_rcmd": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/mlog/rcmd/feed/list",
+  "crypto": "default",
+  "fields": {
+   "id": "query.mvid || 0",
+   "type": "2",
+   "rcmdType": "20",
+   "limit": "query.limit || 10",
+   "extInfo": "JSON.stringify({ songId: query.songid })"
+  }
+ },
+ "mlog_mycollect": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/mlog/mycollect/bytime/get",
+  "crypto": "xeapi",
+  "fields": {
+   "time": "query.time || '-1'",
+   "limit": "query.limit || 30",
+   "mlogType": "query.type || 3"
+  }
+ },
+ "mlog_to_video": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/mlog/video/convert/id",
+  "crypto": "weapi",
+  "fields": {
+   "mlogId": "query.id"
+  }
+ },
+ "mlog_url": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/mlog/detail/v1",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.id",
+   "resolution": "query.res || 1080",
+   "type": "1"
+  }
+ },
+ "msg_comments": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/v1/user/comments/${query.uid}",
+  "crypto": "weapi",
+  "fields": {
+   "beforeTime": "query.before || '-1'",
+   "limit": "query.limit || 30",
+   "total": "'true'",
+   "uid": "query.uid"
+  }
+ },
+ "msg_forwards": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/forwards/get",
+  "crypto": "weapi",
+  "fields": {
+   "offset": "query.offset || 0",
+   "limit": "query.limit || 30",
+   "total": "'true'"
+  }
+ },
+ "msg_notices": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/msg/notices",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 30",
+   "time": "query.lasttime || -1"
+  }
+ },
+ "msg_private": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/msg/private/users",
+  "crypto": "weapi",
+  "fields": {
+   "offset": "query.offset || 0",
+   "limit": "query.limit || 30",
+   "total": "'true'"
+  }
+ },
+ "msg_private_history": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/msg/private/history",
+  "crypto": "weapi",
+  "fields": {
+   "userId": "query.uid",
+   "limit": "query.limit || 30",
+   "time": "query.before || 0",
+   "total": "'true'"
+  }
+ },
+ "msg_recentcontact": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/msg/recentcontact/get",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "music_first_listen_info": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/content/activity/music/first/listen/info",
+  "crypto": "default",
+  "fields": {
+   "songId": "query.id"
+  }
+ },
+ "musician_cloudbean": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/cloudbean/get",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "musician_cloudbean_obtain": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/nmusician/workbench/mission/reward/obtain/new",
+  "crypto": "weapi",
+  "fields": {
+   "userMissionId": "query.id",
+   "period": "query.period"
+  }
+ },
+ "musician_data_overview": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/creator/musician/statistic/data/overview/get",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "musician_play_trend": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/creator/musician/play/count/statistic/data/trend/get",
+  "crypto": "weapi",
+  "fields": {
+   "startTime": "query.startTime",
+   "endTime": "query.endTime"
+  }
+ },
+ "musician_sign": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/creator/user/access",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "musician_tasks": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/nmusician/workbench/mission/cycle/list",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "musician_tasks_new": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/nmusician/workbench/mission/stage/list ",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "musician_vip_tasks": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/nmusician/workbench/special/right/vip/info",
+  "crypto": "eapi",
+  "fields": {}
+ },
+ "mv_all": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/mv/all",
+  "crypto": "default",
+  "fields": {
+   "tags": "JSON.stringify({\n      地区: query.area || '全部',\n      类型: query.type || '全部',\n      排序: query.order || '上升最快',\n    })",
+   "offset": "query.offset || 0",
+   "total": "'true'",
+   "limit": "query.limit || 30"
+  }
+ },
+ "mv_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/mv/detail",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.mvid"
+  }
+ },
+ "mv_detail_info": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/comment/commentthread/info",
+  "crypto": "weapi",
+  "fields": {
+   "threadid": "`R_MV_5_${query.mvid}`",
+   "composeliked": "true"
+  }
+ },
+ "mv_exclusive_rcmd": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/mv/exclusive/rcmd",
+  "crypto": "default",
+  "fields": {
+   "offset": "query.offset || 0",
+   "limit": "query.limit || 30"
+  }
+ },
+ "mv_first": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/mv/first",
+  "crypto": "default",
+  "fields": {
+   "area": "query.area || ''",
+   "limit": "query.limit || 30",
+   "total": "true"
+  }
+ },
+ "mv_sub": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/mv/${query.t}",
+  "crypto": "weapi",
+  "fields": {
+   "mvId": "query.mvid",
+   "mvIds": "'[\"' + query.mvid + '\"]'"
+  },
+  "pre": [
+   [
+    "t",
+    "query.t == 1 ? 'sub' : 'unsub'"
+   ]
+  ]
+ },
+ "mv_sublist": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/cloudvideo/allvideo/sublist",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 25",
+   "offset": "query.offset || 0",
+   "total": "true"
+  }
+ },
+ "mv_url": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/song/enhance/play/mv/url",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.id",
+   "r": "query.r || 1080"
+  }
+ },
+ "nickname_check": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/nickname/duplicated",
+  "crypto": "weapi",
+  "fields": {
+   "nickname": "query.nickname"
+  }
+ },
+ "personal_fm": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/v1/radio/get",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "personal_fm_mode": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/v1/radio/get",
+  "crypto": "default",
+  "fields": {
+   "mode": "query.mode",
+   "subMode": "query.submode",
+   "limit": "query.limit || 3"
+  }
+ },
+ "personalized": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/personalized/playlist",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 30",
+   "total": "true",
+   "n": "1000"
+  }
+ },
+ "personalized_djprogram": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/personalized/djprogram",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "personalized_mv": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/personalized/mv",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "personalized_newsong": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/personalized/newsong",
+  "crypto": "weapi",
+  "fields": {
+   "type": "'recommend'",
+   "limit": "query.limit || 10",
+   "areaId": "query.areaId || 0"
+  }
+ },
+ "personalized_privatecontent": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/personalized/privatecontent",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "personalized_privatecontent_list": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v2/privatecontent/list",
+  "crypto": "weapi",
+  "fields": {
+   "offset": "query.offset || 0",
+   "total": "'true'",
+   "limit": "query.limit || 60"
+  }
+ },
+ "pl_count": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/pl/count",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "playlist_category_list": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/playlist/category/list",
+  "crypto": "default",
+  "fields": {
+   "cat": "query.cat || '全部'",
+   "limit": "query.limit || 24",
+   "newStyle": "true"
+  }
+ },
+ "playlist_catlist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/playlist/catalogue",
+  "crypto": "eapi",
+  "fields": {}
+ },
+ "playlist_cover_update": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "playlist_create": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/playlist/create",
+  "crypto": "weapi",
+  "fields": {
+   "name": "query.name",
+   "privacy": "query.privacy || '0'",
+   "type": "query.type || 'NORMAL'"
+  }
+ },
+ "playlist_delete": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/playlist/remove",
+  "crypto": "weapi",
+  "fields": {
+   "ids": "'[' + query.id + ']'"
+  }
+ },
+ "playlist_desc_update": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/playlist/desc/update",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "desc": "query.desc"
+  }
+ },
+ "playlist_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v6/playlist/detail",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "n": "100000",
+   "s": "query.s || 8"
+  }
+ },
+ "playlist_detail_dynamic": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/playlist/detail/dynamic",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "n": "100000",
+   "s": "query.s || 8"
+  }
+ },
+ "playlist_detail_rcmd_get": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/playlist/detail/rcmd/get",
+  "crypto": "default",
+  "fields": {
+   "scene": "'playlist_head'",
+   "playlistId": "query.id",
+   "newStyle": "'true'"
+  }
+ },
+ "playlist_highquality_tags": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/playlist/highquality/tags",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "playlist_hot": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/playlist/hottags",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "playlist_import_name_task_create": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "playlist_import_task_status": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/playlist/import/task/status/v2",
+  "crypto": "default",
+  "fields": {
+   "taskIds": "JSON.stringify([query.id])"
+  }
+ },
+ "playlist_mylike": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/mlog/playlist/mylike/bytime/get",
+  "crypto": "weapi",
+  "fields": {
+   "time": "query.time || '-1'",
+   "limit": "query.limit || '12'"
+  }
+ },
+ "playlist_name_update": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/playlist/update/name",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "name": "query.name"
+  }
+ },
+ "playlist_order_update": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/playlist/order/update",
+  "crypto": "weapi",
+  "fields": {
+   "ids": "query.ids"
+  }
+ },
+ "playlist_privacy": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/playlist/update/privacy",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "privacy": "0"
+  }
+ },
+ "playlist_subscribe": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "playlist_subscribers": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/playlist/subscribers",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "limit": "query.limit || 20",
+   "offset": "query.offset || 0"
+  }
+ },
+ "playlist_tags_update": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/playlist/tags/update",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "tags": "query.tags"
+  }
+ },
+ "playlist_track_add": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "playlist_track_all": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "playlist_track_delete": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "playlist_tracks": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "playlist_update": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/batch",
+  "crypto": "default",
+  "fields": {
+   "/api/playlist/desc/update": "`{\"id\":${query.id},\"desc\":\"${query.desc}\"}`",
+   "/api/playlist/tags/update": "`{\"id\":${query.id},\"tags\":\"${query.tags}\"}`",
+   "/api/playlist/update/name": "`{\"id\":${query.id},\"name\":\"${query.name}\"}`"
+  },
+  "pre": [
+   [
+    "desc",
+    "query.desc || ''"
+   ],
+   [
+    "tags",
+    "query.tags || ''"
+   ]
+  ]
+ },
+ "playlist_update_playcount": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/playlist/update/playcount",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "playlist_video_recent": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/playlist/video/recent",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "playmode_intelligence_list": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/playmode/intelligence/list",
+  "crypto": "default",
+  "fields": {
+   "songId": "query.id",
+   "type": "'fromPlayOne'",
+   "playlistId": "query.pid",
+   "startMusicId": "query.sid || query.id",
+   "count": "query.count || 1"
+  }
+ },
+ "playmode_song_vector": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/playmode/song/vector/get",
+  "crypto": "default",
+  "fields": {
+   "ids": "query.ids"
+  }
+ },
+ "program_recommend": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/program/recommend/v1",
+  "crypto": "weapi",
+  "fields": {
+   "cateId": "query.type",
+   "limit": "query.limit || 10",
+   "offset": "query.offset || 0"
+  }
+ },
+ "radio_sport_get": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/radio/sport/get",
+  "crypto": "default",
+  "fields": {
+   "bpm": "query.bpm || 50"
+  }
+ },
+ "rebind": {
+  "tier": "auth",
+  "status": "ready",
+  "uri": "/api/user/replaceCellphone",
+  "crypto": "weapi",
+  "fields": {
+   "captcha": "query.captcha",
+   "phone": "query.phone",
+   "oldcaptcha": "query.oldcaptcha",
+   "ctcode": "query.ctcode || '86'"
+  }
+ },
+ "recent_listen_list": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/pc/recent/listen/list",
+  "crypto": "default",
+  "fields": {}
+ },
+ "recommend_category_configs": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/homepage/daily/song/config/get",
+  "crypto": "xeapi",
+  "fields": {}
+ },
+ "recommend_category_set": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "recommend_category_songs": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/homepage/category/daily/song/list",
+  "crypto": "xeapi",
+  "fields": {}
+ },
+ "recommend_resource": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/v1/discovery/recommend/resource",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "recommend_songs": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/v3/discovery/recommend/songs",
+  "crypto": "weapi",
+  "fields": {
+   "afresh": "query.afresh"
+  }
+ },
+ "recommend_songs_dislike": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/v2/discovery/recommend/dislike",
+  "crypto": "weapi",
+  "fields": {
+   "resId": "query.id",
+   "resType": "4",
+   "sceneType": "1"
+  }
+ },
+ "recommend_songs_v1": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/v3/discovery/recommend/songs",
+  "crypto": "xeapi",
+  "fields": {
+   "ispush": "query.ispush || false"
+  }
+ },
+ "record_recent_album": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/play-record/album/list",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 100"
+  }
+ },
+ "record_recent_dj": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/play-record/djradio/list",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 100"
+  }
+ },
+ "record_recent_playlist": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/play-record/playlist/list",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 100"
+  }
+ },
+ "record_recent_song": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/play-record/song/list",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 100"
+  }
+ },
+ "record_recent_video": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/play-record/newvideo/list",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 100"
+  }
+ },
+ "record_recent_voice": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/play-record/voice/list",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 100"
+  }
+ },
+ "register_anonimous": {
+  "tier": "admin",
+  "status": "custom"
+ },
+ "register_cellphone": {
+  "tier": "auth",
+  "status": "custom"
+ },
+ "register_checktoken_v2": {
+  "tier": "admin",
+  "status": "unsupported",
+  "reason": "需要在浏览器环境里运行易盾 SDK，Java 无法移植；用到它的接口已改用 v3"
+ },
+ "register_checktoken_v3": {
+  "tier": "admin",
+  "status": "custom"
+ },
+ "register_neapikey": {
+  "tier": "admin",
+  "status": "unsupported",
+  "reason": "neapi 配置需要解析混淆的 Lua 字节码；目前没有接口默认使用 neapi"
+ },
+ "register_xeapikey": {
+  "tier": "admin",
+  "status": "custom"
+ },
+ "related_allvideo": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "related_playlist": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "relay_play_state_submit": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "rep_ugc_activity_collect": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/rep/ugc/activity/collect",
+  "crypto": "eapi",
+  "fields": {
+   "activityId": "query.activityId || '5001'"
+  }
+ },
+ "rep_ugc_activity_get": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/rep/ugc/activity/get",
+  "crypto": "eapi",
+  "fields": {}
+ },
+ "rep_ugc_exam_info_get": {
+  "tier": "personal",
+  "status": "custom"
+ },
+ "rep_ugc_exam_question_single_get": {
+  "tier": "personal",
+  "status": "custom"
+ },
+ "rep_ugc_exam_result_get": {
+  "tier": "personal",
+  "status": "custom"
+ },
+ "rep_ugc_exam_start": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "rep_ugc_exam_submit": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "rep_ugc_user_collect-vip": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/rep/ugc/user/collect-vip",
+  "crypto": "eapi",
+  "fields": {
+   "activityId": "query.activityId || '5001'"
+  }
+ },
+ "rep_ugc_user_get": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/rep/ugc/user/get",
+  "crypto": "eapi",
+  "fields": {}
+ },
+ "rep_ugc_user_sign": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/rep/ugc/user/sign",
+  "crypto": "eapi",
+  "fields": {}
+ },
+ "rep_ugc_user_vip": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/rep/ugc/user/vip",
+  "crypto": "eapi",
+  "fields": {}
+ },
+ "resource_like": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "sati_resource_list": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/voice/sati/resource/list",
+  "crypto": "default",
+  "fields": {
+   "tag": "query.tag",
+   "firstQuery": "false"
+  }
+ },
+ "sati_resource_list_more": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/voice/sati/resource/list/more/v1",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "sati_resource_sub": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/voice/sati/resource/sub",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "cancel": "query.cancel || false"
+  }
+ },
+ "sati_resource_sub_list": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/voice/sati/resource/sub/list",
+  "crypto": "default",
+  "fields": {}
+ },
+ "sati_tag_list": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/voice/sati/tag/list",
+  "crypto": "default",
+  "fields": {}
+ },
+ "sati_timescene_resources_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/voice/sati/timescene/resources/get",
+  "crypto": "default",
+  "fields": {
+   "firstQuery": "false"
+  }
+ },
+ "scrobble": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "scrobble_v1": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "search": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "search_default": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/search/defaultkeyword/get",
+  "crypto": "default",
+  "fields": {}
+ },
+ "search_hot": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/search/hot",
+  "crypto": "default",
+  "fields": {
+   "type": "1111"
+  }
+ },
+ "search_hot_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/hotsearchlist/get",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "search_lyric": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/search/resource/lyric",
+  "crypto": "weapi",
+  "fields": {
+   "keyword": "query.keyword || query.keywords || ''",
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0"
+  }
+ },
+ "search_match": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "search_multimatch": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/search/suggest/multimatch",
+  "crypto": "weapi",
+  "fields": {
+   "type": "query.type || 1",
+   "s": "query.keywords || ''"
+  }
+ },
+ "search_song_list_page": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/search/song/list/page",
+  "crypto": "weapi",
+  "fields": {
+   "keyword": "query.keyword || query.keywords || ''",
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0",
+   "scene": "query.scene || 'normal'"
+  }
+ },
+ "search_suggest": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "search_suggest_mobile": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/search/suggest/keyword/get",
+  "crypto": "weapi",
+  "fields": {
+   "keyword": "query.keyword || query.keywords || ''"
+  }
+ },
+ "search_suggest_pc": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/search/pc/suggest/keyword/get",
+  "crypto": "default",
+  "fields": {
+   "keyword": "query.keyword || ''"
+  }
+ },
+ "send_album": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/msg/private/send",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "msg": "query.msg || ''",
+   "type": "'album'",
+   "userIds": "'[' + query.user_ids + ']'"
+  }
+ },
+ "send_playlist": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/msg/private/send",
+  "crypto": "default",
+  "fields": {
+   "id": "query.playlist",
+   "type": "'playlist'",
+   "msg": "query.msg",
+   "userIds": "'[' + query.user_ids + ']'"
+  }
+ },
+ "send_song": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/msg/private/send",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "msg": "query.msg || ''",
+   "type": "'song'",
+   "userIds": "'[' + query.user_ids + ']'"
+  }
+ },
+ "send_text": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/msg/private/send",
+  "crypto": "default",
+  "fields": {
+   "type": "'text'",
+   "msg": "query.msg",
+   "userIds": "'[' + query.user_ids + ']'"
+  }
+ },
+ "setting": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/user/setting",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "share_resource": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/share/friends/resource",
+  "crypto": "xeapi",
+  "fields": {
+   "type": "query.type || 'song'",
+   "msg": "query.msg || ''",
+   "id": "query.id || ''"
+  },
+  "checkToken": "v3"
+ },
+ "sheet_list": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/music/sheet/list/v1",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "abTest": "query.ab || 'b'"
+  }
+ },
+ "sheet_preview": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/music/sheet/preview/info",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "sign_happy_info": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/sign/happy/info",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "signin_progress": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/act/modules/signin/v2/progress",
+  "crypto": "weapi",
+  "fields": {
+   "moduleId": "query.moduleId || '1207signin-1207signin'"
+  }
+ },
+ "simi_artist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/discovery/simiArtist",
+  "crypto": "weapi",
+  "fields": {
+   "artistid": "query.id"
+  }
+ },
+ "simi_mv": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/discovery/simiMV",
+  "crypto": "weapi",
+  "fields": {
+   "mvid": "query.mvid"
+  }
+ },
+ "simi_playlist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/discovery/simiPlaylist",
+  "crypto": "weapi",
+  "fields": {
+   "songid": "query.id",
+   "limit": "query.limit || 50",
+   "offset": "query.offset || 0"
+  }
+ },
+ "simi_song": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/discovery/simiSong",
+  "crypto": "weapi",
+  "fields": {
+   "songid": "query.id",
+   "limit": "query.limit || 50",
+   "offset": "query.offset || 0"
+  }
+ },
+ "simi_user": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/discovery/simiUser",
+  "crypto": "weapi",
+  "fields": {
+   "songid": "query.id",
+   "limit": "query.limit || 50",
+   "offset": "query.offset || 0"
+  }
+ },
+ "song_chorus": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/song/chorus",
+  "crypto": "default",
+  "fields": {
+   "ids": "JSON.stringify([query.id])"
+  }
+ },
+ "song_cloud_download": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/cloud/dowonload",
+  "crypto": "eapi",
+  "fields": {
+   "songId": "query.id"
+  }
+ },
+ "song_copyright_rcmd": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/song/copyright/rcmd",
+  "crypto": "eapi",
+  "fields": {
+   "songid": "query.songid || query.id"
+  }
+ },
+ "song_creators": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/song/creators",
+  "crypto": "default",
+  "fields": {
+   "songId": "query.id"
+  }
+ },
+ "song_detail": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "song_downlist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/member/song/downlist",
+  "crypto": "default",
+  "fields": {
+   "limit": "query.limit || '20'",
+   "offset": "query.offset || '0'",
+   "total": "'true'"
+  }
+ },
+ "song_download_url": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/song/enhance/download/url",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id",
+   "br": "parseInt(query.br || 999000)"
+  }
+ },
+ "song_download_url_v1": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "song_dynamic_cover": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/songplay/dynamic-cover",
+  "crypto": "default",
+  "fields": {
+   "songId": "query.id"
+  }
+ },
+ "song_like": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "song_like_check": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/song/like/check",
+  "crypto": "default",
+  "fields": {
+   "trackIds": "query.ids"
+  }
+ },
+ "song_lyrics_mark": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/song/play/lyrics/mark/song",
+  "crypto": "default",
+  "fields": {
+   "songId": "query.id"
+  }
+ },
+ "song_lyrics_mark_add": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/song/play/lyrics/mark/add",
+  "crypto": "default",
+  "fields": {
+   "songId": "query.id",
+   "markId": "query.markId || ''",
+   "data": "query.data || '[]'"
+  }
+ },
+ "song_lyrics_mark_del": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/song/play/lyrics/mark/del",
+  "crypto": "default",
+  "fields": {
+   "markIds": "query.id"
+  }
+ },
+ "song_lyrics_mark_user_page": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/song/play/lyrics/mark/user/page",
+  "crypto": "default",
+  "fields": {
+   "limit": "query.limit || 10",
+   "offset": "query.offset || 0"
+  }
+ },
+ "song_monthdownlist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/member/song/monthdownlist",
+  "crypto": "default",
+  "fields": {
+   "limit": "query.limit || '20'",
+   "offset": "query.offset || '0'",
+   "total": "'true'"
+  }
+ },
+ "song_music_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/song/music/detail/get",
+  "crypto": "default",
+  "fields": {
+   "songId": "query.id"
+  }
+ },
+ "song_order_update": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/playlist/manipulate/tracks",
+  "crypto": "default",
+  "fields": {
+   "pid": "query.pid",
+   "trackIds": "query.ids",
+   "op": "'update'"
+  }
+ },
+ "song_purchased": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/single/mybought/song/list",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 20",
+   "offset": "query.offset || 0"
+  }
+ },
+ "song_red_count": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/song/red/count",
+  "crypto": "default",
+  "fields": {
+   "songId": "query.id"
+  }
+ },
+ "song_simi_get": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/link/position/show/resource",
+  "crypto": "eapi",
+  "fields": {
+   "positionCode": "'toolBarRcmdSong'",
+   "resourceId": "query.id",
+   "resourceType": "'song'"
+  }
+ },
+ "song_singledownlist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/member/song/singledownlist",
+  "crypto": "default",
+  "fields": {
+   "limit": "query.limit || '20'",
+   "offset": "query.offset || '0'",
+   "total": "'true'"
+  }
+ },
+ "song_url": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "song_url_match": {
+  "tier": "admin",
+  "status": "unsupported",
+  "reason": "依赖第三方音源解灰（unblockmusic-utils），涉及版权风险，不移植"
+ },
+ "song_url_ncmget": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "song_url_v1": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "song_url_v1_302": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "song_wiki_info": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "song_wiki_summary": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/song/play/about/block/page",
+  "crypto": "default",
+  "fields": {
+   "songId": "query.id"
+  }
+ },
+ "starpick_comments_summary": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/homepage/block/page",
+  "crypto": "default",
+  "fields": {
+   "cursor": "JSON.stringify({\n      offset: 0,\n      blockCodeOrderList: ['HOMEPAGE_BLOCK_NEW_HOT_COMMENT'],\n      refresh: true,\n    })"
+  }
+ },
+ "style_album": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/style-tag/home/album",
+  "crypto": "weapi",
+  "fields": {
+   "cursor": "query.cursor || 0",
+   "size": "query.size || 20",
+   "tagId": "query.tagId",
+   "sort": "query.sort || 0"
+  }
+ },
+ "style_artist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/style-tag/home/artist",
+  "crypto": "weapi",
+  "fields": {
+   "cursor": "query.cursor || 0",
+   "size": "query.size || 20",
+   "tagId": "query.tagId",
+   "sort": "0"
+  }
+ },
+ "style_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/style-tag/home/head",
+  "crypto": "weapi",
+  "fields": {
+   "tagId": "query.tagId"
+  }
+ },
+ "style_list": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/tag/list/get",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "style_playlist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/style-tag/home/playlist",
+  "crypto": "weapi",
+  "fields": {
+   "cursor": "query.cursor || 0",
+   "size": "query.size || 20",
+   "tagId": "query.tagId",
+   "sort": "0"
+  }
+ },
+ "style_preference": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/tag/my/preference/get",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "style_song": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/style-tag/home/song",
+  "crypto": "weapi",
+  "fields": {
+   "cursor": "query.cursor || 0",
+   "size": "query.size || 20",
+   "tagId": "query.tagId",
+   "sort": "query.sort || 0"
+  }
+ },
+ "summary_annual": {
+  "tier": "personal",
+  "status": "custom"
+ },
+ "thinktank_audit_resource_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/thinktank/audit/resource/detail",
+  "crypto": "eapi",
+  "fields": {
+   "type": "query.type || '4'"
+  }
+ },
+ "thinktank_audit_resource_update": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "threshold_detail_get": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/influencer/web/apply/threshold/detail/get",
+  "crypto": "default",
+  "fields": {}
+ },
+ "top_album": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "top_artists": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/artist/top",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 50",
+   "offset": "query.offset || 0",
+   "total": "true"
+  }
+ },
+ "top_list": {
+  "tier": "public",
+  "status": "custom"
+ },
+ "top_mv": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/mv/toplist",
+  "crypto": "weapi",
+  "fields": {
+   "area": "query.area || ''",
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0",
+   "total": "true"
+  }
+ },
+ "top_playlist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/playlist/list",
+  "crypto": "weapi",
+  "fields": {
+   "cat": "query.cat || '全部'",
+   "order": "query.order || 'hot'",
+   "limit": "query.limit || 50",
+   "offset": "query.offset || 0",
+   "total": "true"
+  },
+  "post": "renameAvatarImgId"
+ },
+ "top_playlist_highquality": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/playlist/highquality/list",
+  "crypto": "weapi",
+  "fields": {
+   "cat": "query.cat || '全部'",
+   "limit": "query.limit || 50",
+   "lasttime": "query.before || 0",
+   "total": "true"
+  }
+ },
+ "top_song": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/discovery/new/songs",
+  "crypto": "weapi",
+  "fields": {
+   "areaId": "query.type || 0",
+   "total": "true"
+  }
+ },
+ "topic_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/act/detail",
+  "crypto": "weapi",
+  "fields": {
+   "actid": "query.actid"
+  }
+ },
+ "topic_detail_event_hot": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/act/event/hot",
+  "crypto": "weapi",
+  "fields": {
+   "actid": "query.actid"
+  }
+ },
+ "topic_sublist": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/topic/sublist",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 50",
+   "offset": "query.offset || 0",
+   "total": "true"
+  }
+ },
+ "toplist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/toplist",
+  "crypto": "default",
+  "fields": {}
+ },
+ "toplist_artist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/toplist/artist",
+  "crypto": "weapi",
+  "fields": {
+   "type": "query.type || 1",
+   "limit": "100",
+   "offset": "0",
+   "total": "true"
+  }
+ },
+ "toplist_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/toplist/detail",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "toplist_detail_v2": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/toplist/detail/v2",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "ugc_album_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/rep/ugc/album/get",
+  "crypto": "default",
+  "fields": {
+   "albumId": "query.id"
+  }
+ },
+ "ugc_artist_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/rep/ugc/artist/get",
+  "crypto": "default",
+  "fields": {
+   "artistId": "query.id"
+  }
+ },
+ "ugc_artist_search": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/rep/ugc/artist/search",
+  "crypto": "default",
+  "fields": {
+   "keyword": "query.keyword",
+   "limit": "query.limit || 40"
+  }
+ },
+ "ugc_detail": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/rep/ugc/detail",
+  "crypto": "weapi",
+  "fields": {
+   "auditStatus": "query.auditStatus || ''",
+   "limit": "query.limit || 10",
+   "offset": "query.offset || 0",
+   "order": "query.order || 'desc'",
+   "sortBy": "query.sortBy || 'createTime'",
+   "type": "query.type || 1"
+  }
+ },
+ "ugc_mv_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/rep/ugc/mv/get",
+  "crypto": "default",
+  "fields": {
+   "mvId": "query.id"
+  }
+ },
+ "ugc_song_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/rep/ugc/song/get",
+  "crypto": "default",
+  "fields": {
+   "songId": "query.id"
+  }
+ },
+ "ugc_user_devote": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/rep/ugc/user/devote",
+  "crypto": "default",
+  "fields": {}
+ },
+ "user_account": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/nuser/account/get",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "user_audio": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/djradio/get/byuser",
+  "crypto": "weapi",
+  "fields": {
+   "userId": "query.uid"
+  }
+ },
+ "user_binding": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/v1/user/bindings/${query.uid}",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "user_bindingcellphone": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "user_cloud": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/v1/cloud/get",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0"
+  }
+ },
+ "user_cloud_del": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/cloud/del",
+  "crypto": "weapi",
+  "fields": {
+   "songIds": "[query.id]"
+  }
+ },
+ "user_cloud_detail": {
+  "tier": "personal",
+  "status": "custom"
+ },
+ "user_comment_history": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/comment/user/comment/history",
+  "crypto": "weapi",
+  "fields": {
+   "compose_reminder": "'true'",
+   "compose_hot_comment": "'true'",
+   "limit": "query.limit || 10",
+   "user_id": "query.uid",
+   "time": "query.time || 0"
+  }
+ },
+ "user_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/v1/user/detail/${query.uid}",
+  "crypto": "weapi",
+  "fields": {},
+  "post": "renameAvatarImgId"
+ },
+ "user_detail_new": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/w/v1/user/detail/${query.uid}",
+  "crypto": "eapi",
+  "fields": {
+   "all": "'true'",
+   "userId": "query.uid"
+  }
+ },
+ "user_dj": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/dj/program/${query.uid}",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0"
+  }
+ },
+ "user_event": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/event/get/${query.uid}",
+  "crypto": "default",
+  "fields": {
+   "getcounts": "true",
+   "time": "query.lasttime ?? -1",
+   "limit": "query.limit ?? 30",
+   "total": "false",
+   "fromRN": "'true'"
+  }
+ },
+ "user_event_all": {
+  "tier": "personal",
+  "status": "custom"
+ },
+ "user_follow_mixed": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "user_followeds": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/user/getfolloweds/${query.uid}",
+  "crypto": "default",
+  "fields": {
+   "userId": "query.uid",
+   "time": "'0'",
+   "limit": "query.limit || 20",
+   "offset": "query.offset || 0",
+   "getcounts": "'true'"
+  }
+ },
+ "user_follows": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/user/getfollows/${query.uid}",
+  "crypto": "weapi",
+  "fields": {
+   "offset": "query.offset || 0",
+   "limit": "query.limit || 30",
+   "order": "true"
+  }
+ },
+ "user_level": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/user/level",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "user_medal": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/medal/user/page",
+  "crypto": "default",
+  "fields": {
+   "uid": "query.uid"
+  }
+ },
+ "user_mutualfollow_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/user/mutualfollow/get",
+  "crypto": "default",
+  "fields": {
+   "friendid": "query.uid"
+  }
+ },
+ "user_playlist": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/user/playlist",
+  "crypto": "weapi",
+  "fields": {
+   "uid": "query.uid",
+   "limit": "query.limit || 30",
+   "offset": "query.offset || 0",
+   "includeVideo": "true"
+  }
+ },
+ "user_playlist_collect": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/user/playlist/collect",
+  "crypto": "default",
+  "fields": {
+   "limit": "query.limit || '100'",
+   "offset": "query.offset || '0'",
+   "userId": "query.uid",
+   "isWebview": "'true'",
+   "includeRedHeart": "'true'",
+   "includeTop": "'true'"
+  }
+ },
+ "user_playlist_create": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/user/playlist/create",
+  "crypto": "default",
+  "fields": {
+   "limit": "query.limit || '100'",
+   "offset": "query.offset || '0'",
+   "userId": "query.uid",
+   "isWebview": "'true'",
+   "includeRedHeart": "'true'",
+   "includeTop": "'true'"
+  }
+ },
+ "user_record": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/v1/play/record",
+  "crypto": "weapi",
+  "fields": {
+   "uid": "query.uid",
+   "type": "query.type || 0"
+  }
+ },
+ "user_replacephone": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/user/replaceCellphone",
+  "crypto": "weapi",
+  "fields": {
+   "phone": "query.phone",
+   "captcha": "query.captcha",
+   "oldcaptcha": "query.oldcaptcha",
+   "countrycode": "query.countrycode || '86'"
+  }
+ },
+ "user_social_status": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/social/user/status",
+  "crypto": "default",
+  "fields": {
+   "visitorId": "query.uid"
+  }
+ },
+ "user_social_status_edit": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/social/user/status/edit",
+  "crypto": "default",
+  "fields": {
+   "content": "JSON.stringify({\n        type: query.type,\n        iconUrl: query.iconUrl,\n        content: query.content,\n        actionUrl: query.actionUrl,\n      })"
+  }
+ },
+ "user_social_status_rcmd": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/social/user/status/rcmd",
+  "crypto": "default",
+  "fields": {}
+ },
+ "user_social_status_support": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/social/user/status/support",
+  "crypto": "default",
+  "fields": {}
+ },
+ "user_subcount": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/subcount",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "user_update": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/user/profile/update",
+  "crypto": "default",
+  "fields": {
+   "birthday": "query.birthday",
+   "city": "query.city",
+   "gender": "query.gender",
+   "nickname": "query.nickname",
+   "province": "query.province",
+   "signature": "query.signature"
+  }
+ },
+ "verify_getQr": {
+  "tier": "auth",
+  "status": "custom"
+ },
+ "verify_qrcodestatus": {
+  "tier": "auth",
+  "status": "ready",
+  "uri": "/api/frontrisk/verify/qrcodestatus",
+  "crypto": "weapi",
+  "fields": {
+   "qrCode": "query.qr"
+  }
+ },
+ "video_category_list": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/cloudvideo/category/list",
+  "crypto": "weapi",
+  "fields": {
+   "offset": "query.offset || 0",
+   "total": "'true'",
+   "limit": "query.limit || 99"
+  }
+ },
+ "video_detail": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/cloudvideo/v1/video/detail",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "video_detail_info": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/comment/commentthread/info",
+  "crypto": "weapi",
+  "fields": {
+   "threadid": "`R_VI_62_${query.vid}`",
+   "composeliked": "true"
+  }
+ },
+ "video_group": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/videotimeline/videogroup/otherclient/get",
+  "crypto": "weapi",
+  "fields": {
+   "groupId": "query.id",
+   "offset": "query.offset || 0",
+   "need_preview_url": "'true'",
+   "total": "true"
+  }
+ },
+ "video_group_list": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/cloudvideo/group/list",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "video_sub": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/cloudvideo/video/${query.t}",
+  "crypto": "weapi",
+  "fields": {
+   "id": "query.id"
+  },
+  "pre": [
+   [
+    "t",
+    "query.t == 1 ? 'sub' : 'unsub'"
+   ]
+  ]
+ },
+ "video_timeline_all": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/videotimeline/otherclient/get",
+  "crypto": "weapi",
+  "fields": {
+   "groupId": "0",
+   "offset": "query.offset || 0",
+   "need_preview_url": "'true'",
+   "total": "true"
+  }
+ },
+ "video_timeline_recommend": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/videotimeline/get",
+  "crypto": "weapi",
+  "fields": {
+   "offset": "query.offset || 0",
+   "filterLives": "'[]'",
+   "withProgramInfo": "'true'",
+   "needUrl": "'1'",
+   "resolution": "'480'"
+  }
+ },
+ "video_url": {
+  "tier": "public",
+  "status": "ready",
+  "uri": "/api/cloudvideo/playurl",
+  "crypto": "weapi",
+  "fields": {
+   "ids": "'[\"' + query.id + '\"]'",
+   "resolution": "query.res || 1080"
+  }
+ },
+ "vip_growthpoint": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/vipnewcenter/app/level/growhpoint/basic",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "vip_growthpoint_details": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/vipnewcenter/app/level/growth/details",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 20",
+   "offset": "query.offset || 0"
+  }
+ },
+ "vip_growthpoint_get": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/vipnewcenter/app/level/task/reward/get",
+  "crypto": "weapi",
+  "fields": {
+   "taskIds": "query.ids"
+  }
+ },
+ "vip_growthpoint_getall": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/vipnewcenter/app/level/task/reward/getall",
+  "crypto": "xeapi",
+  "fields": {}
+ },
+ "vip_info": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/music-vip-membership/front/vip/info",
+  "crypto": "weapi",
+  "fields": {
+   "userId": "query.uid || ''"
+  }
+ },
+ "vip_info_v2": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/music-vip-membership/client/vip/info",
+  "crypto": "weapi",
+  "fields": {
+   "userId": "query.uid || ''"
+  }
+ },
+ "vip_sign": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "vip_sign_detail": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/vipnewcenter/app/level/user/checkin/history/detail",
+  "crypto": "eapi",
+  "fields": {
+   "signDayTime": "query.timestamp",
+   "type": "'1'"
+  }
+ },
+ "vip_sign_history": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/vipnewcenter/app/minidesk/music/sign/pc",
+  "crypto": "eapi",
+  "fields": {
+   "type": "query.type || '0'"
+  }
+ },
+ "vip_sign_info": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/vipnewcenter/app/user/sign/info",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "vip_tasks": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/vipnewcenter/app/level/task/list",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "vip_tasks_v1": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/middle/vip/mission/user/progress/list",
+  "crypto": "xeapi",
+  "fields": {
+   "taskType": "'app_vip_task_center'",
+   "userId": "query.id"
+  }
+ },
+ "vip_timemachine": {
+  "tier": "personal",
+  "status": "custom"
+ },
+ "voice_delete": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/content/voice/delete",
+  "crypto": "default",
+  "fields": {
+   "ids": "query.ids"
+  }
+ },
+ "voice_detail": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/voice/workbench/voice/detail",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "voice_lyric": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/voice/lyric/get",
+  "crypto": "default",
+  "fields": {
+   "programId": "query.id"
+  }
+ },
+ "voice_upload": {
+  "tier": "write",
+  "status": "custom"
+ },
+ "voicelist_detail": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/voice/workbench/voicelist/detail",
+  "crypto": "default",
+  "fields": {
+   "id": "query.id"
+  }
+ },
+ "voicelist_list": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/voice/workbench/voices/by/voicelist",
+  "crypto": "default",
+  "fields": {
+   "limit": "query.limit || '200'",
+   "offset": "query.offset || '0'",
+   "voiceListId": "query.voiceListId"
+  }
+ },
+ "voicelist_list_search": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/voice/workbench/voice/list",
+  "crypto": "default",
+  "fields": {
+   "limit": "query.limit || '200'",
+   "offset": "query.offset || '0'",
+   "name": "query.name || null",
+   "displayStatus": "query.displayStatus || null",
+   "type": "query.type || null",
+   "voiceFeeType": "query.voiceFeeType || null",
+   "radioId": "query.voiceListId"
+  }
+ },
+ "voicelist_my_created": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/social/my/created/voicelist/v1",
+  "crypto": "weapi",
+  "fields": {
+   "limit": "query.limit || 20"
+  }
+ },
+ "voicelist_search": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/search/voicelist/get",
+  "crypto": "default",
+  "fields": {
+   "keyword": "query.keyword || ''",
+   "scene": "'normal'",
+   "limit": "query.limit || '10'",
+   "offset": "query.offset || '30'",
+   "e_r": "true"
+  }
+ },
+ "voicelist_trans": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/voice/workbench/radio/program/trans",
+  "crypto": "default",
+  "fields": {
+   "limit": "query.limit || '200'",
+   "offset": "query.offset || '0'",
+   "radioId": "query.radioId || null",
+   "programId": "query.programId || '0'",
+   "position": "query.position || '1'"
+  }
+ },
+ "weblog": {
+  "tier": "admin",
+  "status": "custom"
+ },
+ "yunbei": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/point/signed/get",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "yunbei_expense": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/point/expense",
+  "crypto": "default",
+  "fields": {
+   "limit": "query.limit || 10",
+   "offset": "query.offset || 0"
+  }
+ },
+ "yunbei_info": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/v1/user/info",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "yunbei_rcmd_song": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/yunbei/rcmd/song/submit",
+  "crypto": "weapi",
+  "fields": {
+   "songId": "query.id",
+   "reason": "query.reason || '好歌献给你'",
+   "scene": "''",
+   "fromUserId": "-1",
+   "yunbeiNum": "query.yunbeiNum || 10"
+  }
+ },
+ "yunbei_rcmd_song_history": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/yunbei/rcmd/song/history/list",
+  "crypto": "weapi",
+  "fields": {
+   "page": "JSON.stringify({\n      size: query.size || 20,\n      cursor: query.cursor || '',\n    })"
+  }
+ },
+ "yunbei_receipt": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/point/receipt",
+  "crypto": "default",
+  "fields": {
+   "limit": "query.limit || 10",
+   "offset": "query.offset || 0"
+  }
+ },
+ "yunbei_sign": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/pointmall/user/sign",
+  "crypto": "xeapi",
+  "fields": {},
+  "checkToken": "v3"
+ },
+ "yunbei_task_finish": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/usertool/task/point/receive",
+  "crypto": "weapi",
+  "fields": {
+   "userTaskId": "query.userTaskId",
+   "depositCode": "query.depositCode || '0'"
+  }
+ },
+ "yunbei_task_finish_v1": {
+  "tier": "write",
+  "status": "ready",
+  "uri": "/api/ad/power/yunbei/distribution/create",
+  "crypto": "weapi",
+  "fields": {
+   "yunbeiAmount": "query.yunbeiAmount || 150"
+  }
+ },
+ "yunbei_task_list_v1": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/ad/power/yunbei/distribution/list",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "yunbei_task_recommend_song": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/ad/power/yunbei/distribution/recommend/song",
+  "crypto": "weapi",
+  "fields": {
+   "offset": "query.offset || 0",
+   "limit": "query.limit || 10"
+  }
+ },
+ "yunbei_tasks": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/usertool/task/list/all",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "yunbei_tasks_todo": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/usertool/task/todo/query",
+  "crypto": "weapi",
+  "fields": {}
+ },
+ "yunbei_today": {
+  "tier": "personal",
+  "status": "ready",
+  "uri": "/api/point/today/get",
+  "crypto": "weapi",
+  "fields": {}
+ }
+}
