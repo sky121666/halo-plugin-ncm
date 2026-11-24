@@ -20,7 +20,8 @@ class PageSettingTest {
         PageSetting s = new PageSetting(null, " ", null, null, null, null, null, null, null);
         assertFalse(s.open());
         assertFalse(s.searchOpen());
-        assertEquals("音乐", s.titleOrDefault());
+        assertEquals("网抑云", PageSetting.DEFAULT.titleOrDefault());
+        assertEquals("网抑云", s.titleOrDefault());
         assertEquals("", s.descriptionOrEmpty());
         assertEquals(50, s.size());
         assertEquals(20, s.searchLimit());

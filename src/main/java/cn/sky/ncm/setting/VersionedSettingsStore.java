@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
@@ -57,15 +58,21 @@ final class VersionedSettingsStore<T> {
     }
 
     Mono<Snapshot<T>> save(Long revision, T settings) {
+        return save(revision, settings, current -> Mono.empty());
+    }
+
+    Mono<Snapshot<T>> save(Long revision, T settings, Function<T, Mono<Void>> validate) {
         return required().flatMap(config -> {
-            requireOwnership(config);
-            if (!Objects.equals(revision, config.getMetadata().getVersion())) {
+            var current = snapshot(config);
+            if (!Objects.equals(revision, current.revision())) {
                 return Mono.error(conflict());
             }
-            var data = new LinkedHashMap<>(config.getData());
-            data.put(SETTINGS, JSON.writeValueAsString(settings));
-            config.setData(data);
-            return client.update(config).map(this::snapshot);
+            return validate.apply(current.settings()).then(Mono.defer(() -> {
+                var data = new LinkedHashMap<>(config.getData());
+                data.put(SETTINGS, JSON.writeValueAsString(settings));
+                config.setData(data);
+                return client.update(config).map(this::snapshot);
+            }));
         }).onErrorMap(OptimisticLockingFailureException.class, error -> conflict())
             .doOnNext(saved -> cached = cache());
     }
@@ -116,7 +123,7 @@ final class VersionedSettingsStore<T> {
             T value = JSON.readValue(json, type);
             return value == null ? defaults : value;
         } catch (RuntimeException error) {
-            throw new IllegalStateException("无法读取网易云音乐配置组 " + group);
+            throw new IllegalStateException("无法读取网抑云配置组 " + group);
         }
     }
 

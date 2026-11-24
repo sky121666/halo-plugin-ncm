@@ -17,16 +17,25 @@ import java.util.regex.Pattern;
  * @param searchPerMinute     每个 IP 每分钟最多搜索次数（1~600）
  * @param suggestEnabled      是否开启搜索联想（输入时的下拉提示）
  * @param suggestPerMinute    每个 IP 每分钟最多联想请求数（1~600）
+ * @param metadata            独立音乐页的图标和分享信息
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record PageSetting(Boolean enabled, String title, String description, String featuredPlaylistIds,
                           Integer pageSize, Boolean searchEnabled, Integer searchPerMinute,
-                          Boolean suggestEnabled, Integer suggestPerMinute) {
+                          Boolean suggestEnabled, Integer suggestPerMinute, NcmMusicPageMetadata metadata) {
+
+    public PageSetting(Boolean enabled, String title, String description, String featuredPlaylistIds,
+                       Integer pageSize, Boolean searchEnabled, Integer searchPerMinute,
+                       Boolean suggestEnabled, Integer suggestPerMinute) {
+        this(enabled, title, description, featuredPlaylistIds, pageSize, searchEnabled, searchPerMinute,
+            suggestEnabled, suggestPerMinute, null);
+    }
 
     static final Pattern ID = Pattern.compile("^\\d{1,20}$");
 
-    public static final PageSetting DEFAULT = new PageSetting(true, "音乐", "", "", 50, true, 20, true, 60);
-    public static final PageSetting CLOSED = new PageSetting(false, "音乐", "", "", 50, false, 20, false, 60);
+    public static final String DEFAULT_TITLE = "网抑云";
+    public static final PageSetting DEFAULT = new PageSetting(true, DEFAULT_TITLE, "", "", 50, true, 20, true, 60);
+    public static final PageSetting CLOSED = new PageSetting(false, DEFAULT_TITLE, "", "", 50, false, 20, false, 60);
 
     public boolean open() {
         return Boolean.TRUE.equals(enabled);
@@ -51,11 +60,15 @@ public record PageSetting(Boolean enabled, String title, String description, Str
     }
 
     public String titleOrDefault() {
-        return title == null || title.isBlank() ? "音乐" : title.strip();
+        return title == null || title.isBlank() ? DEFAULT_TITLE : title.strip();
     }
 
     public String descriptionOrEmpty() {
         return description == null ? "" : description.strip();
+    }
+
+    public NcmMusicPageMetadata metadataOrDefault() {
+        return metadata == null ? NcmMusicPageMetadata.DEFAULT : metadata;
     }
 
     public List<String> featuredIds() {

@@ -109,60 +109,15 @@ public class NcmGateway {
                 Map<String, String> query = p.query();
                 Map<String, UploadFile> files = p.files();
                 query.remove("cookie");
-                Mono<Identity> identity = debug ? Mono.just(Identity.anonymous()) : resolver.resolve(def.tier(), request, basic);
-                return identity.flatMap(id -> {
-                    NcmResponse limited = debug ? null : siteAccountLimit(def.name(), query, id, basic);
-                    return limited != null ? Mono.just(limited)
-                        : call(def, query, files, id, basic, !debug && request.method() == HttpMethod.GET);
-                });
+                Mono<Identity> identity = debug ? Mono.just(Identity.anonymous()) : resolver.resolve(def.tier());
+                return identity.flatMap(id -> call(def, query, files, id, basic,
+                    !debug && request.method() == HttpMethod.GET));
             })
             .flatMap(response -> debug ? respondDebug(response) : respond(response))
             .onErrorResume(DataBufferLimitException.class, e -> respond(NcmResponse.error(413,
                 "上传文件超过 " + adv.maxUploadBytes() / 1024 / 1024 + "MB 上限")))
             .onErrorResume(e -> !(e instanceof ResponseStatusException), e -> unexpected(name, e)));
         });
-    }
-
-    /** 借用站长账号时不开放的接口：下载地址（无损原文件）。 */
-    static final Set<String> SITE_BLOCKED = Set.of("song_download_url", "song_download_url_v1", "song_cloud_download");
-    /** 取播放地址时可以指定音质的接口。 */
-    static final Set<String> LEVEL_APIS = Set.of("song_url_v1", "song_url_v1_302");
-    static final Set<String> UP_TO_EXHIGH = Set.of("standard", "higher", "exhigh");
-
-    /**
-     * 访客在「接口管理 → 接口开放」的公开访问身份中借用站长账号时：
-     * 不开放下载接口；播放地址的音质最高为设置里的上限（默认 exhigh，即 320k），避免把站长的会员无损音源公开分享出去。
-     * 会直接修改 query；返回非 null 表示拒绝。
-     */
-    static NcmResponse siteAccountLimit(String api, Map<String, String> query, Identity id, BasicSetting basic) {
-        if (!"site".equals(id.kind())) {
-            return null;
-        }
-        if (SITE_BLOCKED.contains(api)) {
-            return NcmResponse.error(403, "下载接口不能借用站长账号调用");
-        }
-        String cap = basic.siteLevelCap();
-        if (LEVEL_APIS.contains(api)) {
-            query.put("level", capLevel(query.get("level"), cap));
-        } else if ("song_url".equals(api)) {
-            long max = "standard".equals(cap) ? 128_000 : 320_000;
-            long br;
-            try {
-                br = Long.parseLong(String.valueOf(query.getOrDefault("br", String.valueOf(max))).trim());
-            } catch (NumberFormatException e) {
-                br = max;
-            }
-            query.put("br", String.valueOf(Math.min(Math.max(br, 1), max)));
-        }
-        return null;
-    }
-
-    /** 把音质限制在 cap 以内：cap 为 standard 时只能 standard；为 exhigh 时可以 standard / higher / exhigh。 */
-    public static String capLevel(String level, String cap) {
-        if ("standard".equals(cap) || level == null || level.isBlank()) {
-            return "standard";
-        }
-        return UP_TO_EXHIGH.contains(level) ? level : "exhigh";
     }
 
     /** 插件内部异常（不是网易云返回的错误）：记录完整堆栈，返回 JSON 而不是 Halo 的通用 500 页面。 */
@@ -199,11 +154,11 @@ public class NcmGateway {
     Mono<Boolean> rateLimit(ServerRequest request, ApiDef def, AdvancedSetting adv) {
         String ip = clientIp(request, adv);
         if ("public".equals(def.tier())) {
-            return Mono.just(limiter.tryAcquire("ip:" + ip, adv.publicLimit()));
+            return Mono.fromSupplier(() -> limiter.tryAcquire("ip:" + ip, adv.publicLimit()));
         }
         return IdentityResolver.currentUsername()
             .map(u -> limiter.tryAcquire("user:" + u, adv.userLimit()))
-            .defaultIfEmpty(limiter.tryAcquire("ip:" + ip, adv.publicLimit()));
+            .switchIfEmpty(Mono.fromSupplier(() -> limiter.tryAcquire("ip:" + ip, adv.publicLimit())));
     }
 
     /** 访客 IP：只有请求来自可信代理时才看 X-Forwarded-For（从右往左取）/ X-Real-IP，见 {@link ClientIp}。 */
@@ -216,7 +171,7 @@ public class NcmGateway {
         RequestOptions options = new RequestOptions(def.crypto(), id.cookie(), null, setting.realIp(),
             setting.useRandomCnIp());
         boolean cacheable = isGet && "public".equals(def.tier()) && !def.name().startsWith("song_url")
-            && !"client".equals(id.kind()) && setting.cacheTtl() > 0;
+            && setting.cacheTtl() > 0;
         if (!cacheable) {
             return executor.execute(def, query, files, options);
         }

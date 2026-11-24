@@ -2,21 +2,24 @@ package cn.sky.ncm.gateway;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 
+import cn.sky.ncm.account.AccountService;
 import cn.sky.ncm.api.ApiRegistry;
 import cn.sky.ncm.api.OpenApis;
 import cn.sky.ncm.setting.BasicSetting;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import reactor.test.StepVerifier;
 
 class OpenScopeTest {
 
-    static BasicSetting basic(String scope, String extra, String cap) {
-        return new BasicSetting("site", "none", false, 300, "", false, scope, extra, cap);
+    static BasicSetting basic(String scope, String extra) {
+        return new BasicSetting(300, "", false, scope, extra);
     }
 
     @Test
@@ -26,8 +29,8 @@ class OpenScopeTest {
         assertTrue(d.apiOpen("song_url_v1"));
         assertFalse(d.apiOpen("comment"));
         assertFalse(d.apiOpen("listentogether_room_create"));
-        assertTrue(basic("all", "", "exhigh").apiOpen("comment"));
-        BasicSetting extra = basic("common", "comment, like\n<bad>", "exhigh");
+        assertTrue(basic("all", "").apiOpen("comment"));
+        BasicSetting extra = basic("common", "comment, like\n<bad>");
         assertEquals(Set.of("comment", "like"), extra.extraApiSet());
         assertTrue(extra.apiOpen("like"));
     }
@@ -43,32 +46,13 @@ class OpenScopeTest {
     }
 
     @Test
-    void siteAccountIsCapped() {
-        Identity site = new Identity("site", Map.of("MUSIC_U", "x"));
-        Map<String, String> q = new HashMap<>(Map.of("id", "1", "level", "jymaster"));
-        assertNull(NcmGateway.siteAccountLimit("song_url_v1", q, site, basic("common", "", "exhigh")));
-        assertEquals("exhigh", q.get("level"));
-        q.put("level", "higher");
-        NcmGateway.siteAccountLimit("song_url_v1_302", q, site, basic("common", "", "exhigh"));
-        assertEquals("higher", q.get("level"));
-        NcmGateway.siteAccountLimit("song_url_v1", q, site, basic("common", "", "standard"));
-        assertEquals("standard", q.get("level"));
-
-        Map<String, String> br = new HashMap<>(Map.of("id", "1", "br", "999000"));
-        NcmGateway.siteAccountLimit("song_url", br, site, basic("common", "", "exhigh"));
-        assertEquals("320000", br.get("br"));
-
-        assertEquals(403, NcmGateway.siteAccountLimit("song_download_url_v1", new HashMap<>(), site,
-            BasicSetting.DEFAULT).status());
-    }
-
-    @Test
-    void ownAccountsAreNotCapped() {
-        Map<String, String> q = new HashMap<>(Map.of("id", "1", "level", "hires"));
-        assertNull(NcmGateway.siteAccountLimit("song_url_v1", q, new Identity("user", Map.of()), BasicSetting.DEFAULT));
-        assertNull(NcmGateway.siteAccountLimit("song_download_url_v1", q, Identity.anonymous(), BasicSetting.DEFAULT));
-        assertEquals("hires", q.get("level"));
-        assertEquals("standard", NcmGateway.capLevel(null, "exhigh"));
-        assertEquals("exhigh", NcmGateway.capLevel("lossless", "exhigh"));
+    void publicReadsUseGuestIdentityEvenForSignedInUsers() {
+        var accounts = mock(AccountService.class);
+        var resolver = new IdentityResolver(accounts);
+        var viewer = new TestingAuthenticationToken("owner", null, "ROLE_super-role");
+        StepVerifier.create(resolver.resolve("public")
+                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(viewer)))
+            .expectNext(Identity.anonymous()).verifyComplete();
+        verifyNoInteractions(accounts);
     }
 }

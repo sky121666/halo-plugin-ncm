@@ -531,31 +531,6 @@ final class NcmVoMapper {
         return list;
     }
 
-    /** record_recent_song 的返回：{ data: { list: [{ playTime, data: song }] } }。 */
-    static List<PlayRecordVo> recent(JsonNode body, int limit) {
-        List<PlayRecordVo> list = new ArrayList<>();
-        for (JsonNode r : body.path("data").path("list")) {
-            if (list.size() >= limit) {
-                break;
-            }
-            JsonNode s = r.path("data").hasNonNull("id") ? r.path("data") : r.path("song");
-            if (s.hasNonNull("id")) {
-                long t = r.path("playTime").asLong(0);
-                list.add(PlayRecordVo.builder()
-                    .song(song(s, null))
-                    .playedAt(t > 0 ? Instant.ofEpochMilli(t) : null)
-                    .build());
-            }
-        }
-        return list;
-    }
-
-    /** recommend_songs 的返回：{ data: { dailySongs: [...] } }。 */
-    static List<SongVo> dailySongs(JsonNode body, int limit) {
-        List<SongVo> all = songList(body.path("data").path("dailySongs"), Map.of());
-        return all.subList(0, Math.min(limit, all.size()));
-    }
-
     // ---------- 工具 ----------
 
     static JsonNode first(JsonNode n, String a, String b) {

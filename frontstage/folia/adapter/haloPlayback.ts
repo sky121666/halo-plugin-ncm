@@ -5,31 +5,20 @@ import { clearPrefetchRuntime } from '../services/prefetchService';
 import { PlayerState, type SongResult } from '../types';
 import { useAudioSettingsStore } from '../stores/useAudioSettingsStore';
 import { usePlaybackStore } from '../stores/usePlaybackStore';
-import { haloSettings, isPrivateHaloSong, playbackPath, toSong } from './haloApi';
+import { haloSettings, haloTrackId, isPrivateHaloSong, toSong } from './haloApi';
 import { haloSessionChanges } from './HaloAccount';
+import {
+    canResumePlayback, forgetPlayback, isNewerPlaybackSession, playbackOwnership,
+    owningFoliaFrame, playbackTime, readPlaybackSession, rememberPlayback, type PlaybackTrack,
+} from './playbackSession';
 
 const prefsKey = 'ncm-player:prefs';
-const sessionKey = 'ncm-player:v1';
-const tabKey = 'ncm-player:tab';
-const maxTracks = 300;
-const sevenDays = 7 * 24 * 3600_000;
-const maxResumeAge = 60_000;
-const validId = /^\d{1,20}$/;
 
-function read(key: string, storage: 'localStorage' | 'sessionStorage' = 'localStorage') {
+function read(key: string) {
     try {
-        return window[storage].getItem(key);
+        return localStorage.getItem(key);
     } catch {
         return null;
-    }
-}
-
-function write(key: string, value: string | null, storage: 'localStorage' | 'sessionStorage' = 'localStorage') {
-    try {
-        if (value === null) window[storage].removeItem(key);
-        else window[storage].setItem(key, value);
-    } catch {
-        // 播放可在浏览器禁用存储或配额不足时继续。
     }
 }
 
@@ -60,81 +49,29 @@ export function applyHaloPlaybackPreferences() {
     });
 }
 
-interface SharedTrack {
-    id: string;
-    src: string;
-    title: string;
-    artist: string;
-    cover?: string;
-    durationMs?: number;
-}
-
-interface SharedSession {
-    v: 1;
-    queue: SharedTrack[];
-    index: number;
-    time: number;
-    duration: number;
-    playing: boolean;
-    collapsed: boolean;
-    tab: string;
-    at: number;
-}
-
-type SavedSession = SharedSession | { v: 1; closed: true; tab: string; at: number };
-
-const tabId = read(tabKey, 'sessionStorage') || Math.random().toString(36).slice(2);
-write(tabKey, tabId, 'sessionStorage');
-
-function safeTime(value: number) {
-    return Number.isFinite(value) ? Math.max(0, value) : 0;
-}
-
-function isNeteaseSnapshotTrack(track: SharedTrack) {
-    if (!track || typeof track.id !== 'string' || !validId.test(track.id) || typeof track.src !== 'string') return false;
-    try {
-        const source = new URL(track.src, location.origin);
-        return source.origin === location.origin && source.pathname === '/music/play/' + track.id;
-    } catch {
-        return false;
-    }
-}
-
 export function readHaloPlaybackSession() {
-    const saved = decode<SavedSession>(sessionKey);
-    if (saved?.v !== 1) return null;
+    const saved = readPlaybackSession();
+    if (!saved) return null;
     if ('closed' in saved) return 'closed' as const;
-    if (!Array.isArray(saved.queue) || !Number.isFinite(saved.at)
-        || Date.now() - saved.at > sevenDays) return null;
-    const selectedId = saved.queue[saved.index]?.id;
-    const queue = saved.queue.slice(0, maxTracks).filter(isNeteaseSnapshotTrack).map(track => toSong({
-        id: track.id,
-        name: String(track.title ?? ''),
-        artistNames: String(track.artist ?? ''),
-        coverUrl: typeof track.cover === 'string' && /^https?:\/\//.test(track.cover) ? track.cover : undefined,
-        durationMs: safeTime(track.durationMs ?? (track.id === selectedId ? saved.duration * 1000 : 0)),
+    const queue = saved.queue.map((track, index) => toSong({
+        id: track.id, name: track.title, artistNames: track.artist, coverUrl: track.cover,
+        durationMs: track.durationMs || (index === saved.index ? saved.duration * 1000 : 0),
     }));
-    const song = queue.find(item => item.id === selectedId);
-    if (!song) return null;
     return {
-        song, queue,
-        time: safeTime(saved.time),
-        autoplay: haloSettings.resume && saved.playing === true && saved.tab === tabId
-            && Date.now() - saved.at < maxResumeAge,
+        song: queue[saved.index], queue, time: saved.time,
+        autoplay: !owningFoliaFrame() && haloSettings.resume && canResumePlayback(saved),
     };
 }
 
-function snapshotTrack(song: SongResult) {
-    if (isPrivateHaloSong(song)) return null;
-    const { sourceRef } = song;
-    if (sourceRef?.kind !== 'online' || sourceRef.providerId !== 'netease' || !validId.test(sourceRef.mediaId)) return null;
+function snapshotTrack(song: SongResult): PlaybackTrack | null {
+    const id = haloTrackId(song);
+    if (!id || isPrivateHaloSong(song)) return null;
     return {
-        id: sourceRef.mediaId,
-        src: playbackPath(sourceRef.mediaId, useAudioSettingsStore.getState().audioQuality),
+        id,
         title: song.name,
         artist: song.artists.map(artist => artist.name).join(' / '),
-        cover: typeof song.album?.coverUrl === 'string' && /^https?:\/\//.test(song.album.coverUrl) ? song.album.coverUrl : '',
-        durationMs: safeTime(song.durationMs),
+        cover: song.album?.coverUrl,
+        durationMs: playbackTime(song.durationMs),
     };
 }
 
@@ -144,60 +81,50 @@ export function useHaloPlaybackSession(
     const pause = useRef(pausePlayback);
     pause.current = pausePlayback;
     useEffect(() => {
-        let channel: BroadcastChannel | null = null;
-        try {
-            if (typeof BroadcastChannel === 'function') channel = new BroadcastChannel('ncm-player');
-        } catch {
-            // 个别浏览器环境不提供跨标签页广播。
-        }
-        let ownsPlayback = true;
+        // Embedding can restore a paused selection before the parent makes a resume request.
+        // Acquire ownership on actual playback so that passive restore cannot clear that intent.
+        let ownsPlayback = !owningFoliaFrame();
+        let departing = false;
         let privateMarkerWritten = false;
         let lastWrittenAt = 0;
+        const ownership = playbackOwnership(() => {
+            ownsPlayback = false;
+            if (audioRef.current && !audioRef.current.paused) pause.current();
+        });
         const save = (force: boolean) => {
             const media = audioRef.current;
-            if (!ownsPlayback || !media || media.readyState < 1) return;
+            if (!ownsPlayback || departing) return;
             const now = Date.now();
             if (!force && now - lastWrittenAt < 2000) return;
             const { currentSong, playQueue } = usePlaybackStore.getState();
             if (currentSong && isPrivateHaloSong(currentSong)) {
                 // 私人队列随当前文档播放，跨文档只保存无曲目内容的会话标记。
                 if (!privateMarkerWritten) {
-                    write(sessionKey, JSON.stringify({ v: 1, closed: true, tab: tabId, at: now }));
+                    forgetPlayback();
                     privateMarkerWritten = true;
                     lastWrittenAt = now;
                 }
                 return;
             }
+            if (!media || media.readyState < 1) return;
             privateMarkerWritten = false;
             const selected = currentSong && snapshotTrack(currentSong);
             if (!selected) return;
-            let queue = playQueue.slice(0, maxTracks).flatMap(track => {
-                const stored = snapshotTrack(track);
-                return stored ? [stored] : [];
-            });
+            const queue = playQueue.map(snapshotTrack).filter(track => track !== null);
             let index = queue.findIndex(track => track.id === selected.id);
             if (index < 0) {
-                queue = [selected, ...queue].slice(0, maxTracks);
+                queue.unshift(selected);
                 index = 0;
             }
-            const value: SharedSession = {
-                v: 1, queue, index, time: safeTime(media.currentTime), duration: safeTime(media.duration),
-                playing: !media.paused && !media.ended, collapsed: true, tab: tabId, at: now,
-            };
-            write(sessionKey, JSON.stringify(value));
-            lastWrittenAt = now;
-        };
-        if (channel) channel.onmessage = event => {
-            if (event.data?.t === 'play' && event.data.tab !== tabId) {
-                ownsPlayback = false;
-                if (audioRef.current && !audioRef.current.paused) pause.current();
-            }
+            lastWrittenAt = rememberPlayback({
+                queue, index, time: media.currentTime, duration: media.duration, playing: !media.paused && !media.ended,
+            });
         };
         const onMedia = (event: Event) => {
-            if (event.target !== audioRef.current) return;
+            if (event.target !== audioRef.current || departing) return;
             if (event.type === 'playing') {
                 ownsPlayback = true;
-                channel?.postMessage({ t: 'play', tab: tabId });
+                ownership.claim();
             }
             save(event.type !== 'timeupdate');
         };
@@ -229,13 +156,14 @@ export function useHaloPlaybackSession(
                 if (privateTransition) usePlaybackStore.setState({ transitionDisplay: null });
             }
         };
-        const onHide = () => save(true);
-        const onVisibility = () => { if (document.visibilityState === 'hidden') onHide(); };
+        const onHide = () => { save(true); departing = true; };
+        const onVisibility = () => { if (document.visibilityState === 'hidden') save(true); };
         const onShow = (event: PageTransitionEvent) => {
+            departing = false;
             if (!event.persisted) return;
             // 同一标签页在另一文档上写过进度时，用它重新建立本页的会话。
-            const saved = decode<SavedSession>(sessionKey);
-            if (saved?.tab === tabId && saved.at > lastWrittenAt) location.reload();
+            const saved = readPlaybackSession();
+            if (saved && isNewerPlaybackSession(saved, lastWrittenAt)) location.reload();
         };
         const events = ['playing', 'pause', 'seeked', 'timeupdate'] as const;
         events.forEach(type => document.addEventListener(type, onMedia, true));
@@ -249,7 +177,7 @@ export function useHaloPlaybackSession(
             window.removeEventListener('pagehide', onHide);
             window.removeEventListener('pageshow', onShow);
             haloSessionChanges.removeEventListener('identitychange', onIdentityChange);
-            channel?.close();
+            ownership.close();
         };
     }, [audioRef, abortTransition]);
 }

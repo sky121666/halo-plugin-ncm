@@ -56,7 +56,7 @@ public class AccountService {
     static String description(String accountName) {
         String who = SITE.equals(accountName) ? "站长账号"
             : "用户 " + (accountName.startsWith("user-") ? accountName.substring(5) : accountName) + " 的账号";
-        return "网易云音乐插件：" + who + "的登录 Cookie（由插件管理，值已加密，请勿手动修改）";
+        return "网易云登录 Cookie（" + who + "，由网抑云加密管理）";
     }
 
     public Mono<NcmAccount> find(String name) {

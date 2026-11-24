@@ -5,5 +5,15 @@ metadata:
 spec:
   extensionPointName: template-head-processor
   className: cn.sky.ncm.page.CardHeadProcessor
-  displayName: 网易云音乐文章插歌卡片
+  displayName: 网抑云文章音乐卡片
   description: 在文章页和独立页面加入插歌卡片的样式和脚本，把文章里的网易云链接渲染成可以播放的卡片
+---
+apiVersion: plugin.halo.run/v1alpha1
+kind: ExtensionDefinition
+metadata:
+  name: plugin-ncm-mini-player-head
+spec:
+  extensionPointName: template-head-processor
+  className: cn.sky.ncm.page.MiniPlayerHeadProcessor
+  displayName: 网抑云站点小播放器
+  description: 启用后向主题页面加载站点小播放器。

@@ -111,6 +111,17 @@ public class FeaturedService {
         return ensureMigrated().then(Mono.defer(this::all));
     }
 
+    public Flux<NcmFeaturedPlaylist> publishedPlaylists() {
+        return list().flatMapIterable(rows -> rows).filter(FeaturedService::visible);
+    }
+
+    public Mono<NcmFeaturedPlaylist> publishedPlaylist(String playlistId) {
+        return Mono.justOrEmpty(playlistId).filter(FeaturedInput::validId)
+            .flatMap(id -> client.fetch(NcmFeaturedPlaylist.class,
+                NcmFeaturedPlaylist.nameOf(FeaturedInput.trimZeros(id))))
+            .filter(FeaturedService::visible);
+    }
+
     public Mono<NcmFeaturedPlaylist> get(String name) {
         return client.fetch(NcmFeaturedPlaylist.class, name).filter(FeaturedService::alive)
             .switchIfEmpty(Mono.error(FeaturedService::notFound));

@@ -1,10 +1,13 @@
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { basename, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const directory = fileURLToPath(new URL('./', import.meta.url));
+const playbackSession = resolve(directory, '../mini-player/playbackSession.ts');
+const appearance = resolve(directory, '../mini-player/appearance.ts');
+const brandMark = resolve(directory, '../../src/main/resources/static/brand-mark.png');
 const { repository, revision, sha256 } = JSON.parse(readFileSync(join(directory, 'upstream.json'), 'utf8'));
 const build = resolve(directory, '../../build/folia');
 const cache = join(build, 'downloads');
@@ -39,7 +42,10 @@ try {
     mkdirSync(project);
     run('tar', ['-xzf', archive, '--strip-components=1', '-C', project], work);
     run('patch', ['-p1', '--batch', '--forward', '-i', join(directory, 'upstream.patch')], project);
+    cpSync(brandMark, join(project, 'src/assets/providers/netease.png'));
     cpSync(join(directory, 'adapter'), join(project, 'src/halo'), { recursive: true });
+    cpSync(playbackSession, join(project, 'src/halo/playbackSession.ts'));
+    cpSync(appearance, join(project, 'src/halo/appearance.ts'));
     const modelSource = resolve(directory, '../../ui/src/api/generated/models');
     const models = join(work, 'api-models');
     mkdirSync(models);
@@ -82,6 +88,8 @@ try {
         'Corresponding upstream source: ' + upstream,
         'SHA-256: ' + sha256,
         'Extract the upstream archive, apply upstream.patch with patch -p1, and copy adapter into src/halo.',
+        'Copy brand-mark.png to src/assets/providers/netease.png for the Halo build.',
+        'Copy playbackSession.ts and appearance.ts into src/halo for playback and appearance integration.',
         'Copy tests into test/unit/halo for the Halo configuration sync checks.',
         'Copy api-models into src/halo/generated to compile against the plugin OpenAPI types.',
         'Build with Node.js 24 and npm ci, then npm run build:web with FOLIA_BASE_PATH=' + base,
@@ -90,6 +98,8 @@ try {
     ].join('\n'));
     run('tar', ['-czf', join(source, 'halo-adaptation.tar.gz'),
         '-C', directory, 'upstream.json', 'upstream.patch', 'adapter', 'tests', 'build.mjs',
+        '-C', resolve(directory, '../mini-player'), 'playbackSession.ts', 'appearance.ts',
+        '-C', dirname(brandMark), basename(brandMark),
         '-C', work, 'api-models',
         '-C', notices, 'LICENSE', 'SOURCE.txt'], work);
     cpSync(join(notices, 'LICENSE'), join(source, 'LICENSE.txt'));

@@ -1,7 +1,6 @@
 package cn.sky.ncm.finder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -33,7 +32,7 @@ class NcmFinderImplTest {
         StepVerifier.create(finder.siteDailyRecommend()).verifyComplete();
         StepVerifier.create(finder.siteWeekRank()).verifyComplete();
         StepVerifier.create(finder.siteProfile()).verifyComplete();
-        verify(source, never()).call(anyString(), anyMap(), any());
+        verify(source, never()).call(anyString(), anyMap());
         verify(accounts, never()).find(anyString());
     }
 
@@ -41,18 +40,7 @@ class NcmFinderImplTest {
     void settingErrorFailsClosed() {
         when(settings.finder()).thenReturn(Mono.error(new IllegalStateException("boom")));
         StepVerifier.create(finder.sitePlaylists()).verifyComplete();
-        verify(source, never()).call(anyString(), anyMap(), any());
-    }
-
-    @Test
-    void siteDataUsesSiteIdentityWhenOpen() throws Exception {
-        when(settings.finder()).thenReturn(Mono.just(new FinderSetting(false, false, true, false, false, 600)));
-        var body = new ObjectMapper().readTree(
-            "{\"data\":{\"list\":[{\"playTime\":1700000000000,\"data\":{\"id\":1,\"name\":\"a\",\"ar\":[],\"al\":{}}}]}}");
-        when(source.call(eq("record_recent_song"), anyMap(), eq(FinderSource.As.SITE))).thenReturn(Mono.just(body));
-        StepVerifier.create(finder.siteRecentSongs(5))
-            .assertNext(r -> assertEquals("1", r.getSong().getId()))
-            .verifyComplete();
+        verify(source, never()).call(anyString(), anyMap());
     }
 
     @Test
@@ -61,13 +49,13 @@ class NcmFinderImplTest {
         StepVerifier.create(finder.playlist("1 or 1=1")).verifyComplete();
         StepVerifier.create(finder.songs("x,y")).verifyComplete();
         assertEquals("", finder.playUrl("../etc"));
-        verify(source, never()).call(anyString(), anyMap(), any());
+        verify(source, never()).call(anyString(), anyMap());
     }
 
     @Test
     void songsKeepRequestedOrder() throws Exception {
         var body = new ObjectMapper().readTree("{\"songs\":[{\"id\":2,\"name\":\"b\"},{\"id\":1,\"name\":\"a\"}]}");
-        when(source.call(eq("song_detail"), eq(Map.of("ids", "1,2")), eq(FinderSource.As.PUBLIC)))
+        when(source.call(eq("song_detail"), eq(Map.of("ids", "1,2"))))
             .thenReturn(Mono.just(body));
         StepVerifier.create(finder.songs(" 1, 2 ,1"))
             .assertNext(s -> assertEquals("1", s.getId()))
@@ -85,8 +73,8 @@ class NcmFinderImplTest {
         var albums = mapper.readTree("""
             {"hotAlbums":[{"id":7,"name":"Album","size":8}],"more":false}
             """);
-        when(source.call("artist_songs", page, FinderSource.As.ANONYMOUS)).thenReturn(Mono.just(songs));
-        when(source.call("artist_album", page, FinderSource.As.ANONYMOUS)).thenReturn(Mono.just(albums));
+        when(source.call("artist_songs", page)).thenReturn(Mono.just(songs));
+        when(source.call("artist_album", page)).thenReturn(Mono.just(albums));
 
         StepVerifier.create(finder.foliaArtist("1", "songs", 50, 2))
             .assertNext(result -> {

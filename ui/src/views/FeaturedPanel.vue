@@ -21,10 +21,9 @@ import {
 } from '@halo-dev/components'
 import { utils } from '@halo-dev/ui-shared'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
 import { ncmConsoleApiClient, NCM_REQUEST_HEADER } from '@/api'
 import type { NcmFeaturedItem, NcmFeaturedPreview, NcmFeaturedTrack } from '@/api/generated'
-import { musicPageSettingsRoute, musicPageUrl } from '@/consoleNavigation'
+import { miniPlayerSettingsRoute, musicPageUrl } from '@/consoleNavigation'
 import {
   errorText,
   estimateLabel,
@@ -48,7 +47,7 @@ const EDIT_FORM_ID = 'ncm-featured-edit-metadata'
 const featuredApi = ncmConsoleApiClient.featuredPlaylist
 const writeOptions = { headers: { [NCM_REQUEST_HEADER]: '1' } }
 const ACTIONS = {
-  publish: { method: 'publishNcmFeaturedPlaylist', message: '已发布' },
+  publish: { method: 'publishNcmFeaturedPlaylist', message: '歌单已发布到音乐页' },
   unpublish: { method: 'unpublishNcmFeaturedPlaylist', message: '已下架' },
   check: { method: 'checkNcmFeaturedPlaylist', message: '已重新核对' },
 } as const
@@ -201,7 +200,7 @@ async function save(publish: boolean) {
       writeOptions,
     )
     replaceItem(item)
-    Toast.success(publish ? '已发布' : '已保存为草稿')
+    Toast.success(publish ? '歌单已发布到音乐页' : '已保存为草稿')
     closeAdd()
   } catch (e) {
     const msg = errorText(e, '保存失败')
@@ -385,28 +384,7 @@ onBeforeUnmount(stopAudio)
 </script>
 
 <template>
-  <section class="min-w-0 max-w-3xl" aria-labelledby="ncm-featured-title">
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <h2 id="ncm-featured-title" class="font-medium">精选歌单</h2>
-      <nav aria-label="精选歌单相关入口" class="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-        <RouterLink
-          v-if="canEditSettings"
-          :to="musicPageSettingsRoute"
-          class="text-gray-700 underline underline-offset-4"
-        >
-          音乐页设置
-        </RouterLink>
-        <a
-          :href="musicPageUrl"
-          target="_blank"
-          rel="noopener"
-          class="text-gray-700 underline underline-offset-4"
-        >
-          查看音乐页
-        </a>
-      </nav>
-    </div>
-
+  <section class="min-w-0 max-w-3xl" aria-labelledby="ncm-featured-list-title">
     <VModal v-model:visible="addVisible" title="添加精选歌单" :width="720" :layer-closable="false">
       <div v-if="adding">
         <div class="ncm-add__row">
@@ -594,10 +572,16 @@ onBeforeUnmount(stopAudio)
     <VCard role="region" class="min-w-0" aria-labelledby="ncm-featured-list-title" :aria-busy="loading">
       <template #header>
         <div class="flex min-h-12 w-full flex-wrap items-center justify-between gap-2 px-4 py-2">
-          <h3 id="ncm-featured-list-title" class="font-medium">歌单列表</h3>
-          <VButton type="secondary" size="sm" :disabled="listLocked" @click="openAdd">
-            添加歌单
-          </VButton>
+          <div class="min-w-0">
+            <h2 id="ncm-featured-list-title" class="font-medium">精选歌单</h2>
+            <p class="text-sm text-gray-600">已发布的歌单展示在音乐页，也可供站点小播放器使用。</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <a :href="musicPageUrl" target="_blank" rel="noopener" class="text-sm underline underline-offset-4">
+              查看音乐页
+            </a>
+            <VButton type="secondary" size="sm" :disabled="listLocked" @click="openAdd">添加歌单</VButton>
+          </div>
         </div>
       </template>
       <VAlert
@@ -619,8 +603,8 @@ onBeforeUnmount(stopAudio)
         message="添加网易云歌单后，可保存草稿或发布到音乐页。"
       />
       <template v-else-if="items.length">
-        <p class="mb-3 text-sm text-gray-600">
-          已发布的歌单按列表顺序展示。可在「更多」调整顺序，或聚焦条目后按 Alt + ↑ / ↓。
+        <p v-if="items.length > 1" class="mb-3 text-sm text-gray-600">
+          可在「更多」调整展示顺序，或聚焦条目后按 Alt + ↑ / ↓。
         </p>
         <VEntityContainer class="ncm-featured-entries">
           <VEntity
@@ -650,6 +634,15 @@ onBeforeUnmount(stopAudio)
               <VEntityField>
                 <template #description>
                   <div class="ncm-row__actions">
+                    <VButton
+                      v-if="canEditSettings && item.published && item.state === 'ok'"
+                      size="sm"
+                      :disabled="listLocked"
+                      :route="miniPlayerSettingsRoute(item.playlistId)"
+                      :aria-label="`配置小播放器 ${item.displayTitle}`"
+                    >
+                      配置小播放器
+                    </VButton>
                     <VButton size="sm" :disabled="listLocked" @click="edit(item)">编辑展示</VButton>
                     <VButton
                       v-if="!item.published"

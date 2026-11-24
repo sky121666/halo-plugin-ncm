@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "groups": {
+    "wide": {"x": "range:0:1", "y": "range:0:1"},
+    "compact": {"x": "range:0:1", "y": "range:0:1"}
+  },
+  "personalOnly": []
+}

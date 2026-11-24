@@ -137,7 +137,7 @@ onBeforeUnmount(() => clearTimeout(timer))
 <template>
   <VModal
     ref="modal"
-    :title="editing ? '修改网易云音乐卡片' : '插入网易云音乐卡片'"
+    :title="editing ? '编辑音乐卡片' : '插入音乐卡片'"
     :width="600"
     mount-to-body
     @close="emit('close')"

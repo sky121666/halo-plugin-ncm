@@ -28,7 +28,7 @@ public class DeviceStore {
     public static final String NAME = "default";
     public static final String SECRET_NAME = "ncm-device-default";
     static final String PURPOSE = "device";
-    static final String DESCRIPTION = "网易云音乐插件：游客身份和 xeapi 会话密钥（由插件管理，值已加密，请勿手动修改）";
+    static final String DESCRIPTION = "网抑云管理的游客身份和 xeapi 会话密钥（已加密）";
     static final String K_ANONYMOUS = "anonymousToken";
     static final String K_XEAPI_SK = "xeapiSk";
     static final String K_XEAPI_SESSION = "xeapiSessionKey";

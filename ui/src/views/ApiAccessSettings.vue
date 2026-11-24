@@ -13,6 +13,7 @@ import {
 } from '@/consoleNavigation'
 
 const formId = 'ncm-api-access-settings'
+const title = '接口开放'
 const api = ncmConsoleApiClient.apiAccessSettings
 const route = useRoute()
 const requestOptions = ref<HTMLDetailsElement>()
@@ -51,12 +52,12 @@ async function save() {
       },
     })
     form.value = result.data
-    Toast.success('已保存接口设置')
+    Toast.success(`已保存${title}`)
   } catch (error) {
     conflict.value = isAxiosError(error) && error.response?.status === 409
     saveError.value = conflict.value
-      ? '接口设置已在别处更新，本次未保存。'
-      : '接口设置保存失败，请重试。'
+      ? `${title}已在别处更新，请载入最新设置。`
+      : `${title}保存失败，请重试。`
   } finally {
     saving.value = false
   }
@@ -73,21 +74,27 @@ watchPostEffect(() => {
 </script>
 
 <template>
-  <section class="max-w-xl" aria-label="接口开放">
+  <section class="max-w-xl" :aria-label="title">
     <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-      <h2 class="font-medium">接口开放</h2>
-      <RouterLink
-        :to="pluginSettingsRoute(networkSettingsTabId)"
-        class="text-sm text-gray-700 underline underline-offset-4"
+      <h2 class="font-medium">{{ title }}</h2>
+      <nav
+
+        aria-label="接口相关设置"
+        class="flex flex-wrap gap-x-3 gap-y-1 text-sm"
       >
-        网络与限流
-      </RouterLink>
+        <RouterLink
+          :to="pluginSettingsRoute(networkSettingsTabId)"
+          class="text-gray-700 underline underline-offset-4"
+        >
+          网络与限流
+        </RouterLink>
+      </nav>
     </div>
     <p class="mb-4 mt-1 text-sm text-gray-600">
-      设置通用接口的开放范围和公开播放身份。调用通用接口时仍校验 Halo 权限。
+      公开读取使用游客身份。个人读取与写入使用当前 Halo 用户的网易云绑定。
     </p>
     <VLoading v-if="loading" />
-    <VAlert v-else-if="failed" type="error" title="接口设置读取失败" :closable="false">
+    <VAlert v-else-if="failed" type="error" :title="`${title}读取失败`" :closable="false">
       <template #actions><VButton size="sm" @click="load">重试</VButton></template>
     </VAlert>
     <FormKit
@@ -98,7 +105,10 @@ watchPostEffect(() => {
       :disabled="saving"
       @submit="save"
     >
-      <fieldset class="mb-4 min-w-0 rounded-md border border-gray-200 px-3 pb-3 pt-2">
+      <fieldset
+
+        class="mb-4 min-w-0 rounded-md border border-gray-200 px-3 pb-3 pt-2"
+      >
         <legend class="px-1 text-sm font-medium">通用接口</legend>
         <FormKit
           v-model="form.settings.apiScope"
@@ -128,35 +138,8 @@ watchPostEffect(() => {
         />
       </fieldset>
 
-      <fieldset class="mb-4 min-w-0 rounded-md border border-gray-200 px-3 pb-3 pt-2">
-        <legend class="px-1 text-sm font-medium">公开访问身份</legend>
-        <FormKit
-          v-model="form.settings.publicIdentity"
-          type="toggle"
-          name="publicIdentity"
-          label="网易云身份"
-          help="用于公开接口、主题公开数据和未绑定访客的播放。站长账号未绑定时使用游客身份。"
-          render-type="text"
-          :options="[
-            { label: '游客身份', render: '游客身份', value: 'anonymous' },
-            { label: '站长账号', render: '站长账号', value: 'site' },
-          ]"
-        />
-        <FormKit
-          v-show="form.settings.publicIdentity === 'site'"
-          v-model="form.settings.siteMaxLevel"
-          type="toggle"
-          name="siteMaxLevel"
-          label="借用站长账号的音质上限"
-          render-type="text"
-          :options="[
-            { label: '标准 128k', render: '标准 128k', value: 'standard' },
-            { label: '极高 320k', render: '极高 320k', value: 'exhigh' },
-          ]"
-        />
-      </fieldset>
-
       <details
+
         :id="apiRequestOptionsId"
         ref="requestOptions"
         class="mb-4 rounded-md border border-gray-200 px-3 py-2"
@@ -171,13 +154,6 @@ watchPostEffect(() => {
           :min="0"
           validation="required|min:0"
           help="适用于可缓存的公开读取请求。0 表示关闭。"
-        />
-        <FormKit
-          v-model="form.settings.allowClientCookie"
-          type="switch"
-          name="allowClientCookie"
-          label="接受调用方的网易云 Cookie"
-          help="通过 X-NCM-Cookie 传入，仅用于本次通用接口调用。"
         />
         <FormKit
           v-model="form.settings.realIp"
@@ -199,9 +175,9 @@ watchPostEffect(() => {
           <VButton size="sm" @click="load">载入最新设置</VButton>
         </template>
       </VAlert>
-      <VButton type="secondary" :loading="saving" :disabled="conflict" @click="submitForm(formId)"
-        >保存接口设置</VButton
-      >
+      <VButton type="secondary" :loading="saving" :disabled="conflict" @click="submitForm(formId)">
+        保存接口设置
+      </VButton>
     </FormKit>
   </section>
 </template>

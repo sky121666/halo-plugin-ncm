@@ -1,4 +1,5 @@
 import policy from './foliaConfigPolicy.json';
+import { legacyColorPreference } from './appearance';
 
 export type ConfigValue = null | boolean | number | string | ConfigValue[] | { [key: string]: ConfigValue };
 export type ConfigGroup = Record<string, ConfigValue>;
@@ -73,13 +74,24 @@ export function selectConfig(value: unknown, site = false): ConfigDocument {
         }
         if (Object.keys(fields).length) result[group] = fields;
     }
+    const legacyPreference = legacyColorPreference(result.visual?.followSystemTheme, result.appearance?.daylight);
+    if (legacyPreference && !result.appearance?.colorScheme) {
+        result.appearance = { ...result.appearance, colorScheme: legacyPreference };
+    }
+    // Keep a single preference when diffing and overlaying site, device and profile settings.
+    // A legacy daylight flag must not reappear on its own in an incremental restore.
+    if (result.appearance) delete result.appearance.daylight;
+    if (result.visual) {
+        delete result.visual.followSystemTheme;
+        if (!Object.keys(result.visual).length) delete result.visual;
+    }
     return result;
 }
 
 export function overlayConfig(...documents: (ConfigDocument | null | undefined)[]): ConfigDocument {
     const result: ConfigDocument = {};
     for (const document of documents) {
-        for (const [group, fields] of Object.entries(document ?? {})) {
+        for (const [group, fields] of Object.entries(selectConfig(document))) {
             result[group] = { ...result[group], ...fields };
         }
     }

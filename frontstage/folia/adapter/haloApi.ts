@@ -11,6 +11,8 @@ export type HaloEntry = HaloPageEntry | { type: HaloCollectionType; path: string
 
 export const haloSettings: {
     title: string;
+    seoTitle: string;
+    icon: string;
     description: string;
     search: boolean;
     suggest: boolean;

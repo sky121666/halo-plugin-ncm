@@ -20,6 +20,7 @@ import { useTypographySettingsStore } from '../stores/useTypographySettingsStore
 import { useVideoLayerSettingsStore } from '../stores/useVideoLayerSettingsStore';
 import { useVisualizerSettingsStore } from '../stores/useVisualizerSettingsStore';
 import type { DualTheme, ThemeMode } from '../types';
+import { legacyColorPreference, musicColorPreference } from './appearance';
 import { selectConfig, type ConfigDocument, type ConfigGroup, type ConfigValue } from './haloConfigDocument';
 
 export interface ConfigDriver {
@@ -56,7 +57,7 @@ export function createFoliaConfigDriver(getTheme: () => FoliaThemeDriver): Confi
                 appearance: {
                     mode: theme.bgMode,
                     palette: theme.customTheme ?? null,
-                    daylight: colors.followSystemTheme ? undefined : colors.isDaylight,
+                    colorScheme: colors.colorSchemePreference,
                 },
                 playback: { ...useAudioSettingsStore.getState(), ...useAutomixSettingsStore.getState(),
                     replayGainMode: usePlaybackStore.getState().replayGainMode },
@@ -76,9 +77,9 @@ export function createFoliaConfigDriver(getTheme: () => FoliaThemeDriver): Confi
             const theme = getTheme();
             const colors = useThemeSettingsStore.getState();
             const appearance = config.appearance;
-            const follow = config.visual?.followSystemTheme;
-            if (typeof appearance?.daylight === 'boolean') colors.setDaylightPreference(appearance.daylight);
-            if (typeof follow === 'boolean') colors.setFollowSystemTheme(follow);
+            const preference = musicColorPreference(appearance?.colorScheme)
+                ?? legacyColorPreference(config.visual?.followSystemTheme, appearance?.daylight);
+            if (preference) colors.setColorSchemePreference(preference);
             if (appearance && ('mode' in appearance || 'palette' in appearance)) {
                 theme.restoreProfileTheme((appearance.mode ?? theme.bgMode) as ThemeMode,
                     ('palette' in appearance ? appearance.palette : theme.customTheme) as DualTheme | null);

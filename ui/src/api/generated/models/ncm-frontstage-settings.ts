@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { NcmMusicPageMetadata } from './ncm-music-page-metadata';
 
 /**
  * 
@@ -32,6 +35,12 @@ export interface NcmFrontstageSettings {
      * @memberof NcmFrontstageSettings
      */
     'enabled': boolean;
+    /**
+     *
+     * @type {NcmMusicPageMetadata}
+     * @memberof NcmFrontstageSettings
+     */
+    'metadata'?: NcmMusicPageMetadata;
     /**
      * 
      * @type {string}
@@ -74,18 +83,6 @@ export interface NcmFrontstageSettings {
      * @memberof NcmFrontstageSettings
      */
     'siteRank': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof NcmFrontstageSettings
-     */
-    'siteRecent': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof NcmFrontstageSettings
-     */
-    'siteRecommend': boolean;
     /**
      * 
      * @type {boolean}

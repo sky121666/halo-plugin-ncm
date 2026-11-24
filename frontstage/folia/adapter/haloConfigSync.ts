@@ -98,9 +98,10 @@ export class HaloConfigSync {
         this.driver = driver;
         const current = driver.capture();
         const baseline = readLocal<ConfigDocument>('baseline');
-        // Older baselines predate this portable preference. Preserve the existing browser choice.
+        // Older baselines can lack portable preferences added after the initial capture.
         this.base = baseline
-            ? overlayConfig(selectConfig({ playback: { enableMediaCache: current.playback?.enableMediaCache } }),
+            ? overlayConfig(selectConfig({ playback: { enableMediaCache: current.playback?.enableMediaCache },
+                appearance: { colorScheme: current.appearance?.colorScheme } }),
                 selectConfig(baseline))
             : current;
         this.guest = selectConfig(readLocal<ConfigDocument>('guest') ?? (!baseline ? legacyPlaybackOverride(current) : {}));

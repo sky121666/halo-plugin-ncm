@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import cn.sky.ncm.api.ApiDef;
@@ -24,10 +25,15 @@ import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import java.net.InetSocketAddress;
 import org.springframework.http.HttpMethod;
+import org.springframework.mock.web.reactive.function.server.MockServerRequest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 class NcmGatewayDebugTest {
 
@@ -75,6 +81,18 @@ class NcmGatewayDebugTest {
         verify(executor).execute(any(ApiDef.class), anyMap(), anyMap(), options.capture());
         assertThat(options.getValue().cookie()).isEmpty();
         verifyNoInteractions(resolver, cache);
+    }
+
+    @Test
+    void authenticatedPersonalTrafficDoesNotConsumeTheSharedIpBucket() {
+        var request = MockServerRequest.builder().remoteAddress(new InetSocketAddress("192.0.2.12", 1234)).build();
+        var auth = UsernamePasswordAuthenticationToken.authenticated("reader", "unused", List.of());
+        when(limiter.tryAcquire("user:reader", AdvancedSetting.DEFAULT.userLimit())).thenReturn(true);
+        StepVerifier.create(gateway.rateLimit(request, definition("user_detail", "personal"), AdvancedSetting.DEFAULT)
+            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth))).expectNext(true).verifyComplete();
+
+        verify(limiter).tryAcquire("user:reader", AdvancedSetting.DEFAULT.userLimit());
+        verifyNoMoreInteractions(limiter);
     }
 
     private static ApiDef definition(String name, String tier) {

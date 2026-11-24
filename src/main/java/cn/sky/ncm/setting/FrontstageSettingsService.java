@@ -55,7 +55,7 @@ public class FrontstageSettingsService {
             }
             return store.read().flatMap(stored -> {
                 // 保留旧播放器字段用于兼容与回滚。站点播放偏好由独立发布接口写入。
-                var settings = request.settings().withLegacyPlaybackDefaults(stored.settings());
+                var settings = request.settings().withStoredDefaults(stored.settings());
                 settings.validateForSave();
                 return store.save(request.revision(), settings).map(this::snapshot);
             });
@@ -108,6 +108,6 @@ public class FrontstageSettingsService {
 
     private Mono<ConfigMap> technicalConfig() {
         return client.fetch(ConfigMap.class, ProxySettings.CONFIG)
-            .switchIfEmpty(Mono.error(new IllegalStateException("网易云音乐配置资源尚未初始化")));
+            .switchIfEmpty(Mono.error(new IllegalStateException("网抑云配置资源尚未初始化")));
     }
 }

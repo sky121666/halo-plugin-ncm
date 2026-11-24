@@ -12,6 +12,7 @@ api/console-api-ncm-halo-run-v1alpha1-featured-playlist-api.ts
 api/console-api-ncm-halo-run-v1alpha1-frontstage-settings-api.ts
 api/console-api-ncm-halo-run-v1alpha1-guest-status-api.ts
 api/console-api-ncm-halo-run-v1alpha1-site-account-api.ts
+api/console-api-ncm-halo-run-v1alpha1-tool-settings-api.ts
 api/uc-api-ncm-halo-run-v1alpha1-binding-api.ts
 api/uc-api-ncm-halo-run-v1alpha1-me-api.ts
 base.ts
@@ -67,9 +68,15 @@ models/ncm-me-song.ts
 models/ncm-me-subscription-result.ts
 models/ncm-me-tracks-request.ts
 models/ncm-me-tracks-result.ts
+models/ncm-mini-player-playlist-choice.ts
+models/ncm-mini-player-settings.ts
+models/ncm-music-page-metadata.ts
 models/ncm-my-config.ts
 models/ncm-qr-confirm-request.ts
 models/ncm-qr-key.ts
+models/ncm-tool-ai-settings.ts
+models/ncm-tool-config.ts
+models/ncm-tool-settings.ts
 models/palette.ts
 models/playback-report-request.ts
 models/remove-operation.ts

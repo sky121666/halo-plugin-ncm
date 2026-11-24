@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
  *   <li>limit 默认值见各方法，最大 200</li>
  *   <li>查询缓存可在「网络与限流」调整，默认 600 秒。请避免在 th:each 里逐条查询。</li>
  *   <li>公开数据使用「接口开放」设置的网易云身份。site 开头的方法需要站长已绑定账号，
- *       并在「工具 → 网易云音乐 → 音乐页设置」中启用相应内容。</li>
+ *       并在「网抑云 → 音乐首页 → 探索」中启用相应内容。</li>
  * </ul>
  */
 public interface NcmFinder {
@@ -90,13 +90,19 @@ public interface NcmFinder {
     /** 站长的前 limit 个歌单。 */
     Flux<PlaylistSummaryVo> sitePlaylists(Integer limit);
 
-    /** 站长最近播放的 20 首歌。设置项：siteRecent（默认关闭）。 */
-    Flux<PlayRecordVo> siteRecentSongs();
+    /** 旧模板兼容，统一返回空列表。个人听歌历史通过个人曲库读取。 */
+    @Deprecated
+    default Flux<PlayRecordVo> siteRecentSongs() {
+        return Flux.empty();
+    }
 
-    /** 站长最近播放的 limit 首歌。 */
-    Flux<PlayRecordVo> siteRecentSongs(Integer limit);
+    /** 旧模板兼容，统一返回空列表。 */
+    @Deprecated
+    default Flux<PlayRecordVo> siteRecentSongs(Integer limit) {
+        return Flux.empty();
+    }
 
-    /** 站长最近一周听歌排行前 10。设置项：siteRank（默认关闭）。 */
+    /** 站长允许游客查看的最近一周听歌排行前 10。设置项：siteRank（默认关闭）。 */
     Flux<PlayRecordVo> siteWeekRank();
 
     /** 站长最近一周听歌排行前 limit。 */
@@ -108,9 +114,15 @@ public interface NcmFinder {
     /** 站长全部时间听歌排行前 limit。 */
     Flux<PlayRecordVo> siteAllRank(Integer limit);
 
-    /** 站长今天的每日推荐前 30 首。设置项：siteRecommend（默认关闭）。 */
-    Flux<SongVo> siteDailyRecommend();
+    /** 旧模板兼容，统一返回空列表。个性化推荐通过个人曲库读取。 */
+    @Deprecated
+    default Flux<SongVo> siteDailyRecommend() {
+        return Flux.empty();
+    }
 
-    /** 站长今天的每日推荐前 limit 首。 */
-    Flux<SongVo> siteDailyRecommend(Integer limit);
+    /** 旧模板兼容，统一返回空列表。 */
+    @Deprecated
+    default Flux<SongVo> siteDailyRecommend(Integer limit) {
+        return Flux.empty();
+    }
 }

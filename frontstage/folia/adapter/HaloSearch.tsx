@@ -4,8 +4,8 @@ import { haloGet, haloSettings, musicSearch, searchKind } from './haloApi';
 
 interface Suggestion { id: string; name: string; type: string; sub?: string }
 
-export function HaloSearchField({ query, searching, label, onQuery, onSubmit }: {
-    query: string; searching: boolean; label: string;
+export function HaloSearchField({ query, submittedQuery, searching, label, onQuery, onSubmit }: {
+    query: string; submittedQuery: string; searching: boolean; label: string;
     onQuery: (query: string) => void; onSubmit: (kind?: SearchKind) => void;
 }) {
     const listId = useId();
@@ -16,9 +16,11 @@ export function HaloSearchField({ query, searching, label, onQuery, onSubmit }: 
     const [matched, setMatched] = useState('');
     const [composing, setComposing] = useState(false);
     const word = query.trim();
-    const show = focused && !composing && dismissed !== query && matched === query && items.length > 0;
+    const canSuggest = haloSettings.suggest && focused && !composing && dismissed !== query
+        && word !== submittedQuery.trim() && !!word && word.length <= 100;
+    const show = canSuggest && matched === query && items.length > 0;
     useEffect(() => {
-        if (!haloSettings.suggest || !focused || composing || dismissed === query || !word || word.length > 100) return;
+        if (!canSuggest) return;
         const controller = new AbortController();
         const timer = window.setTimeout(() => {
             void haloGet<{ groups: { items: Suggestion[] }[] }>('/music/search/suggest', { q: word }, controller.signal)
@@ -31,7 +33,7 @@ export function HaloSearchField({ query, searching, label, onQuery, onSubmit }: 
                 }).catch(() => { if (!controller.signal.aborted) setItems([]); });
         }, 250);
         return () => { window.clearTimeout(timer); controller.abort(); };
-    }, [composing, dismissed, focused, query, word]);
+    }, [canSuggest, query, word]);
 
     function pick(item: Suggestion) {
         setDismissed(item.name);

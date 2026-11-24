@@ -8,17 +8,18 @@ import {
   apiManagementTabId,
   featuredRoute,
   maintenanceTabId,
-  musicAiSettingsTabId,
   musicPageSettingsRoute,
   ncmToolsRoute,
   networkSettingsTabId,
   pluginSettingsRoute,
+  toolSettingsRoute,
 } from '@/consoleNavigation'
 
-const groups = [
+const canConfigure = computed(() => utils.permission.has(['system:plugins:manage']))
+const groups = computed(() => [
   {
     id: 'tools',
-    title: '音乐页工具',
+    title: '音乐页与账号',
     links: [
       {
         label: '精选歌单',
@@ -27,8 +28,8 @@ const groups = [
         permission: 'plugin:ncm:manage',
       },
       {
-        label: '音乐页设置',
-        description: '管理页面展示、搜索和播放默认值。',
+        label: '音乐首页',
+        description: '设置标题、图标、搜索、探索、播放和 SEO。',
         route: musicPageSettingsRoute,
         permission: 'system:plugins:manage',
       },
@@ -38,11 +39,17 @@ const groups = [
         route: accountsRoute,
         permission: 'plugin:ncm:manage',
       },
+      {
+        label: '工具设置',
+        description: '设置小播放器和音乐 AI。',
+        route: toolSettingsRoute,
+        permission: 'system:plugins:manage',
+      },
     ],
   },
   {
     id: 'operations',
-    title: '插件设置与维护',
+    title: '接口与维护',
     links: [
       {
         label: '维护',
@@ -50,36 +57,31 @@ const groups = [
         route: pluginSettingsRoute(maintenanceTabId),
         permission: 'system:plugins:manage',
       },
-      {
-        label: '接口开放',
-        description: '设置通用接口范围和公开访问身份。',
-        route: pluginSettingsRoute(apiManagementTabId),
-        permission: 'system:plugins:manage',
-      },
-      {
-        label: '接口调试',
-        description: '以游客身份调用常用只读接口。',
-        route: pluginSettingsRoute(apiManagementTabId, 'debug'),
-        permission: 'plugin:ncm:debug',
-      },
+      canConfigure.value
+        ? {
+            label: '接口管理',
+            description: '管理接口开放范围与请求缓存，可按权限切换到接口调试。',
+            route: pluginSettingsRoute(apiManagementTabId),
+            permission: 'system:plugins:manage',
+          }
+        : {
+            label: '接口调试',
+            description: '以游客身份调用常用只读接口。',
+            route: pluginSettingsRoute(apiManagementTabId, 'debug'),
+            permission: 'plugin:ncm:debug',
+          },
       {
         label: '网络与限流',
         description: '配置代理、请求额度和缓存。',
         route: pluginSettingsRoute(networkSettingsTabId),
         permission: 'system:plugins:manage',
       },
-      {
-        label: '音乐 AI',
-        description: '设置歌曲配色和歌词分词的开关与使用角色。',
-        route: pluginSettingsRoute(musicAiSettingsTabId),
-        permission: 'system:plugins:manage',
-      },
     ],
   },
-]
+])
 
 const availableGroups = computed(() =>
-  groups
+  groups.value
     .map((group) => ({
       ...group,
       links: group.links.filter(({ permission }) => utils.permission.has([permission])),
@@ -119,7 +121,9 @@ const canOpenTools = computed(() => availableGroups.value.some((group) => group.
                 :to="link.route"
                 class="group block rounded px-2 py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600"
               >
-                <span class="block text-sm font-medium group-hover:underline">{{ link.label }}</span>
+                <span class="block text-sm font-medium group-hover:underline">{{
+                  link.label
+                }}</span>
                 <span class="mt-1 block text-sm text-gray-600">{{ link.description }}</span>
               </RouterLink>
             </li>

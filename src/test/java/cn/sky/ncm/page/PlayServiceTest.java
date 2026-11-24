@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import cn.sky.ncm.account.AccountService;
@@ -122,6 +123,23 @@ class PlayServiceTest {
         var limited = PlayService.classify(new SongUrl(NcmResponse.error(429, "limit"), null, null),
             "standard", "guest");
         assertEquals("rate_limited", limited.status());
+    }
+
+    @Test
+    void playbackUsesGuestForVisitorsAndSignedInUsersWithoutTheirOwnBinding() {
+        var accounts = mock(AccountService.class);
+        var service = new PlayService(null, accounts, null, null);
+        var timeout = Duration.ofSeconds(2);
+        var visitor = service.who().block(timeout);
+        assertEquals("guest", visitor.label());
+        assertTrue(visitor.identity().cookie().isEmpty());
+        verifyNoInteractions(accounts);
+
+        when(accounts.credentialsOf("user-qa")).thenReturn(Mono.empty());
+        when(accounts.siteCredentialsIfOwnedBy("qa")).thenReturn(Mono.empty());
+        var principal = ReactiveSecurityContextHolder.withAuthentication(
+            new TestingAuthenticationToken("qa", null, "authenticated"));
+        assertEquals(visitor, service.who().contextWrite(principal).block(timeout));
     }
 
     @Test

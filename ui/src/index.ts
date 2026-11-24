@@ -1,10 +1,12 @@
 import { definePlugin, utils, type PluginTab } from '@halo-dev/ui-shared'
 import { defineAsyncComponent, markRaw } from 'vue'
-import RiNeteaseCloudMusicLine from '~icons/ri/netease-cloud-music-line'
+import RiMusic2Line from '~icons/ri/music-2-line'
 import {
   apiManagementTabId,
   legacySiteAccountTabId,
   maintenanceTabId,
+  musicAiSettingsTabId,
+  pluginDisplayName,
   pluginEntryTabId,
 } from '@/consoleNavigation'
 
@@ -13,6 +15,9 @@ const legacySiteAccountTab = markRaw(
 )
 const maintenanceTab = markRaw(defineAsyncComponent(() => import('./views/NcmMaintenanceTab.vue')))
 const pluginEntryTab = markRaw(defineAsyncComponent(() => import('./views/NcmPluginEntryTab.vue')))
+const legacyAiSettingsTab = markRaw(
+  defineAsyncComponent(() => import('./views/NcmLegacyAiSettingsTab.vue')),
+)
 const apiManagementTab = markRaw(
   defineAsyncComponent(() => import('./views/NcmApiManagementTab.vue')),
 )
@@ -28,13 +33,13 @@ export default definePlugin({
         name: 'NcmConsole',
         component: () => import('./views/NcmConsoleView.vue'),
         meta: {
-          title: '网易云音乐工具',
+          title: pluginDisplayName,
           searchable: true,
           permissions: ['plugin:ncm:manage', 'system:plugins:manage'],
           menu: {
-            name: '网易云音乐',
+            name: pluginDisplayName,
             group: 'tool',
-            icon: markRaw(RiNeteaseCloudMusicLine),
+            icon: markRaw(RiMusic2Line),
             priority: 0,
           },
         },
@@ -50,11 +55,11 @@ export default definePlugin({
         name: 'NcmUcBinding',
         component: () => import('./views/NcmUcBindingView.vue'),
         meta: {
-          title: '网易云音乐',
+          title: pluginDisplayName,
           searchable: true,
           menu: {
-            name: '网易云音乐',
-            icon: markRaw(RiNeteaseCloudMusicLine),
+            name: pluginDisplayName,
+            icon: markRaw(RiMusic2Line),
             priority: 10,
           },
         },
@@ -96,9 +101,17 @@ export default definePlugin({
           permissions: ['plugin:ncm:manage'],
         })
       }
+      if (query.get('tab') === musicAiSettingsTabId) {
+        tabs.push({
+          id: musicAiSettingsTabId,
+          label: '音乐 AI',
+          component: legacyAiSettingsTab,
+          permissions: ['system:plugins:manage'],
+        })
+      }
       return tabs
     },
-    // 默认编辑器：工具箱和斜杠菜单里的“网易云音乐卡片”。按需加载，不进入后台首屏
+    // 默认编辑器的音乐卡片。按需加载，不进入后台首屏。
     'default:editor:extension:create': async () => {
       const { ExtensionNcmCard } = await import('./editor')
       return [ExtensionNcmCard]

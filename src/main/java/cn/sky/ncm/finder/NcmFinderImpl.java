@@ -1,7 +1,6 @@
 package cn.sky.ncm.finder;
 
 import cn.sky.ncm.account.AccountService;
-import cn.sky.ncm.finder.FinderSource.As;
 import cn.sky.ncm.finder.vo.AlbumVo;
 import cn.sky.ncm.finder.vo.ArtistVo;
 import cn.sky.ncm.finder.vo.HotKeywordVo;
@@ -60,8 +59,8 @@ public class NcmFinderImpl implements NcmFinder {
         return strict ? this : new NcmFinderImpl(source, settings, accounts, true);
     }
 
-    Mono<JsonNode> call(String api, Map<String, String> query, As as) {
-        return strict ? source.fetch(api, query, as) : source.call(api, query, as);
+    Mono<JsonNode> call(String api, Map<String, String> query) {
+        return strict ? source.fetch(api, query) : source.call(api, query);
     }
 
     // ---------- 公开数据 ----------
@@ -69,24 +68,24 @@ public class NcmFinderImpl implements NcmFinder {
     public Mono<Map<String, Object>> foliaDiscovery(String feed, int offset, int limit, String seed) {
         Map<String, String> page = Map.of("limit", String.valueOf(limit), "offset", String.valueOf(offset));
         return switch (feed) {
-            case "charts" -> call("toplist", Map.of(), As.ANONYMOUS)
+            case "charts" -> call("toplist", Map.of())
                 .map(body -> Map.of("list", FoliaFeedPayload.collections(body.path("list"))));
-            case "new-songs" -> call("top_song", Map.of(), As.ANONYMOUS)
+            case "new-songs" -> call("top_song", Map.of())
                 .map(body -> Map.of("songs", FoliaFeedPayload.songs(body, "data", "songs")));
-            case "new-albums" -> call("album_new", page, As.ANONYMOUS)
+            case "new-albums" -> call("album_new", page)
                 .map(body -> Map.of("albums", FoliaFeedPayload.collections(body.path("albums")),
                     "total", body.path("total").asInt(0)));
-            case "hot-playlists" -> call("top_playlist", page, As.ANONYMOUS)
+            case "hot-playlists" -> call("top_playlist", page)
                 .map(body -> Map.of("playlists", FoliaFeedPayload.collections(body.path("playlists")),
                     "more", body.path("more").asBoolean(false)));
-            case "similar-songs" -> validId(seed) ? call("simi_song", Map.of("id", seed), As.ANONYMOUS)
+            case "similar-songs" -> validId(seed) ? call("simi_song", Map.of("id", seed))
                 .map(body -> Map.of("songs", FoliaFeedPayload.songs(body, "songs"))) : Mono.empty();
             default -> Mono.empty();
         };
     }
 
     public Mono<Map<String, Object>> foliaGuestHome(String cursor) {
-        return call("homepage_block_page", foliaHomeParams(cursor), As.ANONYMOUS).map(FoliaFeedPayload::home);
+        return call("homepage_block_page", foliaHomeParams(cursor)).map(FoliaFeedPayload::home);
     }
 
     public static Map<String, String> foliaHomeParams(String cursor) {
@@ -98,7 +97,7 @@ public class NcmFinderImpl implements NcmFinder {
         if (!validId(id)) {
             return Mono.empty();
         }
-        return call("song_detail", Map.of("ids", id.trim()), As.PUBLIC)
+        return call("song_detail", Map.of("ids", id.trim()))
             .flatMap(b -> Mono.justOrEmpty(NcmVoMapper.songs(b).stream().findFirst()));
     }
 
@@ -109,7 +108,7 @@ public class NcmFinderImpl implements NcmFinder {
         if (list.isEmpty()) {
             return Flux.empty();
         }
-        return call("song_detail", Map.of("ids", String.join(",", list)), As.PUBLIC)
+        return call("song_detail", Map.of("ids", String.join(",", list)))
             .flatMapIterable(b -> {
                 Map<String, SongVo> byId = new LinkedHashMap<>();
                 NcmVoMapper.songs(b).forEach(s -> byId.put(s.getId(), s));
@@ -135,10 +134,10 @@ public class NcmFinderImpl implements NcmFinder {
         }
         String pid = id.trim();
         int n = limit(limit, 50);
-        Mono<JsonNode> detail = call("playlist_detail", Map.of("id", pid), As.PUBLIC)
+        Mono<JsonNode> detail = call("playlist_detail", Map.of("id", pid))
             .filter(NcmVoMapper::hasPlaylist);
         Mono<List<SongVo>> tracks = n == 0 ? Mono.just(List.of())
-            : call("playlist_track_all", Map.of("id", pid, "limit", String.valueOf(n), "offset", "0"), As.PUBLIC)
+            : call("playlist_track_all", Map.of("id", pid, "limit", String.valueOf(n), "offset", "0"))
                 .map(NcmVoMapper::songs)
                 .defaultIfEmpty(List.of());
         return Mono.zip(detail, tracks).map(t -> NcmVoMapper.playlist(t.getT1(), t.getT2()));
@@ -155,7 +154,7 @@ public class NcmFinderImpl implements NcmFinder {
             return Flux.empty();
         }
         return call("playlist_track_all",
-                Map.of("id", id.trim(), "limit", String.valueOf(n), "offset", String.valueOf(from)), As.PUBLIC)
+                Map.of("id", id.trim(), "limit", String.valueOf(n), "offset", String.valueOf(from)))
             .flatMapIterable(NcmVoMapper::songs);
     }
 
@@ -169,7 +168,7 @@ public class NcmFinderImpl implements NcmFinder {
         int n = size == null ? 30 : Math.max(1, Math.min(size, 100));
         int p = Math.max(1, Math.min(page == null ? 1 : page, maxSearchPage(n)));
         return call("cloudsearch", Map.of("keywords", kw, "type", String.valueOf(t.code()),
-                "limit", String.valueOf(n), "offset", String.valueOf((p - 1) * n)), As.PUBLIC)
+                "limit", String.valueOf(n), "offset", String.valueOf((p - 1) * n)))
             .filter(b -> b.path("result").isObject())
             .map(b -> NcmVoMapper.search(b, kw, t, p, n))
             .defaultIfEmpty(NcmVoMapper.emptySearch(kw, t, p, n));
@@ -181,7 +180,7 @@ public class NcmFinderImpl implements NcmFinder {
         if (kw == null) {
             return Mono.empty();
         }
-        return call("search_suggest", Map.of("keywords", kw), As.PUBLIC)
+        return call("search_suggest", Map.of("keywords", kw))
             .map(b -> NcmVoMapper.suggest(b, kw, 5))
             .defaultIfEmpty(SuggestVo.builder().keyword(kw).groups(List.of()).build());
     }
@@ -192,7 +191,7 @@ public class NcmFinderImpl implements NcmFinder {
         if (n == 0) {
             return Flux.empty();
         }
-        return call("search_hot_detail", Map.of(), As.PUBLIC)
+        return call("search_hot_detail", Map.of())
             .flatMapIterable(b -> NcmVoMapper.hotKeywords(b, n));
     }
 
@@ -217,7 +216,7 @@ public class NcmFinderImpl implements NcmFinder {
         if (!validId(id)) {
             return Mono.empty();
         }
-        return call("album", Map.of("id", id.trim()), As.PUBLIC)
+        return call("album", Map.of("id", id.trim()))
             .filter(NcmVoMapper::hasAlbum)
             .map(NcmVoMapper::album);
     }
@@ -233,7 +232,7 @@ public class NcmFinderImpl implements NcmFinder {
             return Mono.empty();
         }
         int n = limit(limit, 20);
-        return call("artists", Map.of("id", id.trim()), As.PUBLIC)
+        return call("artists", Map.of("id", id.trim()))
             .filter(NcmVoMapper::hasArtist)
             .map(b -> NcmVoMapper.artist(b, n));
     }
@@ -246,13 +245,13 @@ public class NcmFinderImpl implements NcmFinder {
         Map<String, String> page = Map.of("id", artistId, "offset", String.valueOf(offset),
             "limit", String.valueOf(limit));
         return switch (section) {
-            case "profile" -> call("artist_detail", Map.of("id", artistId), As.ANONYMOUS)
+            case "profile" -> call("artist_detail", Map.of("id", artistId))
                 .map(body -> body.path("data").path("artist"))
                 .filter(artist -> artist.hasNonNull("id"))
                 .map(artist -> Map.of("artist", NcmVoMapper.artistOf(artist, List.of())));
-            case "songs" -> call("artist_songs", page, As.ANONYMOUS)
+            case "songs" -> call("artist_songs", page)
                 .map(body -> artistPage("artist_songs", body, "songs", NcmVoMapper.songs(body), offset));
-            case "albums" -> call("artist_album", page, As.ANONYMOUS)
+            case "albums" -> call("artist_album", page)
                 .map(body -> artistPage("artist_album", body, "hotAlbums",
                     FoliaFeedPayload.collections(body.path("hotAlbums")), offset));
             default -> Mono.empty();
@@ -282,14 +281,14 @@ public class NcmFinderImpl implements NcmFinder {
             return Mono.empty();
         }
         String sid = id.trim();
-        return call("lyric_new", Map.of("id", sid), As.PUBLIC).map(b -> NcmVoMapper.lyric(sid, b));
+        return call("lyric_new", Map.of("id", sid)).map(b -> NcmVoMapper.lyric(sid, b));
     }
 
     public Mono<List<Map<String, Long>>> foliaChorus(String id) {
         if (!validId(id)) {
             return Mono.empty();
         }
-        return call("song_chorus", Map.of("id", id.trim()), As.ANONYMOUS).map(NcmVoMapper::chorus);
+        return call("song_chorus", Map.of("id", id.trim())).map(NcmVoMapper::chorus);
     }
 
     @Override
@@ -312,7 +311,7 @@ public class NcmFinderImpl implements NcmFinder {
     @Override
     public Mono<UserVo> siteProfile() {
         return gate(FinderSetting::profileOpen).flatMap(x -> siteUid())
-            .flatMap(uid -> call("user_detail", Map.of("uid", uid), As.PUBLIC))
+            .flatMap(uid -> call("user_detail", Map.of("uid", uid)))
             .filter(NcmVoMapper::hasUser)
             .map(NcmVoMapper::user);
     }
@@ -325,24 +324,10 @@ public class NcmFinderImpl implements NcmFinder {
     @Override
     public Flux<PlaylistSummaryVo> sitePlaylists(Integer limit) {
         int n = limit(limit, 30);
-        // 用公开身份请求：网易云只返回该用户公开的歌单
+        // 使用游客可读的歌单元数据。
         return gate(FinderSetting::playlistsOpen).flatMap(x -> siteUid())
-            .flatMap(uid -> call("user_playlist", Map.of("uid", uid, "limit", String.valueOf(n), "offset", "0"),
-                As.PUBLIC).map(b -> NcmVoMapper.playlistSummaries(b, uid)))
+            .flatMap(uid -> call("user_playlist", Map.of("uid", uid, "limit", String.valueOf(n), "offset", "0")).map(b -> NcmVoMapper.playlistSummaries(b, uid)))
             .flatMapIterable(Function.identity());
-    }
-
-    @Override
-    public Flux<PlayRecordVo> siteRecentSongs() {
-        return siteRecentSongs(20);
-    }
-
-    @Override
-    public Flux<PlayRecordVo> siteRecentSongs(Integer limit) {
-        int n = limit(limit, 20);
-        return gate(FinderSetting::recentOpen)
-            .flatMap(x -> call("record_recent_song", Map.of("limit", String.valueOf(Math.max(n, 1))), As.SITE))
-            .flatMapIterable(b -> NcmVoMapper.recent(b, n));
     }
 
     @Override
@@ -367,21 +352,8 @@ public class NcmFinderImpl implements NcmFinder {
 
     Flux<PlayRecordVo> rank(boolean week, int n) {
         return gate(FinderSetting::rankOpen).flatMap(x -> siteUid())
-            .flatMap(uid -> call("user_record", Map.of("uid", uid, "type", week ? "1" : "0"), As.SITE))
+            .flatMap(uid -> call("user_record", Map.of("uid", uid, "type", week ? "1" : "0")))
             .flatMapIterable(b -> NcmVoMapper.rank(b, week, n));
-    }
-
-    @Override
-    public Flux<SongVo> siteDailyRecommend() {
-        return siteDailyRecommend(30);
-    }
-
-    @Override
-    public Flux<SongVo> siteDailyRecommend(Integer limit) {
-        int n = limit(limit, 30);
-        return gate(FinderSetting::recommendOpen)
-            .flatMap(x -> call("recommend_songs", Map.of(), As.SITE))
-            .flatMapIterable(b -> NcmVoMapper.dailySongs(b, n));
     }
 
     // ---------- 工具 ----------

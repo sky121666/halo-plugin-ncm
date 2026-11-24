@@ -1,5 +1,5 @@
 /**
- * 默认编辑器扩展：网易云音乐卡片（歌曲 / 歌单 / 专辑）。
+ * 网抑云编辑器扩展（歌曲 / 歌单 / 专辑）。
  * 通过 Halo 的 default:editor:extension:create 扩展点注册（见 ui/src/index.ts），
  * 写法参考 Halo 2.27 自带的 iframe 扩展（ui/packages/editor/src/extensions/iframe）。
  *
@@ -27,14 +27,15 @@ import { markRaw } from 'vue'
 import RiDeleteBinLine from '~icons/ri/delete-bin-line'
 import RiEditLine from '~icons/ri/edit-line'
 import RiExternalLinkLine from '~icons/ri/external-link-line'
-import RiNeteaseCloudMusicLine from '~icons/ri/netease-cloud-music-line'
+import RiMusic2Line from '~icons/ri/music-2-line'
+import { pluginDisplayName } from '@/consoleNavigation'
 import NcmCardView from './NcmCardView.vue'
 import { CARD_EDIT_EVENT, NCM_CARD_NODE } from './constants'
 import { canonicalUrl, defaultTitle, isValidId, normalizeType } from './link'
 
 export const NCM_CARD_BUBBLE_MENU_KEY = new PluginKey('ncmCardBubbleMenu')
 
-const TITLE = '网易云音乐卡片'
+const TITLE = `${pluginDisplayName}音乐卡片`
 
 function insertCard(editor: Editor, range?: Range) {
   const chain = editor.chain().focus()
@@ -95,7 +96,7 @@ export const ExtensionNcmCard = Node.create<ExtensionOptions>({
   renderHTML({ node }) {
     const type = normalizeType(node.attrs.ncmType)
     const id = isValidId(node.attrs.ncmId) ? (node.attrs.ncmId as string) : ''
-    const title = String(node.attrs.title || '').trim() || (id ? defaultTitle(type, id) : '网易云音乐')
+    const title = String(node.attrs.title || '').trim() || (id ? defaultTitle(type, id) : pluginDisplayName)
     return [
       'div',
       { class: 'ncm-card', 'data-ncm-card': '', 'data-type': type, 'data-id': id },
@@ -119,7 +120,7 @@ export const ExtensionNcmCard = Node.create<ExtensionOptions>({
       getCommandMenuItems() {
         return {
           priority: 200,
-          icon: markRaw(RiNeteaseCloudMusicLine),
+          icon: markRaw(RiMusic2Line),
           title: TITLE,
           keywords: ['ncm', 'music', 'netease', 'wangyiyun', 'yinyue', '网易云', '音乐', '歌曲', '歌单', '专辑'],
           command: ({ editor, range }: { editor: Editor; range: Range }) => {
@@ -133,7 +134,7 @@ export const ExtensionNcmCard = Node.create<ExtensionOptions>({
           component: markRaw(ToolboxItem),
           props: {
             editor,
-            icon: markRaw(RiNeteaseCloudMusicLine),
+            icon: markRaw(RiMusic2Line),
             title: TITLE,
             description: '插入网易云的歌曲、歌单或专辑，访客可以直接播放',
             action: () => insertCard(editor),

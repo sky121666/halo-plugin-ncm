@@ -48,7 +48,7 @@ tasks.named('processResources') {
 }
 
 // 把 ui/ 构建出的完整产物目录打进插件包的 ui/ 目录（Halo 2.25+ 从这里加载插件前端，ESM 需要整个目录）
-tasks.register('processUiResources', Copy) {
+tasks.register('processUiResources', Sync) {
     from project(':ui').layout.buildDirectory.dir('dist')
     into layout.buildDirectory.dir('resources/main/ui')
     dependsOn project(':ui').tasks.named('assemble')
@@ -69,6 +69,9 @@ if (!generatingApi) {
         description = 'Build the pinned Folia Web client for the public music pages'
         group = 'build'
         inputs.dir(foliaSources)
+        inputs.file('frontstage/mini-player/playbackSession.ts')
+        inputs.file('frontstage/mini-player/appearance.ts')
+        inputs.file('src/main/resources/static/brand-mark.png')
         inputs.files(fileTree('ui/src/api/generated/models') {
             include 'ncm-account-view.ts', 'ncm-me-*.ts', 'ncm-qr-*.ts', 'ncm-login-result.ts',
                 'ncm-captcha-request.ts', 'ncm-cellphone-login-request.ts'
@@ -79,6 +82,14 @@ if (!generatingApi) {
     tasks.named('processResources') {
         dependsOn buildFolia
         from(foliaResources)
+        dependsOn ':ui:buildMiniPlayer'
+        from(project(':ui').layout.buildDirectory.dir('mini-player')) {
+            into 'static/mini-player'
+        }
+        from('frontstage/mini-player') {
+            include '*.css'
+            into 'static/mini-player'
+        }
     }
 }
 
@@ -100,6 +111,9 @@ haloPlugin {
     watchDomains {
         foliaSource {
             files files('frontstage/folia/')
+        }
+        miniPlayerSource {
+            files files('frontstage/mini-player/')
         }
     }
     openApi {

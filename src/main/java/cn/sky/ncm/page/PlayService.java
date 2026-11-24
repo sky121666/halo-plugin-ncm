@@ -8,7 +8,6 @@ import cn.sky.ncm.bootstrap.NcmBootstrap;
 import cn.sky.ncm.client.RequestOptions;
 import cn.sky.ncm.gateway.Identity;
 import cn.sky.ncm.gateway.IdentityResolver;
-import cn.sky.ncm.gateway.NcmGateway;
 import cn.sky.ncm.setting.BasicSetting;
 import cn.sky.ncm.setting.SettingService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -27,7 +26,7 @@ import reactor.core.publisher.Mono;
  * <pre>
  * 登录的 Halo 用户绑定了自己的网易云账号 → 用他自己的账号（会员歌曲可以听完整版）
  * 管理员本人没有单独绑定             → 用他在后台绑定的站长账号
- * 其他访客（含登录后未绑定的用户）   → 使用「接口开放」设置的公开访问身份
+ * 其他访客（含登录后未绑定的用户）   → 游客身份
  * </pre>
  * 成功和“没有音源”的结果按身份缓存一小段时间（不超过音频地址的有效期），服务出错不缓存。
  */
@@ -45,7 +44,7 @@ public class PlayService {
      * @param url        音频地址（status 为 ok 时）
      * @param trialStart 试听片段在整首歌里的开始时间（毫秒，已从网易云的秒换算），不是试听时为 null
      * @param trialEnd   试听片段的结束时间（毫秒）
-     * @param identity   user（访客自己的账号）/ site（站长账号）/ guest（游客）
+     * @param identity   user（访客自己的绑定）/ guest（游客）
      * @param message    给访客看的说明（status 不是 ok 时）
      */
     public record PlayResult(String status, String url, Long trialStart, Long trialEnd, String level, long br,
@@ -98,9 +97,8 @@ public class PlayService {
      * @param fresh 为 true 时不读缓存（播放器在音频加载失败后重试时使用）
      */
     public Mono<PlayResult> resolve(String id, String level, boolean fresh) {
-        return settings.basic().flatMap(s -> who(s).flatMap(w -> {
-            // 访客借用站长账号（label 为 site）时音质有上限，避免把站长的会员无损音源公开分享出去
-            String lv = "site".equals(w.label()) ? NcmGateway.capLevel(level(level), s.siteLevelCap()) : level(level);
+        String lv = level(level);
+        return settings.basic().flatMap(s -> who().flatMap(w -> {
             if (w.cacheKey() == null) {
                 return fetch(id, lv, s, w);
             }
@@ -136,24 +134,19 @@ public class PlayService {
             });
     }
 
-    /** 当前请求用谁的身份。读取访客自己的绑定出错时退回公开身份。 */
-    Mono<Who> who(BasicSetting s) {
+    /** 当前请求用谁的身份。读取访客自己的绑定出错时退回游客身份。 */
+    Mono<Who> who() {
         var guest = new Who(Identity.anonymous(), "guest", "guest");
-        Mono<Who> pub = Mono.defer(() -> s.publicUsesSite()
-            ? accounts.credentialsOf(AccountService.SITE)
-                .map(credentials -> Who.bound("site", "site", "site", credentials))
-                .defaultIfEmpty(guest)
-            : Mono.just(guest));
         return IdentityResolver.currentUsername()
             .flatMap(u -> accounts.credentialsOf(AccountService.userAccountName(u))
                 .map(credentials -> Who.bound("user", "user:" + u, "user", credentials))
                 .switchIfEmpty(Mono.defer(() -> accounts.siteCredentialsIfOwnedBy(u)
                     .map(credentials -> Who.bound("site", "site-owner:" + u, "user", credentials)))))
             .onErrorResume(e -> {
-                log.warn("[ncm] 读取访客的网易云绑定失败，改用公开身份: {}", e.toString());
+                log.warn("[ncm] 读取访客的网易云绑定失败，改用游客身份: {}", e.toString());
                 return Mono.empty();
             })
-            .switchIfEmpty(pub);
+            .defaultIfEmpty(guest);
     }
 
     static PlayResult classify(SongUrl su, String level, String identity) {

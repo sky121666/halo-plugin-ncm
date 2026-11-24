@@ -42,7 +42,7 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 /**
- * 个人音乐空间（个人中心 → 网易云音乐）的业务逻辑。
+ * 个人音乐空间（个人中心 → 网抑云）的业务逻辑。
  * <ul>
  *   <li>只用当前 Halo 用户自己绑定的网易云账号；管理员本人没有单独绑定时，用他在后台绑定的站长账号
  *       （和 IdentityResolver 的规则一致）；其他情况一律 403，绝不借用站长账号</li>

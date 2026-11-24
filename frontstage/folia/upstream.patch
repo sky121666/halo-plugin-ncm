@@ -1,6 +1,6 @@
 --- a/index.html
 +++ b/index.html
-@@ -1,10 +1,10 @@
+@@ -1,33 +1,15 @@
  <!DOCTYPE html>
 -<html lang="en">
 +<html lang="zh-CN">
@@ -9,14 +9,13 @@
      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
      <meta name="referrer" content="no-referrer" />
 -    <meta name="description" content="一个动态歌词播放器，支持 AI 主题生成" />
-+    <meta name="description" content="精选歌单、网易云搜索和音乐播放" />
      <meta name="theme-color" content="#09090b" />
      <meta name="mobile-web-app-capable" content="yes" />
      <meta name="apple-mobile-web-app-capable" content="yes" />
-@@ -12,22 +12,8 @@
-     <meta name="apple-mobile-web-app-title" content="Folia" />
-     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-     <link rel="apple-touch-icon" href="/icon.svg" />
+     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+-    <meta name="apple-mobile-web-app-title" content="Folia" />
+-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+-    <link rel="apple-touch-icon" href="/icon.svg" />
 -    <title>Folia</title>
 -    <script src="/runtime-config.js"></script>
 -  <script type="importmap">
@@ -38,7 +37,7 @@
      <!-- 首屏加载遮罩：内联样式，随 HTML 首帧一起绘制，不等 index.css 与 JS bundle。
           由 src/utils/appSplash.ts 在 React 挂载后淡出并移除。 -->
      <style>
-@@ -322,25 +308,8 @@
+@@ -322,25 +304,8 @@
          </div>
        </div>
      </div>
@@ -1455,7 +1454,7 @@
 +        setDirectEntry(state.directEntry ?? null);
 +        const title = state.directEntry?.item.name ?? state.collection?.stack.at(-1)?.name
 +            ?? (state.search ? '点唱台' : '');
-+        document.title = title ? title + ' · ' + haloSettings.title : haloSettings.title;
++        document.title = title ? title + ' · ' + haloSettings.title : haloSettings.seoTitle || haloSettings.title;
          useCollectionNavigationStore.getState().restore(state.collection ?? null);
          if (state.search) {
              useSearchNavigationStore.getState().restoreSearch(state.search);
@@ -1498,7 +1497,7 @@
          historyJournal.record(nextState, replace ? 'replace' : 'push');
          restoreHistoryState(nextState);
      }, [historyJournal, restoreHistoryState]);
-@@ -253,65 +269,33 @@
+@@ -253,65 +269,36 @@
      }, []);
  
      useEffect(() => {
@@ -1521,10 +1520,13 @@
 +        const initialCollection = entry?.type === 'playlist' || entry?.type === 'album' || entry?.type === 'artist'
 +            ? { origin: 'home' as const, stack: [createOnlineGridViewCollection(toCollection(entry.item, entry.type), 'netease')] }
 +            : null;
-+        const initialState = { ...buildHistoryState('home', initialSearch, initialCollection), directEntry };
++        const openLyrics = !entry && window.location.pathname.replace(/\/$/, '') === musicHome
++            && initialParams.get('view') === 'lyrics';
++        const initialState = { ...buildHistoryState(openLyrics ? 'player' : 'home', initialSearch, initialCollection), directEntry };
 +        const initialHref = directEntry?.type === 'library' ? directEntry.path
 +            : entry ? entry.path + window.location.search
-+            : initialSearch ? searchHref(initialSearch.query, initialSearch.kind) : musicHome;
++            : initialSearch ? searchHref(initialSearch.query, initialSearch.kind)
++            : openLyrics ? musicHome + window.location.search : musicHome;
 +        window.history.replaceState(initialState, '', initialHref);
          historyJournal.reset(initialState);
          restoreHistoryState(initialState);
@@ -1583,7 +1585,7 @@
                  historyJournal.reset(fallbackState);
                  restoreHistoryState(fallbackState);
                  return;
-@@ -325,7 +309,6 @@
+@@ -325,7 +312,6 @@
  
          window.addEventListener('popstate', handlePopState);
          return () => {
@@ -1591,7 +1593,22 @@
              finishCollectionTraversal();
              window.removeEventListener('popstate', handlePopState);
          };
-@@ -444,6 +427,13 @@
+@@ -332,12 +318,12 @@
+     }, []);
+
+-    const navigateToPlayer = useCallback(() => {
++    const navigateToPlayer = useCallback((options?: { replace?: boolean }) => {
+         const collection = useCollectionNavigationStore.getState().snapshot;
+         const search = getSearchHistorySnapshot();
+         const historyState = window.history.state as NavigationHistoryState | null;
+         pushNavigationState({
+             view: 'player',
+-            replace: shouldReplacePlayerNavigation(historyState),
++            replace: options?.replace === true || shouldReplacePlayerNavigation(historyState),
+             hash: '#player',
+             search,
+             collection,
+@@ -444,6 +430,13 @@
          navigateDirectHome();
      }, [navigateDirectHome]);
  
@@ -1605,7 +1622,7 @@
      const navigateToSearch = useCallback(({
          query,
          sourceTab,
-@@ -455,6 +445,7 @@
+@@ -455,6 +448,7 @@
          replace?: boolean;
          returnView?: SearchReturnView;
      }) => {
@@ -1613,7 +1630,7 @@
          useCollectionNavigationStore.getState().clear();
          // 搜索先提交、再压历史：种类按提交时定下的记（来源搜不到的种类已退回单曲）。
          const search = { query, sourceTab, kind: useSearchNavigationStore.getState().searchKind, returnView };
-@@ -545,6 +536,11 @@
+@@ -545,6 +539,11 @@
              return 'none';
          }
          if (window.history.state?.collection) {
@@ -1625,7 +1642,7 @@
              // leaveLayer（折叠往返）：当前层之上若压着 suite 自己的面板记录（同一个栈，例如 bravais 的列表面板），
              // 连它们一起退，落到上一层；只退一步会只关掉面板、留在这一层。应用内返回不传——返回先关面板。
              const index = getAppHistoryIndex(window.history.state);
-@@ -568,7 +564,7 @@
+@@ -568,7 +567,7 @@
              setCurrentView('player');
          }
          return 'local';
@@ -1634,7 +1651,7 @@
  
      const pushCollection = useCallback((collection: GridViewCollectionDescriptor) => {
          if (pendingTraversalRef.current !== null) return;
-@@ -610,6 +606,7 @@
+@@ -610,6 +609,7 @@
  
      return {
          currentView,
@@ -7196,13 +7213,14 @@ diff --git a/package-lock.json b/package-lock.json
          ? getPersonalFmSelectionLabel(personalFmSelection, (key, fallback) => t(key, fallback ?? ''), catalog)
 --- a/src/library/suites/grid/home/Grid3D.tsx
 +++ b/src/library/suites/grid/home/Grid3D.tsx
-@@ -34,12 +34,16 @@
+@@ -34,12 +34,17 @@
  import { cycleIndex } from '../../../core/home/homeSources';
  import HomeSearchHistory from './HomeSearchHistory';
  import { useUpdateIndicator } from '../../../../hooks/useUpdateIndicator';
 +import { useHaloAccount } from '../../../../halo/HaloAccount';
 +import { foliaBindingKey } from '../../../../halo/haloFoliaBinding';
 +import { haloSettings } from '../../../../halo/haloApi';
++import { HaloBlogLink, HaloHomeSettingsLink, HaloMusicPageIcon } from '../../../../halo/HaloMusicHeader';
  
  // src/library/suites/grid/home/Grid3D.tsx
  // Glassmorphic interactive desktop home view replacing the legacy 3D carousel.
@@ -7213,7 +7231,7 @@ diff --git a/package-lock.json b/package-lock.json
      /** 在线账户 controller（宿主创建，见 LibraryHomeSurfaceProps）：登录按钮与右下角的切换器读它，换平台、登录、退出都在登录窗口里。 */
      account: LibraryAccountController;
      onPlaySong: (song: SongResult, playlistCtx?: SongResult[], isFmCall?: boolean) => void;
-@@ -169,6 +173,8 @@
+@@ -169,6 +174,8 @@
      const activeProviderLabel = online.providerLabel;
      const activeUser = online.user;
      const activeAccountView = online.accountView;
@@ -7222,18 +7240,36 @@ diff --git a/package-lock.json b/package-lock.json
      const activeProviderNeedsRelogin = online.needsRelogin;
      const onlineList = useLibraryHomeOnline(homeResources, homeSources);
      const homeActions = homeResources.actions;
-@@ -321,8 +327,8 @@
-                 <div className="grid grid-cols-2 md:grid-cols-3 items-center w-full max-w-7xl mx-auto p-4 md:p-8 gap-y-4 md:gap-y-0">
+@@ -320,13 +327,14 @@
+             <div className="transition-opacity duration-300 ease-in-out z-20 opacity-100 select-none">
+-                <div className="grid grid-cols-2 md:grid-cols-3 items-center w-full max-w-7xl mx-auto p-4 md:p-8 gap-y-4 md:gap-y-0">
++                <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] sm:grid-cols-2 md:grid-cols-3 items-center w-full max-w-7xl mx-auto p-4 md:p-8 gap-y-4 md:gap-y-0">
                      {/* Left title and settings */}
-                     <div className="flex items-center justify-start order-1 md:order-none">
+-                    <div className="flex items-center justify-start order-1 md:order-none">
 -                        <h1 className="text-2xl font-bold tracking-tight opacity-90 flex items-center gap-3">
 -                            Folia
-+                        <h1 className="min-w-0 truncate text-2xl font-bold tracking-tight opacity-90">
-+                            {haloSettings.title || 'Folia'}
++                    <div className="flex min-w-0 items-center justify-start order-1 md:order-none">
++                        <HaloMusicPageIcon className="mr-2 size-5 md:size-6 shrink-0 rounded object-contain" />
++                        <h1 className="min-w-0 truncate text-xl md:text-2xl font-bold tracking-tight opacity-90">
++                            {haloSettings.title}
                          </h1>
                          <button
                              onClick={() => onOpenSettings?.('help')}
-@@ -413,6 +419,7 @@
+-                            className={`relative flex items-center gap-1.5 p-2 rounded-full hover:bg-white/10 transition-all ml-4 ${showUpdateIndicator
++                            className={`relative flex items-center gap-1.5 p-2 shrink-0 rounded-full hover:bg-white/10 transition-all ml-1 md:ml-4 ${showUpdateIndicator
+                                     ? 'opacity-90 hover:opacity-100'
+                                     : 'opacity-40 hover:opacity-100'
+                                 }`}
+@@ -339,6 +347,8 @@
+                                 </span>
+                             )}
+                         </button>
++                        <HaloHomeSettingsLink />
++                        <HaloBlogLink iconOnly />
+                         {scanProgress?.active && (
+                             <div
+                                 className="relative ml-3"
+@@ -413,6 +423,7 @@
                                              <button
                                                  disabled={Boolean(tab.disabledReason)}
                                                  aria-label={tab.disabledReason || tab.label}
@@ -7241,7 +7277,7 @@ diff --git a/package-lock.json b/package-lock.json
                                                  onClick={() => {
                                                      setHomeViewTab(tab.key);
                                                      focusActiveSlider();
-@@ -475,7 +482,7 @@
+@@ -475,7 +486,7 @@
  
                      {/* Right Search Bar */}
                      <div className="flex justify-end order-2 md:order-none">
@@ -7250,7 +7286,7 @@ diff --git a/package-lock.json b/package-lock.json
                              onSubmit={handleSearch}
                              className="relative w-full md:w-56 transition-all focus-within:md:w-72"
                              onBlur={event => {
-@@ -533,7 +540,7 @@
+@@ -533,7 +544,7 @@
                                      </motion.div>
                                  )}
                              </AnimatePresence>
@@ -7259,7 +7295,7 @@ diff --git a/package-lock.json b/package-lock.json
                      </div>
                  </div>
              </div>
-@@ -546,21 +553,20 @@
+@@ -546,21 +557,20 @@
                          isDaylight={isDaylight}
                          onSearch={() => searchInputRef.current?.focus()}
                      />
@@ -7286,7 +7322,7 @@ diff --git a/package-lock.json b/package-lock.json
                              onPlaySong={(song, queue) => onPlaySong(song, queue, false)}
                              onOpenCollection={collection => onOpenGridView?.(createOnlineGridViewCollection(collection, activeProviderId))}
                          />
-@@ -633,7 +639,7 @@
+@@ -633,7 +643,7 @@
              </div>
  
              {/* The active account and the way back to the player; the sign-in window opens from it. */}
@@ -11840,3 +11876,774 @@ diff --git a/package-lock.json b/package-lock.json
 +    "transitionAutomixNeedsCache": "Song caching is off. Enable it to let AutoMix analyse eligible online tracks in full.",
      "transitionAutomixEnableCache": "Turn song caching on",
      "lyricApi": "Lyrics API",
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -132,3 +132,5 @@
+ import { useSessionRestoreController } from './components/app/playback/restore/useSessionRestoreController';
+ import { useHaloPlaybackSession } from './halo/haloPlayback';
++import { useHaloEmbeddedPlayback } from './halo/haloEmbeddedPlayback';
++import { resumeTimeForMedia } from './halo/playbackSession';
+ import { DeferredSurface } from './halo/DeferredSurface';
+@@ -2061,4 +2062,16 @@
+     ]);
+-
++
++    useHaloEmbeddedPlayback({
++        time: () => currentTime.get(),
++        toggle: togglePlay,
++        step: direction => { if (direction === 1) void handleNextTrack(); else handlePrevTrack(); },
++        seek: seekMainAudio,
++        play: (song, queue, time, autoplay) => {
++            void playSong(song, queue, false, { startAtSec: time, autoplay, shouldNavigateToPlayer: false });
++        },
++        // The outer Swup visit already added the history entry.
++        openLyrics: () => navigateToPlayer({ replace: true }),
++    });
++
+     // Folium services (folium.playback / folium.ui) call through to these App handlers.
+     useFoliumHostActions({
+@@ -2678,9 +2692,7 @@
+                 const pendingResumeTime = pendingResumeTimeRef.current;
+                 if (pendingResumeTime !== null) {
+-                    const safeDuration = Number.isFinite(audioElement.duration) && audioElement.duration > 0
+-                        ? Math.max(audioElement.duration - 0.25, 0)
+-                        : pendingResumeTime;
+-                    const nextTime = Math.min(pendingResumeTime, safeDuration);
++                    const nextTime = resumeTimeForMedia(pendingResumeTime, audioElement.duration,
++                        audioSrc !== null && omni.isPreviewAudioSource(audioSrc));
+                     audioElement.currentTime = nextTime;
+                     currentTime.set(nextTime);
+                     pendingResumeTimeRef.current = null;
+--- a/src/components/app/playback/start/usePlaybackQueueController.ts
++++ b/src/components/app/playback/start/usePlaybackQueueController.ts
+@@ -1014,8 +1014,9 @@
+         // Written only now: a play that gave up above leaves the intent to play, the time to resume
+         // at and the address's fetch time to the song the key went back to.
+-        shouldAutoPlayRef.current = true;
+-        pendingResumeTimeRef.current = null;
++        shouldAutoPlayRef.current = options.autoplay !== false;
++        const startAtSec = options.startAtSec ?? 0;
++        pendingResumeTimeRef.current = !isExternal && Number.isFinite(startAtSec) && startAtSec > 0 ? startAtSec : null;
+         lastAudioRecoverySourceRef.current = null;
+         currentOnlineAudioUrlFetchedAtRef.current = null;
+         setLyrics(null);
+         setCurrentLineIndex(-1);
+--- a/src/types/appPlayback.ts
++++ b/src/types/appPlayback.ts
+@@ -42,6 +42,6 @@
+     /**
+      * false: the song is loaded and left paused, as a paused song moved to the other engine stays
+-     * paused. Not given: it plays, as every play does. Only onPlayLocalSong and onPlayNavidromeSong read it.
++     * paused. If omitted, playback starts once the source is ready.
+      */
+     autoplay?: boolean;
+     /**
+--- a/src/components/app/search/SearchWorkspace.tsx
++++ b/src/components/app/search/SearchWorkspace.tsx
+@@ -186,5 +186,5 @@
+                         </div>
+                         <div className="flex items-center gap-4">
+-                            <HaloSearchField query={searchQuery} searching={isSearching} onQuery={setSearchQuery}
++                            <HaloSearchField query={searchQuery} submittedQuery={submittedQuery} searching={isSearching} onQuery={setSearchQuery}
+                                 label={searchKind === 'artist' ? PLACEHOLDER_KEYS.artist : t(PLACEHOLDER_KEYS[searchKind])}
+                                 onSubmit={kind => onSubmitSearch(searchSourceTab, kind)} />
+--- a/src/components/login/HomeLoginPanel.tsx
++++ b/src/components/login/HomeLoginPanel.tsx
+@@ -1,3 +1,4 @@
+ import React from 'react';
++import { LogIn, RefreshCw } from 'lucide-react';
+ import { useHaloAccount } from '../../halo/HaloAccount';
+ import { settingsTokens, useSettingsKitTheme } from '../modal/settings/kit/kitTheme';
+@@ -6,5 +7,5 @@
+ import './login.css';
+-
++
+-const HomeLoginPanel: React.FC = () => {
++const HomeLoginPanel: React.FC<{ onExplore?: () => void }> = ({ onExplore }) => {
+     const { isDaylight, theme } = useSettingsKitTheme();
+     const reduced = useKitReducedMotion();
+@@ -22,23 +23,30 @@
+         >
+             <h2 className="login-rise text-xl font-semibold leading-7 [text-wrap:balance]">
+-                {error ? '暂时无法读取账号' : guest ? '先搜几首喜欢的歌试试看' : ranOut ? '请重新绑定网易云' : '绑定网易云，打开你的曲库'}
++                {error ? '暂时无法读取账号' : guest ? '登录后查看个人曲库' : ranOut ? '请重新绑定网易云' : '绑定网易云，打开你的曲库'}
+             </h2>
+             <p className="login-rise mt-2 max-w-[516px] whitespace-pre-line text-[13px] leading-5 text-[color:var(--st-t2)]" style={{ animationDelay: '40ms' }}>
+                 {error ? '请重试。你仍可搜索和播放公开曲目。' : guest
+-                    ? '登录 Halo 并绑定网易云后，即可查看自己的歌单、推荐和收藏专辑。'
++                    ? '绑定网易云后，这里会显示你的歌单、推荐和收藏专辑。'
+                     : '用网易云音乐 App 扫码，即可读取自己的歌单、推荐和收藏专辑。'}
+             </p>
+-            <button
+-                type="button"
+-                data-ponder="sign-in"
+-                data-halo-account={state.kind}
+-                aria-haspopup={error ? undefined : 'dialog'}
+-                onClick={event => error ? retry() : openDialog(guest ? 'login' : 'binding', event.currentTarget)}
+-                className="login-rise st-t-fast mt-7 inline-flex h-12 max-w-full items-center gap-2.5 rounded-xl bg-[var(--st-accent)] pl-2.5 pr-[22px] text-[15px] font-semibold text-[color:var(--st-on-accent)] transition-[opacity,transform] hover:opacity-90 active:scale-[0.98]"
+-                style={{ animationDelay: '80ms', '--login-edge': 'var(--st-accent)' } as React.CSSProperties}
+-            >
+-                <PlatformMark providerId="netease" label="网易云" size={28} />
+-                <span className="truncate">{label}</span>
+-            </button>
++            <div className="login-rise mt-6 flex flex-wrap justify-center gap-2.5" style={{ animationDelay: '80ms' }}>
++                <button
++                    type="button"
++                    data-ponder="sign-in"
++                    data-halo-account={state.kind}
++                    aria-haspopup={error ? undefined : 'dialog'}
++                    onClick={event => error ? retry() : openDialog(guest ? 'login' : 'binding', event.currentTarget)}
++                    className="st-t-fast st-focus-inside inline-flex min-h-11 max-w-full items-center justify-center gap-2 rounded-xl bg-[var(--st-accent)] px-4 text-sm font-semibold text-[color:var(--st-on-accent)] transition-[opacity,transform] hover:opacity-90 active:scale-[0.98]"
++                    style={{ '--login-edge': 'var(--st-accent)' } as React.CSSProperties}
++                >
++                    {guest ? <LogIn size={17} aria-hidden /> : error ? <RefreshCw size={17} aria-hidden />
++                        : <PlatformMark providerId="netease" label="网易云" size={26} />}
++                    <span className="truncate">{label}</span>
++                </button>
++                {guest && onExplore && <button type="button" onClick={onExplore}
++                    className="st-t-fast st-focus-inside min-h-11 rounded-xl bg-[var(--st-fill)] px-4 text-sm font-medium hover:bg-[var(--st-fill2)]">
++                    浏览公开音乐
++                </button>}
++            </div>
+         </div>
+     );
+--- a/src/components/login/SwitcherPill.tsx
++++ b/src/components/login/SwitcherPill.tsx
+@@ -29,7 +29,8 @@
+     onBackToPlayer: () => void;
+     onLibrary?: () => void;
++    hideAccountAction?: boolean;
+ };
+-
++
+-const SwitcherPill: React.FC<SwitcherPillProps> = ({ account, onBackToPlayer, onLibrary }) => {
++const SwitcherPill: React.FC<SwitcherPillProps> = ({ account, onBackToPlayer, onLibrary, hideAccountAction }) => {
+     const { t } = useTranslation();
+     const { providers, activeProviderId } = useLibraryAccountProviders(account);
+@@ -117,9 +118,9 @@
+             data-testid="online-provider-switcher"
+             data-halo-home-account
+-            className="pointer-events-auto absolute bottom-4 right-4 z-[100] md:bottom-6 md:right-6"
++            className={`pointer-events-auto absolute bottom-4 right-4 z-[100] md:bottom-6 md:right-6 ${hideAccountAction ? 'hidden md:block' : ''}`}
+             style={{ ...settingsTokens(isDaylight, theme), ...kitMotionTokens(reduced), '--login-edge': 'var(--st-menu)' } as React.CSSProperties}
+         >
+             <div className="flex items-center rounded-[26px] bg-[var(--st-menu)] p-0.5 text-[color:var(--st-t1)] shadow-lg md:p-1.5">
+-                <Tooltip text={bound && provider.user ? provider.user.nickname + ' · 个人曲库' : actionLabel} className="inline-flex">
++                {!hideAccountAction && <Tooltip text={bound && provider.user ? provider.user.nickname + ' · 个人曲库' : actionLabel} className="inline-flex">
+                     <button
+                         type="button"
+@@ -144,6 +145,6 @@
+                         </span>
+                     </button>
+-                </Tooltip>
+-                <span className="mx-1.5 hidden h-6 w-px bg-[var(--st-line2)] md:block" aria-hidden="true" />
++                </Tooltip>}
++                {!hideAccountAction && <span className="mx-1.5 hidden h-6 w-px bg-[var(--st-line2)] md:block" aria-hidden="true" />}
+                 <Tooltip text={t('home.backToPlayer')} className="hidden md:inline-flex">
+                     <button
+--- a/src/components/panelTab/shell/PanelHandle.tsx
++++ b/src/components/panelTab/shell/PanelHandle.tsx
+@@ -3,4 +3,5 @@
+ import { motion, AnimatePresence } from 'framer-motion';
+ import { Settings2, X, Command } from 'lucide-react';
++import { useTranslation } from 'react-i18next';
+ import type { Theme } from '../../../types';
+ import { usePlayerBottomBarBottomPx } from '../../../hooks/usePlayerBottomBarBottomPx';
+@@ -39,4 +40,5 @@
+     isCommandPaletteOpen,
+ }) => {
++    const { t } = useTranslation();
+     const [showGuideLine, setShowGuideLine] = React.useState(false);
+     const [isDragging, setIsDragging] = React.useState(false);
+@@ -428,4 +430,6 @@
+                             ref={toggleButtonRef}
+                             type="button"
++                            aria-label={t(isOpen ? 'ui.close' : 'help.openControlPanel')}
++                            aria-expanded={isOpen}
+                             onPointerDown={handleToggleButtonPointerDown}
+                             onPointerMove={handleToggleButtonPointerMove}
+--- a/src/i18n/locales/zh-CN.ts
++++ b/src/i18n/locales/zh-CN.ts
+@@ -659,5 +659,5 @@
+     "syncFailed": "同步失败",
+     "loginExpired": "登录状态已失效，请重新登录",
+-    "songPreviewOnly": "当前账号仅可试听此歌曲",
++    "songPreviewOnly": "这首歌当前仅可试听",
+     "songVipFullUnavailable": "第三方播放器暂时无法获取完整VIP歌曲",
+     "songSubscriptionRequired": "{{provider}}需要会员才能播放",
+@@ -2009,5 +2009,5 @@
+     "loadMore": "加载更多",
+     "loading": "加载中...",
+-    "searchDatabase": "搜索在线歌曲...",
++    "searchDatabase": "搜索音乐",
+     "searchLocal": "搜索本地歌曲...",
+     "searchNavidrome": "搜索navidrome...",
+--- a/src/library/suites/grid/collection/GridView.tsx
++++ b/src/library/suites/grid/collection/GridView.tsx
+@@ -282,4 +282,5 @@
+ }) => {
+     const { t } = useTranslation();
++    const cutInPanelId = React.useId();
+     const lowerBackButton = useWindowButtonsAtTopLeft();
+     const bottomBarPanelBottomPx = useSidePanelBottomPx();
+@@ -1619,4 +1620,5 @@
+     const albumPublishedAt = infoCollection?.publishedAt;
+     const albumPublisher = infoCollection?.publisher;
++    const collectionTitle = infoCollection?.name || collectionName || title;
+-
++
+     return (
+@@ -1652,4 +1654,6 @@
+             {/* Back Button */}
+             <button
++                type="button"
++                aria-label={t('ui.back')}
+                 // 返回按钮表示看完了（onDone）：宿主清掉浏览会话、让每套 suite 忘掉布局记录（网格的 sessionStorage
+                 // 记录经 entry 的 layout.forget），再返回。Escape 与浏览器后退保留（onBack）。P4.5 起不在这里清。
+@@ -1687,9 +1691,5 @@
+             {/* Center Clickable Area */}
+             <div
+-                onClick={() => {
+-                    if (!hasCutInPanel) return;
+-                    setShowCutInPanel(!showCutInPanel);
+-                }}
+-                className={`group/grid-title absolute left-1/2 top-5 -translate-x-1/2 z-[70] text-center flex flex-col items-center select-none transition-all px-5 py-2 rounded-2xl backdrop-blur-md ${hasCutInPanel ? 'cursor-pointer hover:scale-[1.01] active:scale-98' : ''}`}
++                className="group/grid-title absolute left-1/2 top-5 z-[70] flex w-max max-w-[min(40rem,calc(100vw_-_7rem))] -translate-x-1/2 select-none flex-col items-center rounded-2xl px-3 text-center backdrop-blur-md sm:px-5"
+                 style={{
+                     backgroundColor: 'color-mix(in srgb, var(--bg-color) 20%, transparent)',
+@@ -1697,10 +1697,17 @@
+                 }}
+             >
+-                <h2 className="text-lg font-bold tracking-tight flex items-center gap-1.5 justify-center">
+-                    {infoCollection?.name || collectionName || title}
+-                    {hasCutInPanel && <GridPanelToggleIndicator isOpen={showCutInPanel} />}
++                <h2 className="max-w-full text-lg font-bold tracking-tight">
++                    {hasCutInPanel ? (
++                        <button type="button" aria-expanded={showCutInPanel}
++                            aria-controls={showCutInPanel ? cutInPanelId : undefined}
++                            onClick={() => setShowCutInPanel(open => !open)}
++                            className="st-focus-inside flex min-h-11 max-w-full cursor-pointer items-center justify-center gap-1.5 rounded-md">
++                            <span className="min-w-0 truncate" title={collectionTitle}>{collectionTitle}</span>
++                            <span aria-hidden="true"><GridPanelToggleIndicator isOpen={showCutInPanel} /></span>
++                        </button>
++                    ) : <span className="block truncate py-2" title={collectionTitle}>{collectionTitle}</span>}
+                 </h2>
+                 {(infoCollection?.description || subtitle) && (
+-                    <p className="mt-0.5 max-w-[min(40rem,calc(100vw-8rem))] text-xs leading-relaxed opacity-50 line-clamp-2 whitespace-normal break-words">
++                    <p className="max-w-full pb-1 text-xs leading-relaxed opacity-50 line-clamp-1 whitespace-normal break-words sm:line-clamp-2">
+                         {infoCollection?.description || subtitle}
+                     </p>
+@@ -1855,4 +1862,5 @@
+                     {showCutInPanel && mode === 'tracks' && collection && (
+                         <motion.div
++                            id={cutInPanelId}
+                             data-wheel-scroll-region
+                             onWheelCapture={event => event.stopPropagation()}
+@@ -1861,5 +1869,5 @@
+                             exit={{ opacity: 0, x: -60, scale: 0.95 }}
+                             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+-                            className="absolute left-6 top-24 w-80 rounded-3xl z-[80] overflow-y-auto overscroll-contain hide-scrollbar flex flex-col p-6 shadow-2xl border backdrop-blur-2xl pointer-events-auto theme-glass-panel"
++                            className="halo-collection-info absolute left-6 top-24 w-80 rounded-3xl z-[80] overflow-y-auto overscroll-contain hide-scrollbar flex flex-col p-6 shadow-2xl border backdrop-blur-2xl pointer-events-auto theme-glass-panel"
+                             style={{
+                                 bottom: bottomBarPanelBottomPx,
+@@ -1868,5 +1876,5 @@
+                         >
+                             {/* Cover Image */}
+-                            <div className="w-full aspect-square rounded-2xl overflow-hidden shadow-lg mb-4 bg-zinc-800/20 relative shrink-0">
++                            <div className="halo-collection-cover w-full aspect-square rounded-2xl overflow-hidden shadow-lg mb-4 bg-zinc-800/20 relative shrink-0">
+                                 {infoPanelCoverUrl ? (
+                                     <img src={getSizedCoverUrl(toHttps(infoPanelCoverUrl), 512)} alt={infoCollection?.name || title} decoding="async" className="w-full h-full object-cover select-none pointer-events-none" />
+@@ -1897,5 +1905,5 @@
+-
++
+                             {/* Title & Creator */}
+-                            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain custom-scrollbar pr-1 space-y-4 text-left min-w-0">
++                            <div className="halo-collection-meta min-h-0 flex-1 overflow-y-auto overscroll-contain custom-scrollbar pr-1 space-y-4 text-left min-w-0">
+                                 <div>
+                                     {canRename && isEditMode ? (
+@@ -2005,5 +2013,5 @@
+                                 // 思索把整块认成一个目标，指着哪一颗都讲得到。
+                                 data-ponder={isLocalCollection ? 'local-folder-actions' : 'online-collection-actions'}
+-                                className="space-y-2 mt-4 pt-4 border-t shrink-0"
++                                className="halo-collection-actions space-y-2 mt-4 pt-4 border-t shrink-0"
+                                 style={{ borderTopColor: 'color-mix(in srgb, var(--text-primary) 12%, transparent)' }}
+                             >
+--- a/src/library/suites/grid/home/Grid3D.tsx
++++ b/src/library/suites/grid/home/Grid3D.tsx
+@@ -176,4 +176,8 @@
+     const activeAccountView = online.accountView;
+     const { state: haloAccount } = useHaloAccount();
++    const showHomeAccountPanel = isOnlineTab && homeViewTab !== 'explore'
++        && activeAccountView === 'guest' && haloAccount.kind !== 'loading';
++    const searchLabel = t(homeViewTab === 'local' ? 'home.searchLocal'
++        : homeViewTab === 'navidrome' ? 'home.searchNavidrome' : 'home.searchDatabase');
+     const bindingKey = haloAccount.kind === 'account' ? foliaBindingKey(haloAccount.account) : '';
+     const activeProviderNeedsRelogin = online.needsRelogin;
+@@ -507,5 +511,6 @@
+                                 ref={searchInputRef}
+                                 type="text"
+-                                placeholder={homeViewTab === 'local' ? t('home.searchLocal') : homeViewTab === 'navidrome' ? t('home.searchNavidrome') : t('home.searchDatabase')}
++                                placeholder={searchLabel}
++                                aria-label={searchLabel}
+                                 value={searchQuery}
+                                 onChange={e => setSearchQuery(e.target.value)}
+@@ -561,6 +566,6 @@
+                         <Loader2 className="animate-spin opacity-30" size={28} />
+                     </div>
+-                ) : isOnlineTab && homeViewTab !== 'explore' && activeAccountView === 'guest' ? (
+-                    <HomeLoginPanel />
++                ) : showHomeAccountPanel ? (
++                    <HomeLoginPanel onExplore={online.canUseExplore ? () => setHomeViewTab('explore') : undefined} />
+                 ) : homeViewTab === 'explore' ? (
+                     online.canUseExplore && (
+@@ -643,5 +648,6 @@
+-
++
+             {/* The active account and the way back to the player; the sign-in window opens from it. */}
+-            <SwitcherPill account={account} onBackToPlayer={onBackToPlayer} onLibrary={props.onHaloLibrary} />
++            <SwitcherPill account={account} onBackToPlayer={onBackToPlayer} onLibrary={props.onHaloLibrary}
++                hideAccountAction={showHomeAccountPanel} />
+-
++
+         </div>
+--- a/src/services/onlineMusic/netease/neteaseExplore.ts
++++ b/src/services/onlineMusic/netease/neteaseExplore.ts
+@@ -65,4 +65,5 @@
+         artists?: Array<{ id?: number; name?: string }>;
+         playCount?: number;
++        subtitle?: string;
+     } | null;
+ }
+@@ -254,5 +255,9 @@
+         const numericId = Number(resourceId);
+         const id = Number.isSafeInteger(numericId) ? numericId : resourceId;
+-        if (resource.resourceType === 'list') return { kind: 'collection', collection: normalize.collection({ id, name, coverImgUrl: cover, playCount: info.playCount }) };
++        if (resource.resourceType === 'list') return {
++            kind: 'collection',
++            collection: normalize.collection({ id, name, coverImgUrl: cover, playCount: info.playCount }),
++            subtitle: info.subtitle,
++        };
+         if (resource.resourceType === 'album') return { kind: 'collection', collection: normalize.collection({ id, name, picUrl: cover, artists: info.artists }, 'album') };
+         return null;
+--- a/src/stores/useThemeSettingsStore.ts
++++ b/src/stores/useThemeSettingsStore.ts
+@@ -16,22 +16,11 @@
+ import { getStoredBoolean, setStoredBoolean } from './storagePrimitives';
+ import { setStatusMessage } from './useStatusMessageStore';
+ import { isPerfCheckSurface } from '../utils/appSurface';
++import {
++    readMusicColorPreference, resolveMusicColorScheme, saveMusicColorPreference, type MusicColorPreference,
++} from '../halo/appearance';
+
+-export const FOLLOW_SYSTEM_THEME_STORAGE_KEY = 'follow_system_theme';
+-
+-export const readSystemThemeIsDaylight = (): boolean | null => {
+-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+-        return null;
+-    }
+-
+-    return window.matchMedia('(prefers-color-scheme: light)').matches;
+-};
+-
+-const initialFollowSystemTheme = getStoredBoolean(FOLLOW_SYSTEM_THEME_STORAGE_KEY, false);
+-const initialStoredDaylight = getStoredBoolean('default_theme_daylight', false);
+-const initialDaylight = initialFollowSystemTheme
+-    ? (readSystemThemeIsDaylight() ?? initialStoredDaylight)
+-    : initialStoredDaylight;
++const initialColorPreference = readMusicColorPreference();
+
+ const readStoredDisableHomeDynamicBackground = (): boolean => {
+     if (typeof window === 'undefined') {
+@@ -58,11 +47,13 @@
+     disableHomeDynamicBackground: boolean;
+     isDaylight: boolean;
+     followSystemTheme: boolean;
++    colorSchemePreference: MusicColorPreference;
+     handleToggleCoverColorBg: (enable: boolean) => void;
+     handleToggleStaticMode: (enable: boolean) => void;
+     handleToggleDisableHomeDynamicBackground: (disable: boolean) => void;
+     setDaylightPreference: (isDaylight: boolean) => void;
+-    setDaylightPreferenceFromSystem: (isDaylight: boolean) => void;
++    setColorSchemePreference: (preference: MusicColorPreference) => void;
++    refreshColorScheme: () => void;
+     setFollowSystemTheme: (enabled: boolean) => void;
+ };
+
+@@ -70,8 +61,9 @@
+     useCoverColorBg: getStoredBoolean('use_cover_color_bg', false),
+     staticMode: getStoredBoolean('static_mode', false),
+     disableHomeDynamicBackground: readStoredDisableHomeDynamicBackground(),
+-    followSystemTheme: initialFollowSystemTheme,
+-    isDaylight: initialDaylight,
++    followSystemTheme: initialColorPreference === 'system',
++    colorSchemePreference: initialColorPreference,
++    isDaylight: resolveMusicColorScheme(initialColorPreference) === 'light',
+     handleToggleCoverColorBg: (enable) => {
+         setStoredBoolean('use_cover_color_bg', enable);
+         set({ useCoverColorBg: enable });
+@@ -96,44 +88,25 @@
+             text: i18n.t('notifications.' + (disable ? 'homeBgDisabled' : 'homeBgEnabled')),
+         });
+     },
+-    // System updates are kept separate from the manual setter so a user click can disable auto-follow.
+-    setDaylightPreferenceFromSystem: (enabled) => {
+-        if (!get().followSystemTheme) {
+-            return;
+-        }
+-
+-        setStoredBoolean('default_theme_daylight', enabled);
+-        set({ isDaylight: enabled });
++    refreshColorScheme: () => {
++        const state = get();
++        const isDaylight = resolveMusicColorScheme(state.colorSchemePreference) === 'light';
++        if (isDaylight !== state.isDaylight) set({ isDaylight });
++    },
++    setColorSchemePreference: (preference) => {
++        const scheme = resolveMusicColorScheme(preference);
++        const followSystemTheme = preference === 'system';
++        saveMusicColorPreference(preference);
++        set({ colorSchemePreference: preference, followSystemTheme, isDaylight: scheme === 'light' });
+         if (typeof window !== 'undefined' && window.electron?.setNativeTheme) {
+-            void window.electron.setNativeTheme('system');
++            void window.electron.setNativeTheme(followSystemTheme ? 'system' : scheme);
+         }
+     },
+     setFollowSystemTheme: (enabled) => {
+-        setStoredBoolean(FOLLOW_SYSTEM_THEME_STORAGE_KEY, enabled);
+-        set({ followSystemTheme: enabled });
+-
+-        if (typeof window !== 'undefined' && window.electron?.setNativeTheme) {
+-            void window.electron.setNativeTheme(enabled ? 'system' : (get().isDaylight ? 'light' : 'dark'));
+-        }
+-
+-        if (enabled) {
+-            const systemThemeIsDaylight = readSystemThemeIsDaylight();
+-            if (systemThemeIsDaylight !== null) {
+-                get().setDaylightPreferenceFromSystem(systemThemeIsDaylight);
+-            }
+-        }
++        if (enabled) get().setColorSchemePreference('system');
++        else if (get().followSystemTheme) get().setDaylightPreference(get().isDaylight);
+     },
+-    setDaylightPreference: (enabled) => {
+-        const wasFollowingSystem = get().followSystemTheme;
+-        if (wasFollowingSystem) {
+-            setStoredBoolean(FOLLOW_SYSTEM_THEME_STORAGE_KEY, false);
+-        }
+-        setStoredBoolean('default_theme_daylight', enabled);
+-        set({ isDaylight: enabled, ...(wasFollowingSystem ? { followSystemTheme: false } : {}) });
+-        if (typeof window !== 'undefined' && window.electron?.setNativeTheme) {
+-            void window.electron.setNativeTheme(enabled ? 'light' : 'dark');
+-        }
+-    },
++    setDaylightPreference: (enabled) => get().setColorSchemePreference(enabled ? 'light' : 'dark'),
+ }));
+
+ /**
+@@ -147,7 +120,6 @@
+     staticMode: state.staticMode,
+     disableHomeDynamicBackground: state.disableHomeDynamicBackground,
+     setDaylightPreference: state.setDaylightPreference,
+-    setDaylightPreferenceFromSystem: state.setDaylightPreferenceFromSystem,
+     setFollowSystemTheme: state.setFollowSystemTheme,
+     handleToggleCoverColorBg: state.handleToggleCoverColorBg,
+     handleToggleStaticMode: state.handleToggleStaticMode,
+--- a/src/hooks/useAppPreferences.ts
++++ b/src/hooks/useAppPreferences.ts
+@@ -18,14 +18,13 @@
+ import { useTypographySettingsStore } from '../stores/useTypographySettingsStore';
+ import { resolveStoredCustomLyricsFont } from '../stores/useTypographySettingsStore';
+ import { usePlayerChromeSettingsStore } from '../stores/usePlayerChromeSettingsStore';
+-import { readSystemThemeIsDaylight } from '../stores/useThemeSettingsStore';
++import { observeMusicColorScheme } from '../halo/appearance';
+ import { useThemeSettingsStore } from '../stores/useThemeSettingsStore';
+ import { useDesktopSettingsStore } from '../stores/useDesktopSettingsStore';
+
+ export { resolveStoredCappellaTuning, resolveStoredCustomLyricsFont, resolveStoredMonetBackgroundTuning, resolveVisualizerBackgroundMode };
+
+ export function useAppPreferences() {
+-    const followSystemTheme = useThemeSettingsStore(state => state.followSystemTheme);
+     const setTransparentPlayerBackgroundFromSystem = usePlayerChromeSettingsStore(state => state.setTransparentPlayerBackgroundFromSystem);
+     const setDesktopPreferenceSnapshot = useDesktopSettingsStore(state => state.setDesktopPreferenceSnapshot);
+     const setStoredCappellaEmojiPack = useVisualizerAssetStore(state => state.setStoredCappellaEmojiPack);
+@@ -53,10 +52,10 @@
+     const monetBackgroundTuning = useVisualizerSettingsStore(state => state.monetBackgroundTuning);
+     const monetTuning = useVisualizerSettingsStore(state => state.monetTuning);
+     const isDaylight = useThemeSettingsStore(state => state.isDaylight);
+-    const setDaylightPreferenceFromSystem = useThemeSettingsStore(state => state.setDaylightPreferenceFromSystem);
+
+     useEffect(() => {
+         const root = document.documentElement;
++        root.dataset.ncmMusicColorScheme = isDaylight ? 'light' : 'dark';
+         if (isDaylight) {
+             root.style.setProperty('--scrollbar-track', '#cccbcc');
+             root.style.setProperty('--scrollbar-thumb', '#ecececff');
+@@ -68,34 +67,7 @@
+         }
+     }, [isDaylight]);
+
+-    // Keep the persisted daylight value in sync with OS changes only while auto-follow is enabled.
+-    useEffect(() => {
+-        if (!followSystemTheme || typeof window.matchMedia !== 'function') {
+-            return;
+-        }
+-
+-        const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
+-        const syncWithSystemTheme = (isLight: boolean) => {
+-            setDaylightPreferenceFromSystem(isLight);
+-        };
+-
+-        const handleSystemThemeChange = (event: MediaQueryListEvent) => {
+-            syncWithSystemTheme(event.matches);
+-        };
+-
+-        const initialSystemTheme = readSystemThemeIsDaylight();
+-        if (initialSystemTheme !== null) {
+-            syncWithSystemTheme(initialSystemTheme);
+-        }
+-
+-        if (typeof mediaQuery.addEventListener === 'function') {
+-            mediaQuery.addEventListener('change', handleSystemThemeChange);
+-            return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
+-        }
+-
+-        mediaQuery.addListener(handleSystemThemeChange);
+-        return () => mediaQuery.removeListener(handleSystemThemeChange);
+-    }, [followSystemTheme, setDaylightPreferenceFromSystem]);
++    useEffect(() => observeMusicColorScheme(useThemeSettingsStore.getState().refreshColorScheme), []);
+
+     useEffect(() => {
+         if (!window.electron?.getWindowTransparentMode) {
+--- a/src/components/modal/settings/pages/AppearancePage.tsx
++++ b/src/components/modal/settings/pages/AppearancePage.tsx
+@@ -39,17 +39,13 @@
+
+ export const OPTIONS: SettingsOptionDef[] = Object.values(O);
+
+-type DaylightChoice = 'light' | 'dark' | 'system';
+-
+ const AppearancePage: React.FC = () => {
+     const { t } = useTranslation();
+     const aiAvailable = useHaloMusicAi();
+     const { themeControls, onOpenVisPlayground, onOpenThemePark, onOpenSceneWindow } = useSettingsPage();
+-    const { isDaylight, followSystemTheme, setDaylightPreference, setFollowSystemTheme } = useThemeSettingsStore(useShallow(state => ({
+-        isDaylight: state.isDaylight,
+-        followSystemTheme: state.followSystemTheme,
+-        setDaylightPreference: state.setDaylightPreference,
+-        setFollowSystemTheme: state.setFollowSystemTheme,
++    const { colorSchemePreference, setColorSchemePreference } = useThemeSettingsStore(useShallow(state => ({
++        colorSchemePreference: state.colorSchemePreference,
++        setColorSchemePreference: state.setColorSchemePreference,
+     })));
+     const visualizerMode = useVisualizerSettingsStore(state => state.visualizerMode);
+     const randomEnabled = useVisualizerSettingsStore(state => state.randomVisualizerModePerSong);
+@@ -68,22 +64,16 @@
+             </Group>
+
+             <Group def={THEME}>
+-                <Row option={O.daylight} note={t('options.followSystemThemeDesc')}>
+-                    <Segmented<DaylightChoice>
+-                        value={followSystemTheme ? 'system' : isDaylight ? 'light' : 'dark'}
++                <Row option={O.daylight} note={t('options.followSiteThemeDesc', 'Follow the blog appearance, with system colors as the fallback.')}>
++                    <Segmented
++                        value={colorSchemePreference}
+                         options={[
++                            { value: 'site', label: t('options.daylightModeSite', 'Follow site') },
++                            { value: 'system', label: t('options.daylightModeSystem') },
+                             { value: 'light', label: t('options.daylightModeLight') },
+                             { value: 'dark', label: t('options.daylightModeDark') },
+-                            { value: 'system', label: t('options.daylightModeSystem') },
+                         ]}
+-                        onChange={(choice) => {
+-                            if (choice === 'system') {
+-                                setFollowSystemTheme(true);
+-                            } else {
+-                                // A light or dark picked by hand also stops following the system.
+-                                setDaylightPreference(choice === 'light');
+-                            }
+-                        }}
++                        onChange={setColorSchemePreference}
+                     />
+                 </Row>
+                 <Row option={O.preset}>
+--- a/src/components/panelTab/controls/ThemeNameRow.tsx
++++ b/src/components/panelTab/controls/ThemeNameRow.tsx
+@@ -1,10 +1,11 @@
+ import React from 'react';
+-import { Moon, Sparkle, Sparkles, Sun } from 'lucide-react';
++import { Link2, Monitor, Moon, Sparkle, Sparkles, Sun } from 'lucide-react';
+ import { useTranslation } from 'react-i18next';
+ import type { Theme } from '../../../types';
+ import type { ThemeSourceModel } from '../../../hooks/themeControllerState';
+ import { Button } from '../../modal/settings/kit';
+ import { Segments } from '../shell/Segments';
++import { useThemeSettingsStore } from '../../../stores/useThemeSettingsStore';
+
+ // src/components/panelTab/controls/ThemeNameRow.tsx
+ // The line under the theme source: the name of the theme in use, light or dark, the button that has
+@@ -18,8 +19,6 @@
+     onGenerateAITheme: () => void;
+     isGeneratingTheme: boolean;
+     canGenerateAITheme: boolean;
+-    isDaylight: boolean;
+-    onToggleDaylight: () => void;
+ }
+
+ const ThemeNameRow: React.FC<ThemeNameRowProps> = ({
+@@ -30,10 +29,10 @@
+     onGenerateAITheme,
+     isGeneratingTheme,
+     canGenerateAITheme,
+-    isDaylight,
+-    onToggleDaylight,
+ }) => {
+     const { t } = useTranslation();
++    const colorSchemePreference = useThemeSettingsStore(state => state.colorSchemePreference);
++    const setColorSchemePreference = useThemeSettingsStore(state => state.setColorSchemePreference);
+     const useAi = themeSourceModel.generationSource === 'ai';
+
+     const formatThemeDisplayName = (name: string) => {
+@@ -54,9 +53,11 @@
+             <span className="ml-auto flex max-w-full items-center gap-1.5">
+                 <Segments
+                     size="m"
+-                    value={isDaylight ? 'light' : 'dark'}
+-                    onChange={() => onToggleDaylight()}
++                    value={colorSchemePreference}
++                    onChange={setColorSchemePreference}
+                     options={[
++                        { value: 'site', label: t('options.daylightModeSite', 'Follow site'), icon: <Link2 size={15} />, iconOnly: true },
++                        { value: 'system', label: t('options.daylightModeSystem'), icon: <Monitor size={15} />, iconOnly: true },
+                         { value: 'light', label: t('options.daylightModeLight'), icon: <Sun size={15} />, iconOnly: true },
+                         { value: 'dark', label: t('options.daylightModeDark'), icon: <Moon size={15} />, iconOnly: true },
+                     ]}
+--- a/src/components/panelTab/ControlsTab.tsx
++++ b/src/components/panelTab/ControlsTab.tsx
+@@ -32,7 +32,6 @@
+     transparentPlayerBackground: boolean;
+     onToggleTransparentPlayerBackground: (enable: boolean) => void;
+     isDaylight: boolean;
+-    onToggleDaylight: () => void;
+     volume: number;
+     isMuted: boolean;
+     onVolumePreview: (val: number) => void;
+@@ -62,7 +61,6 @@
+     transparentPlayerBackground,
+     onToggleTransparentPlayerBackground,
+     isDaylight,
+-    onToggleDaylight,
+     volume,
+     isMuted,
+     onVolumePreview,
+@@ -118,8 +116,6 @@
+             onGenerateAITheme={onGenerateAITheme}
+             isGeneratingTheme={isGeneratingTheme}
+             canGenerateAITheme={canGenerateAITheme}
+-            isDaylight={isDaylight}
+-            onToggleDaylight={onToggleDaylight}
+         />
+
+         <AudioEqualizerDialog isDaylight={isDaylight} />
+--- a/src/components/UnifiedPanel.tsx
++++ b/src/components/UnifiedPanel.tsx
+@@ -126,7 +126,6 @@
+     useCoverColorBg: boolean;
+     onToggleCoverColorBg: (enable: boolean) => void;
+     isDaylight: boolean;
+-    onToggleDaylight: () => void;
+ };
+
+ type UnifiedPanelLibraryProps = {
+@@ -236,7 +235,6 @@
+         useCoverColorBg,
+         onToggleCoverColorBg,
+         isDaylight,
+-        onToggleDaylight,
+     } = account;
+
+     const isStage = isStageContext || Boolean(currentSong && (currentSong as any).isStage === true);
+@@ -392,7 +390,6 @@
+                     transparentPlayerBackground={transparentPlayerBackground}
+                     onToggleTransparentPlayerBackground={onToggleTransparentPlayerBackground}
+                     isDaylight={isDaylight}
+-                    onToggleDaylight={onToggleDaylight}
+                     volume={volume}
+                     isMuted={isMuted}
+                     onVolumePreview={onVolumePreview}
+--- a/src/components/app/player-panel/buildPlayerPanelModel.ts
++++ b/src/components/app/player-panel/buildPlayerPanelModel.ts
+@@ -100,7 +100,6 @@
+     accountController: UnifiedPanelProps['account']['accountController'];
+     handleSyncData: UnifiedPanelProps['account']['onSyncData'];
+     isSyncing: UnifiedPanelProps['account']['isSyncing'];
+-    handleToggleDaylight: () => void;
+ };
+
+ type BuildPlayerPanelModelParams = PlayerPanelAmbient & PlayerPanelDeps;
+@@ -183,7 +182,6 @@
+     isSyncing,
+     useCoverColorBg,
+     isDaylight,
+-    handleToggleDaylight,
+ }: BuildPlayerPanelModelParams): PlayerPanelViewModel => ({
+     panelProps: {
+         playback: {
+@@ -279,7 +277,6 @@
+             useCoverColorBg,
+             onToggleCoverColorBg: handleToggleCoverColorBg,
+             isDaylight,
+-            onToggleDaylight: handleToggleDaylight,
+         },
+     },
+ });
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -2278,7 +2278,6 @@
+         accountController,
+         handleSyncData: handleActiveProviderSyncData,
+         isSyncing: isProviderSyncing,
+-        handleToggleDaylight: toggleDaylightMode,
+         // Derived inside the hook, but these are the sources only App.tsx holds.
+         isLocalSongLiked,
+         shouldHidePlayerRightPanelButton,
+--- a/src/i18n/locales/zh-CN.ts
++++ b/src/i18n/locales/zh-CN.ts
+@@ -2464,6 +2464,8 @@
+     "daylightModeLight": "浅色",
+     "daylightModeDark": "深色",
+     "daylightModeSystem": "跟随系统",
++    "daylightModeSite": "跟随站点",
++    "followSiteThemeDesc": "跟随博客的明暗模式。没有站点记录时跟随系统。",
+     "stageTrackPillReposition": "调整卡片位置",
+     "stageTrackPillRepositionUnavailable": "先播放一首歌 —— 卡片要在屏幕上才能拖动",
+     "stageTrackPillPosition": "歌曲卡片位置",
+--- a/index.html
++++ b/index.html
+@@ -15,7 +15,19 @@
+     <style>
+       html,
+       body {
++        color-scheme: light dark;
+         background-color: #09090b;
++        background-color: light-dark(#eef1f5, #09090b);
++      }
++
++      html[data-ncm-music-color-scheme="light"],
++      html[data-ncm-music-color-scheme="light"] body {
++        color-scheme: light;
++      }
++
++      html[data-ncm-music-color-scheme="dark"],
++      html[data-ncm-music-color-scheme="dark"] body {
++        color-scheme: dark;
+       }
+
+       #app-splash {
+@@ -26,6 +38,7 @@
+         align-items: center;
+         justify-content: center;
+         background-color: #09090b;
++        background-color: light-dark(#eef1f5, #09090b);
+         font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+         transition: opacity 320ms ease;
+       }

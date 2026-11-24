@@ -3,6 +3,7 @@ import type { NcmAccountView } from './generated/ncm-account-view';
 
 let account: NcmAccountView | undefined;
 let session = new AbortController();
+let bindingObserved = false;
 
 export function foliaBindingKey(binding?: NcmAccountView) {
     return binding?.bound && binding.readable !== false && binding.userId
@@ -12,10 +13,15 @@ export function foliaBindingKey(binding?: NcmAccountView) {
 export function setFoliaBinding(binding?: NcmAccountView) {
     const previous = foliaBindingKey(account);
     const next = foliaBindingKey(binding);
+    const initialRead = !bindingObserved;
+    bindingObserved = true;
     account = next ? binding : undefined;
     if (previous === next) return false;
-    session.abort();
-    session = new AbortController();
+    // The initial read describes the same Halo session already used by in-flight public playback requests.
+    if (!initialRead) {
+        session.abort();
+        session = new AbortController();
+    }
     return true;
 }
 

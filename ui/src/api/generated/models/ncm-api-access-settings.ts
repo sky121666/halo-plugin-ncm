@@ -22,12 +22,6 @@
 export interface NcmApiAccessSettings {
     /**
      * 
-     * @type {boolean}
-     * @memberof NcmApiAccessSettings
-     */
-    'allowClientCookie': boolean;
-    /**
-     * 
      * @type {string}
      * @memberof NcmApiAccessSettings
      */
@@ -46,12 +40,6 @@ export interface NcmApiAccessSettings {
     'extraApis': string;
     /**
      * 
-     * @type {string}
-     * @memberof NcmApiAccessSettings
-     */
-    'publicIdentity': string;
-    /**
-     * 
      * @type {boolean}
      * @memberof NcmApiAccessSettings
      */
@@ -62,11 +50,5 @@ export interface NcmApiAccessSettings {
      * @memberof NcmApiAccessSettings
      */
     'realIp': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof NcmApiAccessSettings
-     */
-    'siteMaxLevel': string;
 }
 

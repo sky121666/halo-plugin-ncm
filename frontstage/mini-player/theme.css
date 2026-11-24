@@ -1,0 +1,63 @@
+/* Keep the public attribute, Halo classes and legacy theme name independent. */
+:where(html, body)[data-theme="light"] { --_ncm-legacy-scheme: light; }
+:where(html, body)[data-theme="dark"] { --_ncm-legacy-scheme: dark; }
+
+:where(html, body):where(.light) { --_ncm-class-scheme: light; }
+:where(html, body):where(.dark) { --_ncm-class-scheme: dark; }
+:where(html, body).color-scheme-light { --_ncm-class-scheme: light; }
+:where(html, body).color-scheme-dark { --_ncm-class-scheme: dark; }
+:where(html, body).color-scheme-auto { --_ncm-class-scheme: light dark; }
+
+:where(html, body)[data-color-scheme="light"] { --_ncm-halo-scheme: light; }
+:where(html, body)[data-color-scheme="dark"] { --_ncm-halo-scheme: dark; }
+:where(html, body)[data-color-scheme="auto"] { --_ncm-halo-scheme: light dark; }
+
+dialog[data-ncm-folia-view] {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: #e6e7ec;
+    background: #14151a;
+    color-scheme: light dark;
+    color: light-dark(#17202b, #e6e7ec);
+    background: light-dark(#f2f4f7, #14151a);
+}
+
+html[data-ncm-site-color-scheme=light] dialog[data-ncm-folia-view] { color-scheme: light; }
+html[data-ncm-site-color-scheme=dark] dialog[data-ncm-folia-view] { color-scheme: dark; }
+dialog[data-ncm-folia-view][open] { display: flex; flex-direction: column; }
+
+dialog[data-ncm-folia-view] > [data-ncm-folia-status]:not([hidden]) {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: inherit;
+    font: 500 0.875rem/1.5 system-ui, sans-serif;
+}
+
+dialog[data-ncm-folia-view] > [data-ncm-folia-status] a {
+    padding: 0.5rem;
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+dialog[data-ncm-folia-view] > [data-ncm-folia-status] a:focus-visible { outline: 2px solid light-dark(#455cc7, #bac5ff); outline-offset: 3px; }
+
+dialog[data-ncm-folia-view] > iframe {
+    display: block;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+    border: 0;
+}

@@ -3,7 +3,7 @@ import { CopyButton, Group, Link, Row } from '../components/modal/settings/kit';
 import { haloSettings, sourceHref } from './haloApi';
 
 const repository = 'https://github.com/sky121666/halo-plugin-ncm';
-const about = { id: 'helpAbout', titleKey: '网易云音乐 · Halo 插件' };
+const about = { id: 'helpAbout', titleKey: '网抑云 · Halo 插件' };
 const sources = { id: 'helpOpenSource', titleKey: '开源项目' };
 const projects = [
     { name: 'Folia Web', usage: '音乐页界面与播放器', license: 'AGPL-3.0', href: 'https://github.com/folia-ce/folia-web' },
@@ -15,6 +15,7 @@ export function HaloHelpAbout() {
     const version = haloSettings.version;
     return <div data-halo-help-project>
         <Group def={about}>
+            <Row label="关于网抑云" hint="网抑云是独立的 Halo 插件，接入网易云音乐服务。" />
             <Row label="插件版本">
                 {version && version !== '0' ? <span className="flex min-w-0 items-center gap-2">
                     <code className="min-w-0 select-text font-mono text-xs text-[color:var(--st-t2)] [overflow-wrap:anywhere]">{version}</code>

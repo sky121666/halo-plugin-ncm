@@ -6,7 +6,7 @@ import run.halo.app.extension.AbstractExtension;
 import run.halo.app.extension.GVK;
 
 /**
- * 发布到 /music 首页的歌单（后台「网易云音乐 → 歌单发布」管理）。
+ * 发布到 /music 首页的歌单，在后台「网抑云 → 精选歌单」管理。
  * <p>
  * metadata.name 固定为 {@code playlist-{网易云歌单 ID}}，同一个歌单只能添加一次，迁移重复执行也不会产生重复记录。
  * 只有 spec.published = true 并且游客能公开访问的歌单才会出现在 /music。

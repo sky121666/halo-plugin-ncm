@@ -1,7 +1,6 @@
 package cn.sky.ncm;
 
 import cn.sky.ncm.account.NcmAccount;
-import cn.sky.ncm.ai.MusicAiSettings;
 import cn.sky.ncm.bootstrap.NcmBootstrap;
 import cn.sky.ncm.device.NcmDevice;
 import cn.sky.ncm.featured.FeaturedService;
@@ -10,6 +9,7 @@ import cn.sky.ncm.setting.ApiAccessSettingsService;
 import cn.sky.ncm.setting.ClientConfigService;
 import cn.sky.ncm.setting.FrontstageSettingsService;
 import cn.sky.ncm.setting.NcmClientConfig;
+import cn.sky.ncm.setting.ToolSettingsService;
 import java.time.Duration;
 import org.springframework.stereotype.Component;
 import run.halo.app.extension.SchemeManager;
@@ -25,12 +25,12 @@ public class NcmPlugin extends BasePlugin {
     private final NcmBootstrap bootstrap;
     private final FeaturedService featuredPlaylists;
     private final ClientConfigService preferences;
-    private final MusicAiSettings musicAiSettings;
+    private final ToolSettingsService toolSettings;
 
     public NcmPlugin(PluginContext pluginContext, SchemeManager schemeManager,
                      FrontstageSettingsService frontstageSettings, ApiAccessSettingsService apiAccessSettings,
                      NcmBootstrap bootstrap, FeaturedService featuredPlaylists, ClientConfigService preferences,
-                     MusicAiSettings musicAiSettings) {
+                     ToolSettingsService toolSettings) {
         super(pluginContext);
         this.schemeManager = schemeManager;
         this.frontstageSettings = frontstageSettings;
@@ -38,13 +38,13 @@ public class NcmPlugin extends BasePlugin {
         this.bootstrap = bootstrap;
         this.featuredPlaylists = featuredPlaylists;
         this.preferences = preferences;
-        this.musicAiSettings = musicAiSettings;
+        this.toolSettings = toolSettings;
     }
 
     @Override
     public void start() {
-        apiAccessSettings.initialize().then(frontstageSettings.initialize()).block(Duration.ofSeconds(15));
-        musicAiSettings.migrate().block();
+        apiAccessSettings.initialize().then(frontstageSettings.initialize()).then(toolSettings.initialize())
+            .block(Duration.ofSeconds(15));
         schemeManager.register(NcmAccount.class);
         schemeManager.register(NcmDevice.class);
         schemeManager.register(NcmFeaturedPlaylist.class);

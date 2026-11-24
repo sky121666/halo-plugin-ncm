@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { VButton, VCard, VPageHeader, VTabbar } from '@halo-dev/components'
+import { VButton, VCard, VPageHeader } from '@halo-dev/components'
 import { utils } from '@halo-dev/ui-shared'
 import { computed, defineAsyncComponent, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import RiNeteaseCloudMusicLine from '~icons/ri/netease-cloud-music-line'
+import RiMusic2Line from '~icons/ri/music-2-line'
 import {
   accountsTabId,
   apiManagementTabId,
   featuredTabId,
   maintenanceTabId,
   musicPageTabId,
+  toolSettingsTabId,
+  pluginDisplayName,
   pluginEntryTabId,
   pluginSettingsRoute,
 } from '@/consoleNavigation'
@@ -17,6 +19,7 @@ import FeaturedPanel from './FeaturedPanel.vue'
 
 const MusicPageSettings = defineAsyncComponent(() => import('./MusicPageSettings.vue'))
 const NcmAccountsView = defineAsyncComponent(() => import('./NcmAccountsView.vue'))
+const NcmToolSettingsView = defineAsyncComponent(() => import('./NcmToolSettingsView.vue'))
 const route = useRoute()
 const router = useRouter()
 const canViewPlugin = computed(() => utils.permission.has(['system:plugins:view']))
@@ -24,9 +27,10 @@ const canManageFeatured = computed(() => utils.permission.has(['plugin:ncm:manag
 const canEditSettings = computed(() => utils.permission.has(['system:plugins:manage']))
 const canDebug = computed(() => utils.permission.has(['plugin:ncm:debug']))
 const tabs = computed(() => [
+  ...(canEditSettings.value ? [{ id: musicPageTabId, label: '音乐首页' }] : []),
   ...(canManageFeatured.value ? [{ id: featuredTabId, label: '精选歌单' }] : []),
-  ...(canEditSettings.value ? [{ id: musicPageTabId, label: '音乐页设置' }] : []),
   ...(canManageFeatured.value ? [{ id: accountsTabId, label: '账号与游客' }] : []),
+  ...(canEditSettings.value ? [{ id: toolSettingsTabId, label: '工具设置' }] : []),
 ])
 const activeTab = computed(
   () => tabs.value.find((tab) => tab.id === route.query.tab)?.id ?? tabs.value[0]?.id,
@@ -47,21 +51,18 @@ watch(
 function selectTab(tab: string | number) {
   if (tab === activeTab.value) return
   void router.push({
-    query: { ...route.query, tab: tab === featuredTabId ? undefined : tab, view: undefined },
+    query: { ...route.query, tab, view: undefined, section: undefined, playlist: undefined },
   })
 }
 </script>
 
 <template>
-  <VPageHeader title="网易云音乐工具">
+  <VPageHeader :title="pluginDisplayName">
     <template #icon>
-      <RiNeteaseCloudMusicLine />
+      <RiMusic2Line />
     </template>
     <template #actions>
-      <VButton
-        v-if="canViewPlugin"
-        :route="pluginSettingsRoute(pluginEntryTabId)"
-      >
+      <VButton v-if="canViewPlugin" :route="pluginSettingsRoute(pluginEntryTabId)">
         插件详情
       </VButton>
     </template>
@@ -70,17 +71,23 @@ function selectTab(tab: string | number) {
   <div class="m-0 md:m-4">
     <VCard :body-class="['!p-0', '!overflow-visible']">
       <template #header>
-        <VTabbar
-          :active-id="activeTab"
-          :items="tabs"
-          class="w-full !rounded-none"
-          type="outline"
-          @update:active-id="selectTab"
-        />
+        <nav aria-label="网抑云管理分区" class="flex w-full flex-wrap items-center gap-2 p-3">
+          <VButton
+            v-for="tab in tabs"
+            :key="tab.id"
+            size="sm"
+            :type="activeTab === tab.id ? 'secondary' : 'default'"
+            :aria-current="activeTab === tab.id ? 'page' : undefined"
+            @click="selectTab(tab.id)"
+          >
+            {{ tab.label }}
+          </VButton>
+        </nav>
       </template>
       <div class="p-4">
         <MusicPageSettings v-if="activeTab === musicPageTabId" />
         <NcmAccountsView v-else-if="activeTab === accountsTabId" />
+        <NcmToolSettingsView v-else-if="activeTab === toolSettingsTabId" />
         <FeaturedPanel v-else-if="activeTab === featuredTabId" />
       </div>
     </VCard>

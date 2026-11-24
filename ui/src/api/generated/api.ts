@@ -24,6 +24,6 @@ export * from './api/console-api-ncm-halo-run-v1alpha1-featured-playlist-api';
 export * from './api/console-api-ncm-halo-run-v1alpha1-frontstage-settings-api';
 export * from './api/console-api-ncm-halo-run-v1alpha1-guest-status-api';
 export * from './api/console-api-ncm-halo-run-v1alpha1-site-account-api';
+export * from './api/console-api-ncm-halo-run-v1alpha1-tool-settings-api';
 export * from './api/uc-api-ncm-halo-run-v1alpha1-binding-api';
 export * from './api/uc-api-ncm-halo-run-v1alpha1-me-api';
-

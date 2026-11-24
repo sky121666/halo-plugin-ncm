@@ -42,7 +42,7 @@ import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
 
 /**
- * 后台「歌单发布」（需要「网易云音乐管理」权限，沿用 Halo 后台的角色授权），前缀 /apis/console.api.ncm.halo.run/v1alpha1：
+ * 后台「精选歌单」使用「网抑云管理」权限，前缀 /apis/console.api.ncm.halo.run/v1alpha1。
  * <pre>
  * GET    featured-playlists                        列表，按 /music 的顺序 → { items }
  * POST   featured-playlists                        添加 { playlistId, title?, description?, publish? } → Item

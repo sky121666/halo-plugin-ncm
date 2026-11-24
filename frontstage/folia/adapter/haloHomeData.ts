@@ -116,9 +116,7 @@ type Showcase = {
     leadPlaylist?: HaloCollection;
     featuredPlaylists?: HaloCollection[];
     publicPlaylistShelf?: HaloCollection[];
-    recentSongs?: HaloSong[];
     weekRank?: HaloSong[];
-    dailySongs?: HaloSong[];
 };
 
 function showcaseBlock<T>(blockCode: string, title: string, items: readonly T[], resource: (item: T) => object) {
@@ -129,7 +127,7 @@ function sitePlaylist(row: HaloCollection) {
     return {
         resourceType: 'list', resourceId: row.id,
         uiElement: { mainTitle: { title: row.name }, image: { imageUrl: row.coverUrl } },
-        resourceExtInfo: { playCount: row.playCount },
+        resourceExtInfo: { playCount: row.playCount, subtitle: '' },
     };
 }
 
@@ -153,11 +151,9 @@ async function getHomeBlocks(cursor: string | undefined, signal: AbortSignal) {
     const publicLists = data.publicPlaylistShelf ?? [];
     if (!featured.length && data.leadPlaylist) publicLists.unshift(data.leadPlaylist);
     return { data: { ...result.data, blocks: [
-        showcaseBlock('halo-featured', '站长精选', featured, sitePlaylist),
+        showcaseBlock('halo-featured', '站长精选歌单', featured, sitePlaylist),
         showcaseBlock('halo-public', '站长公开歌单', publicLists, sitePlaylist),
-        showcaseBlock('halo-plays', '站长最近播放', data.recentSongs ?? [], siteSong),
-        showcaseBlock('halo-rank', '站长听歌排行', data.weekRank ?? [], siteSong),
-        showcaseBlock('halo-daily', '站长每日推荐', data.dailySongs ?? [], siteSong),
+        showcaseBlock('halo-rank', '站长公开听歌排行', data.weekRank ?? [], siteSong),
         ...result.data.blocks,
     ] } };
 }

@@ -1,5 +1,6 @@
 import { axiosInstance } from '@halo-dev/api-client'
 import {
+  ApiNcmHaloRunV1alpha1ClientConfigApi,
   ApiNcmHaloRunV1alpha1NcmApi,
   ConsoleApiNcmHaloRunV1alpha1ApiAccessSettingsApi,
   ConsoleApiNcmHaloRunV1alpha1DebugApi,
@@ -8,6 +9,7 @@ import {
   ConsoleApiNcmHaloRunV1alpha1FrontstageSettingsApi,
   ConsoleApiNcmHaloRunV1alpha1GuestStatusApi,
   ConsoleApiNcmHaloRunV1alpha1SiteAccountApi,
+  ConsoleApiNcmHaloRunV1alpha1ToolSettingsApi,
   UcApiNcmHaloRunV1alpha1BindingApi,
   type NcmAccountView,
   type NcmApiMeta,
@@ -23,6 +25,7 @@ import {
 
 export const ncmApiClient = {
   ncm: new ApiNcmHaloRunV1alpha1NcmApi(undefined, '', axiosInstance),
+  clientConfig: new ApiNcmHaloRunV1alpha1ClientConfigApi(undefined, '', axiosInstance),
 }
 
 export const ncmConsoleApiClient = {
@@ -45,6 +48,7 @@ export const ncmConsoleApiClient = {
     '',
     axiosInstance,
   ),
+  toolSettings: new ConsoleApiNcmHaloRunV1alpha1ToolSettingsApi(undefined, '', axiosInstance),
 }
 
 export const ncmUcApiClient = {

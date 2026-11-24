@@ -109,7 +109,7 @@ public class SecretStore {
                 .flatMap(existing -> {
                     if (!owned(existing)) {
                         return Mono.error(new IllegalStateException(
-                            "Secret " + name + " 已存在，但不是网易云音乐插件创建的，已拒绝覆盖"));
+                            "Secret " + name + " 已由其他资源使用，网抑云无法覆盖"));
                     }
                     existing.setType(Secret.SECRET_TYPE_OPAQUE);
                     existing.setData(null);

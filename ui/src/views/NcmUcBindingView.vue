@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import { VCard, VPageHeader } from '@halo-dev/components'
 import { computed, ref } from 'vue'
-import RiNeteaseCloudMusicLine from '~icons/ri/netease-cloud-music-line'
+import RiMusic2Line from '~icons/ri/music-2-line'
 import { myBindingApi } from '@/api'
 import type { NcmAccountView } from '@/api/generated'
 import AccountBinding from '@/components/AccountBinding.vue'
-import { musicPageUrl } from '@/consoleNavigation'
+import { musicPageUrl, pluginDisplayName } from '@/consoleNavigation'
 
 const account = ref<NcmAccountView>()
 const bound = computed(() => account.value?.bound === true && account.value.readable !== false)
 </script>
 
 <template>
-  <VPageHeader title="网易云音乐">
+  <VPageHeader :title="pluginDisplayName">
     <template #icon>
-      <RiNeteaseCloudMusicLine />
+      <RiMusic2Line />
     </template>
     <template #actions>
       <a

@@ -50,7 +50,7 @@ public class MusicPageRouter {
 
     public static final String ID_PATTERN = "{id:\\d+}";
     static final int SEARCH_PAGE_SIZE = 30;
-    private static final Set<String> HOME_SECTIONS = Set.of("playlists", "profile", "recent", "rank", "daily");
+    private static final Set<String> HOME_SECTIONS = Set.of("playlists", "profile", "rank");
 
     private final SettingService settings;
     /** 严格模式：网易云出错时抛 NcmUnavailableException，页面据此显示“服务暂时不可用”而不是“没有内容”。 */
@@ -59,14 +59,15 @@ public class MusicPageRouter {
     /** 后台「歌单发布」 */
     private final FeaturedService featured;
     private final String assetsVersion;
-    private final FoliaPage folia = new FoliaPage();
+    private final FoliaPage folia;
 
-    public MusicPageRouter(SettingService settings, NcmFinderImpl finder,
-                           RateLimiter limiter, PluginContext pluginContext, FeaturedService featured) {
+    MusicPageRouter(SettingService settings, NcmFinderImpl finder, RateLimiter limiter,
+                    PluginContext pluginContext, FeaturedService featured, FoliaPage folia) {
         this.featured = featured;
         this.settings = settings;
         this.finder = finder.strict();
         this.limiter = limiter;
+        this.folia = folia;
         this.assetsVersion = Objects.requireNonNullElse(pluginContext.getVersion(), "0");
     }
 
@@ -118,9 +119,7 @@ public class MusicPageRouter {
                 ? featured.homePlaylists(!part.isEmpty()) : Mono.just(new HomePlaylists(List.of(), false));
             return Mono.zip(homeSection(part, "profile", () -> finder.siteProfile().flux(), failed), published,
                     homeSection(part, "playlists", () -> finder.sitePlaylists(24), failed),
-                    homeSection(part, "recent", () -> finder.siteRecentSongs(10), failed),
-                    homeSection(part, "rank", () -> finder.siteWeekRank(10), failed),
-                    homeSection(part, "daily", () -> finder.siteDailyRecommend(10), failed))
+                    homeSection(part, "rank", () -> finder.siteWeekRank(10), failed))
                 .flatMap(t -> {
                     Map<String, Object> m = new LinkedHashMap<>();
                     if (t.getT2().unavailable()) {
@@ -138,9 +137,7 @@ public class MusicPageRouter {
                     m.put("featuredPlaylists", featuredPlaylists);
                     m.put("publicPlaylistShelf", t.getT3().stream()
                         .filter(p -> !featuredIds.contains(p.getId())).toList());
-                    m.put("recentSongs", t.getT4().stream().map(PlayRecordVo::getSong).toList());
-                    m.put("weekRank", t.getT5().stream().map(PlayRecordVo::getSong).toList());
-                    m.put("dailySongs", t.getT6());
+                    m.put("weekRank", t.getT4().stream().map(PlayRecordVo::getSong).toList());
                     m.put("homeErrors", List.copyOf(failed));
                     return json(HttpStatus.OK, m, NO_STORE);
                 });

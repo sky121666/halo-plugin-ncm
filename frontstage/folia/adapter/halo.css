@@ -144,6 +144,40 @@
 #root .search-workspace .search-sources { display: none; }
 #root .search-workspace .search-kinds { gap: .375rem 1rem; }
 
+@media (max-width: 39.99rem) {
+    .halo-collection-info {
+        inset-inline: 1rem;
+        width: auto;
+        max-width: 20rem;
+        margin-inline: auto;
+        padding: 1rem;
+    }
+    .halo-collection-meta { overflow-wrap: anywhere; }
+}
+
+@media (max-width: 39.99rem) and (max-height: 43rem) {
+    .halo-collection-info {
+        display: grid;
+        grid-template-columns: 4.75rem minmax(0, 1fr);
+        align-content: start;
+        gap: .75rem;
+    }
+    .halo-collection-cover {
+        margin: 0;
+        border-radius: .75rem;
+    }
+    .halo-collection-cover > button {
+        right: .25rem;
+        bottom: .25rem;
+    }
+    .halo-collection-meta { overflow: visible; }
+    .halo-collection-actions {
+        grid-column: 1 / -1;
+        margin-top: 0;
+        padding-top: .75rem;
+    }
+}
+
 .halo-entry-main { padding-block: clamp(1.5rem, 5vw, 4rem); }
 .halo-entry-main h1 { font-size: clamp(1.25rem, 2.6vw, 1.75rem); font-weight: 650; }
 .halo-entry-main p { margin-block: .5rem 1rem; }

@@ -46,7 +46,7 @@ interface PlayAddress {
     status: 'ok' | 'unavailable' | 'service' | 'rate_limited';
     url?: string;
     level?: string;
-    identity?: 'guest' | 'user' | 'site';
+    identity?: 'guest' | 'user';
     gain?: number;
     message?: string;
     trial?: { start: number; end: number };
@@ -66,7 +66,7 @@ function servedQuality(level: string | undefined, requested: AudioQualityPrefere
     }
 }
 
-export const useHaloTrackFeedback = create<Map<string, { request: symbol; text?: string }>>(() => new Map());
+export const useHaloTrackFeedback = create<Map<string, { request: symbol; text?: string; trial?: boolean }>>(() => new Map());
 
 function trackFeedback(id: string) {
     const request = Symbol();
@@ -77,9 +77,9 @@ function trackFeedback(id: string) {
         if (next.size > 200) next.delete(next.keys().next().value!);
         return next;
     }, true);
-    return (text?: string) => {
+    return (text: string, trial = false) => {
         useHaloTrackFeedback.setState(previous => previous.get(id)?.request === request
-            ? new Map(previous).set(id, { request, text }) : previous, true);
+            ? new Map(previous).set(id, { request, text, trial }) : previous, true);
     };
 }
 
@@ -109,7 +109,7 @@ async function getAudioSource(song: SongResult, quality: AudioQualityPreference)
             setAudioCacheSource(cacheKey, cacheable ? { url: url.href, level, signal } : undefined);
         }
         if (play.trial) {
-            feedback('试听 ' + Math.round((play.trial.end - play.trial.start) / 1000) + ' 秒');
+            feedback('试听 ' + Math.round((play.trial.end - play.trial.start) / 1000) + ' 秒', true);
         }
         return {
             url: url.href, quality: level, fetchedAt: Date.now(), expiresAt: Date.now(),

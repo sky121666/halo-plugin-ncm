@@ -79,8 +79,8 @@ metadata:
   labels:
     halo.run/role-template: "true"
   annotations:
-    rbac.authorization.halo.run/module: "网易云音乐"
-    rbac.authorization.halo.run/display-name: "网易云音乐管理"
+    rbac.authorization.halo.run/module: "网抑云"
+    rbac.authorization.halo.run/display-name: "网抑云管理"
     rbac.authorization.halo.run/ui-permissions: '["plugin:ncm:manage"]'
 rules:
   - apiGroups: [ "console.api.ncm.halo.run" ]
@@ -124,8 +124,8 @@ metadata:
   labels:
     halo.run/role-template: "true"
   annotations:
-    rbac.authorization.halo.run/module: "网易云音乐"
-    rbac.authorization.halo.run/display-name: "网易云接口调试"
+    rbac.authorization.halo.run/module: "网抑云"
+    rbac.authorization.halo.run/display-name: "网抑云接口调试"
     rbac.authorization.halo.run/ui-permissions: '["plugin:ncm:debug"]'
 rules:
   - apiGroups: [ "console.api.ncm.halo.run" ]
@@ -156,7 +156,7 @@ metadata:
     rbac.authorization.halo.run/aggregate-to-role-template-manage-plugins: "true"
 rules:
   - apiGroups: [ "console.api.ncm.halo.run" ]
-    resources: [ "api-access-settings" ]
+    resources: [ "api-access-settings", "tool-settings" ]
     resourceNames: [ "-" ]
     verbs: [ "get", "update" ]
   - apiGroups: [ "console.api.ncm.halo.run" ]
@@ -197,6 +197,6 @@ metadata:
     halo.run/role-template: "false"
     halo.run/hidden: "false"
   annotations:
-    rbac.authorization.halo.run/display-name: "旧版网易云音乐管理"
+    rbac.authorization.halo.run/display-name: "旧版网抑云管理"
     rbac.authorization.halo.run/dependencies: '["plugin-ncm-role-manage"]'
 rules: []

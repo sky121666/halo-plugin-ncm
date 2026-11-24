@@ -69,6 +69,7 @@
     "appearance": {
       "mode": "enum:default|custom|ai",
       "palette": "palette?",
+      "colorScheme": "enum:site|system|light|dark",
       "daylight": "bool"
     },
     "playback": {
