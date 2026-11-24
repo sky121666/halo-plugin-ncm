@@ -2,7 +2,7 @@
 
 为 Halo 提供独立音乐页、精选歌单、点唱台和个人曲库。音乐页由 Folia Web 适配，网易云 API 内置于插件的 Java 服务。
 
-[项目源码](https://github.com/sky121666/halo-plugin-ncm) · [问题反馈](https://github.com/sky121666/halo-plugin-ncm/issues) · [构建方法](#构建)
+[项目源码](https://github.com/sky121666/halo-plugin-ncm) · [问题反馈](https://github.com/sky121666/halo-plugin-ncm/issues) · [构建方法](#构建) · [配置同步快速接入](docs/配置同步快速接入.md)
 
 ## 安装与使用
 
@@ -66,7 +66,7 @@
 | `GET /apis/console.api.ncm.halo.run/v1alpha1/calls/{name}` | 网易云接口调试 | 使用游客身份调试常用只读接口 |
 | `GET /apis/console.api.ncm.halo.run/v1alpha1/guest-status/-` | 网易云音乐管理 | 读取游客会话摘要 |
 | `GET/PUT /apis/console.api.ncm.halo.run/v1alpha1/api-access-settings/-` | Halo 插件管理 | 读取和保存接口设置。保存时校验配置版本 |
-| `GET/PUT /apis/console.api.ncm.halo.run/v1alpha1/frontstage-settings/-` | Halo 插件管理 | 读取和保存音乐页设置。保存时校验配置版本 |
+| `GET/PUT /apis/console.api.ncm.halo.run/v1alpha1/frontstage-settings/-` | Halo 插件管理 | 读取和保存音乐页设置。播放模式和音量由配置发布接口管理 |
 | `GET /apis/console.api.ncm.halo.run/v1alpha1/device` | Halo 插件管理 | 读取设备、凭据和连接状态 |
 | `POST /apis/console.api.ncm.halo.run/v1alpha1/device/refresh` | Halo 插件管理 | 重新获取 xeapi 公钥并注册游客 |
 | `POST /apis/console.api.ncm.halo.run/v1alpha1/device/reset` | Halo 插件管理 | 重新生成设备身份 |
@@ -120,6 +120,65 @@ Halo 默认限制请求体大小，上传大文件前请确认反向代理和 Ha
 
 `song_url_v1` 走 xeapi，失败时自动改用 eapi 重试，返回体里带 `"fallback": "eapi"`。
 
+## 可选的音乐 AI
+
+网易云音乐插件内置歌曲 AI 配色和歌词分词，随主 JAR 安装。在「插件 → 网易云音乐 → 音乐 AI」管理总开关与使用范围。默认开启，所有已登录的 Halo 账号可用。切换到「仅指定角色」后，账号拥有任意一个所选角色即可使用。已有站点的开关选择继续有效。
+
+音乐 AI 需要启用 [AI Foundation](https://github.com/halo-dev/plugin-ai-foundation)（`>=1.4.0 & <2.0.0`）并设置默认语言模型。音乐页在打开或切回标签页时检查角色权限和模型状态。未登录、权限不符或模型未就绪时隐藏生成入口，仍可使用手动配色、封面取色和原始歌词。
+
+已安装旧「网易云音乐 AI 扩展」的站点可先停用旧扩展，再升级主插件。首次启动时，主插件会读取旧开关，优先使用主插件里已保存的值。核对开关后可卸载旧扩展。如热更新 AI Foundation 后 AI 入口未恢复，重载一次网易云音乐插件。
+
+生成配色时会把歌名或最多 2,000 字的歌词发给站点配置的模型。明暗配色、关键词颜色和意象图标作为单曲主题保存在浏览器，重复播放可复用。封面提色也保存在浏览器的单独缓存中。Halo 配置同步保存外观、播放等偏好。分词只发送要处理的歌词行。
+
+同站点的适配界面可调用 `/apis/api.ncm-ai.halo.run/v1alpha1` 下的接口。
+
+| 方法和路径 | 请求 | 响应 |
+|---|---|---|
+| `GET /capabilities/-` | Halo 登录会话 | 对象中的 `available` 字段为 `true` 或 `false` |
+| `POST /themes` | `{ "lyricsText": "...", "songTitle": "...", "isPureMusic": false }` | `light`、`dark` 两套配色 |
+| `POST /segmentations` | `{ "lines": ["第一行", "第二行"] }` | `lines` 按输入对齐。空项沿用本地分词 |
+
+POST 使用同源 JSON 请求并带上 `X-NCM-Request: 1`。服务端每次检查总开关、角色和模型。角色未获授权返回 `403`，总开关关闭或模型未就绪返回 `503`。个人每分钟最多 8 次，全站每分钟最多 30 次，同时最多处理 2 次生成，超出额度返回 `429`。
+
+## 前端配置同步
+
+主题或自定义音乐页可从[配置同步快速接入](docs/配置同步快速接入.md)复制客户端清单和读写示例。
+
+Folia 设置即时保存在浏览器。登录 Halo 后，「存储与备份 → Halo 配置同步」中的个人同步默认开启，已有的开关选择优先。后续修改合并提交到当前 Halo 账号。换号会切换本地配置副本。离线修改在本机保留，版本冲突由用户选择云端或本机配置。
+
+超级管理员修改可发布的设置后，可从设置窗口底部「保存为站点默认」。保存范围由配置字段清单决定。浏览器的歌词、封面、歌单和媒体缓存保存在本地。
+
+在「存储与备份 → 缓存详情 → 歌曲缓存」可开关缓存、查看本浏览器已缓存的歌曲数量和占用空间，也可以清理。个人同步仅保存开关。重复播放时仍会校验当前账号的音源权限。试听、私人云盘、站长代播和需要会员权限的音源继续在线播放。
+
+配置 API 的前缀为 `/apis/api.ncm.halo.run/v1alpha1`。
+
+| 方法和路径 | Halo 权限 | 用途 |
+|---|---|---|
+| `GET /config-defaults/{clientId}` | 游客可读 | 读取该客户端已发布的默认配置 |
+| `GET /my-configs/{clientId}` | 登录 | 读取本人的配置快照、当前账号标识和权限 |
+| `PUT /my-configs/{clientId}` | 登录 | 保存本人的完整可同步配置 |
+| `PUT /config-defaults/{clientId}` | 超级管理员 | 发布新的站点默认 |
+| `POST /config-defaults/{clientId}/restore` | 超级管理员 | 用当前版本令牌恢复上一版 |
+
+读取返回 `schemaVersion`、`revision`、`config`。个人读取将三项放在 `snapshot`，并提供 `profileKey`、`canPublishSite` 和 `canViewDiagnostics`。`config` 为空时沿用站点或客户端默认。写入提交同样三项，使用目标接口读取的 `revision`。
+
+```json
+{
+  "schemaVersion": 1,
+  "revision": "从目标接口读取的版本令牌",
+  "config": {
+    "playback": { "volume": 0.65, "loopMode": "all" },
+    "visual": { "showSubtitleTranslation": true }
+  }
+}
+```
+
+写请求发送 `Content-Type: application/json` 和 `X-NCM-Request: 1`，浏览器使用同源 Halo 会话。请求体上限 64 KiB，未知字段或非法值返回 `400`，版本冲突返回 `409`。个人响应使用 `private, no-store`。诊断入口使用 Halo 的「网易云接口调试」权限，站点发布使用超级管理员权限。
+
+Folia 使用 `folia` 客户端，其字段清单是 [foliaConfigPolicy.json](frontstage/folia/adapter/foliaConfigPolicy.json)。新适配端可随插件登记 `config-clients/{clientId}.json`，声明版本、分组、字段和 `personalOnly` 列表。设备、播放会话、外部服务凭据、素材和日志沿用各自存储。首次升级将原播放模式和音量迁入 `folia` 站点默认。两个标签页的待同步改动会分别保存在当前浏览器，恢复联网后按字段合并。同一字段取最后一次本机改动，服务端版本发生冲突时由用户选择。
+
+清除个人云端配置复用个人写入接口，提交 `config: {}` 并使用个人配置的当前 `revision`。开启同步的设备重新应用站点默认。发布不同的站点默认时会保留上一版。`hasPrevious` 为 `true` 时，超管可以提交 `{ "schemaVersion": 1, "revision": "当前站点版本" }` 恢复。历史内容保留在后台。
+
 ## OpenAPI 与前端 API Client
 
 三组自定义接口都用 `SpringdocRouteBuilder` 声明了 OpenAPI 描述（稳定的 operationId、tag、参数、请求体和响应类型），请求和响应都有明确的 DTO（`cn.sky.ncm.endpoint.dto.Ncm*`），请求体在服务端显式校验，不只靠文档约束。
@@ -133,7 +192,7 @@ Halo 默认限制请求体大小，上传大文件前请确认反向代理和 Ha
 | `console.api.ncm.halo.run/v1alpha1/FrontstageSettings` | `ConsoleApiNcmHaloRunV1alpha1FrontstageSettingsApi` | 音乐页设置 |
 | `uc.api.ncm.halo.run/v1alpha1/Binding` | `UcApiNcmHaloRunV1alpha1BindingApi` | 个人中心绑定 |
 
-前端不再手写请求和类型，全部使用 `./gradlew generateApiClient` 生成到 `ui/src/api/generated/` 的客户端和模型；`ui/src/api/index.ts` 只用 Halo 的 `axiosInstance` 创建实例并做少量适配。
+后台和个人中心使用 `./gradlew generateApiClient` 生成到 `ui/src/api/generated/` 的客户端和模型。Folia 配置同步通过同源 Fetch 接入上述契约。
 
 > 网易云接口本身（`public/{name}`、`personal/{name}`、`calls/{name}`）的参数因接口而异，OpenAPI 里只声明了路径参数 `name`，其余参数用 axios 的 `params` 或请求体传入，返回值声明为任意 JSON。
 
@@ -281,7 +340,7 @@ Halo 默认限制请求体大小，上传大文件前请确认反向代理和 Ha
 
 ## Folia 播放器
 
-播放器布局、歌词、快捷键和随机播放使用 Folia 原生功能。「音乐页设置 → 播放默认值」控制默认循环模式、音量和回到音乐页时的自动续播。访客修改过的音量、静音和循环模式由浏览器保存。旧版随机模式按列表循环读取，可用 Folia 的随机播放操作打乱队列。
+播放器布局、歌词、快捷键和随机播放使用 Folia 原生功能。超管在音乐页「存储与备份 → Halo 配置同步」发布默认循环模式、音量等偏好。「音乐页设置 → 播放行为」控制回到音乐页时的自动续播。访客的本机调节由浏览器保存。旧版随机模式按列表循环读取，可用 Folia 的随机播放操作打乱队列。
 
 适配源码和许可证可从音乐页「设置 → 帮助 → 开源项目」下载。
 
@@ -304,11 +363,12 @@ Halo 默认限制请求体大小，上传大文件前请确认反向代理和 Ha
 | 位置 | 页签 | 管理内容 | 所需权限 |
 |---|---|---|---|
 | 工具 → 网易云音乐 | 精选歌单 | 预览试听、编辑展示信息、保存草稿、发布、下架和排序 | 网易云音乐管理 |
-| 工具 → 网易云音乐 | 音乐页设置 | 页面与搜索、站长公开内容、Folia 播放默认值 | Halo 插件管理 |
+| 工具 → 网易云音乐 | 音乐页设置 | 页面与搜索、站长公开内容、自动续播 | Halo 插件管理 |
 | 工具 → 网易云音乐 | 账号与游客 | 绑定站长网易云账号，读取游客注册状态与最近初始化尝试 | 网易云音乐管理 |
 | 插件 → 网易云音乐 | 维护 | 刷新设备、凭据与代理状态，重新初始化游客或重置设备身份 | Halo 插件管理 |
 | 插件 → 网易云音乐 | 接口管理 | 通用接口范围、公开访问身份、请求兼容和游客只读调试 | Halo 插件查看。接口开放需要 Halo 插件管理，接口调试需要网易云接口调试 |
 | 插件 → 网易云音乐 | 网络与限流 | 网易云代理、访客 IP、请求额度、音乐页与主题查询缓存、上传 | Halo 插件管理 |
+| 插件 → 网易云音乐 | 音乐 AI | 启用歌曲配色和歌词分词 | Halo 插件管理 |
 
 工具页右上角的「插件详情」打开「管理入口」。该页按角色提供音乐页工具、插件设置与维护的直达链接，并可返回工具页。
 
@@ -320,7 +380,7 @@ Halo 默认限制请求体大小，上传大文件前请确认反向代理和 Ha
 
 ### Halo 接入边界
 
-- 个人账号和个人曲库在「个人中心 → 网易云音乐」（`/uc/ncm`）管理。个人曲库使用 `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/` 下的接口。
+- 个人账号在「个人中心 → 网易云音乐」（`/uc/ncm`）绑定或解绑。打开个人曲库会进入 Folia 的 `/music/library`。个人曲库使用 `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/` 下的接口。
 - 音乐页从插件的发布记录和授权的站长内容读取数据。实际取址由 `/music/play/{id}` 按请求身份处理。
 - 主题模板通过 `ncmFinder` 读取公开音乐数据。技术参数由 Halo Setting 管理，工具页使用 Halo 共享组件和生成的 API Client。
 
@@ -346,13 +406,13 @@ cd halo-plugin-ncm
 ./gradlew build
 ```
 
-后端 API 契约变更后，重新生成 `ui/src/api/generated/`。默认由 DevTools 启动临时 Halo 容器读取 OpenAPI 文档，需要 Docker。也可在 `build.gradle` 的 `haloPlugin.openApi` 中配置 `useExistingServer = true`，从已加载插件的 Halo 读取文档。
+后端 API 契约变更后，重新生成 `ui/src/api/generated/`。默认由 DevTools 启动临时 Halo 容器读取 OpenAPI 文档，需要 Docker。请使用独立构建目录或把历史插件包保存在 `build/libs/` 之外，避免临时容器同时加载同名插件。也可在 `build.gradle` 的 `haloPlugin.openApi` 中配置 `useExistingServer = true`，从已加载插件的 Halo 读取文档。
 
 ```bash
-./gradlew generateApiClient
+./gradlew generateApiClient -x test
 ```
 
-每次生成时会清空该目录。更新 API Client 后应与后端改动一并提交。
+生成会重写专用客户端目录。确认产物包含当前接口后，使用 `./gradlew build` 运行完整检查。
 
 构建插件会同时构建 `ui/` 前端（Gradle 的 node 插件会自动执行 `pnpm install`），前端产物会完整复制到插件包的 `ui/` 目录：
 
@@ -362,13 +422,13 @@ corepack enable          # 没装 pnpm 时执行一次
 ./gradlew haloServer     # 启动一个装好插件的 Halo 2.27 开发实例（需要 Docker）
 ```
 
-前台脚本（`static/player.js`、`nav.js`）的单元测试在 `ui/src/__tests__/`，用 vitest + jsdom 直接运行脚本：
+使用 Halo DevTools 在独立端口启动开发实例并自动重载。
 
 ```bash
-cd ui && pnpm test:unit --run
+./gradlew watch -Pport=8092
 ```
 
-只改前端时，可以在 `ui/` 里执行 `pnpm dev`（监听构建，直接输出到 `build/resources/main/ui`），配合 `./gradlew haloServer` 刷新页面即可看到效果。
+`watch` 会启动开发实例，监听插件源码和 `frontstage/folia/`。需要手动重载时，可用 `./gradlew haloServer -Pport=8092` 启动开发实例，然后执行 `./gradlew reloadPlugin -Pport=8092`。控制台和个人中心的 Vue 界面还可以使用 `ui/` 下的 `pnpm dev`。完整检查运行 `./gradlew build`。
 
 > Halo 2.23 起升级到 Spring Boot 4，默认用 Jackson 3 序列化。插件内部仍用 Jackson 2 处理网易云的数据，所有接口在返回前都先自己序列化成 JSON 字符串，避免两套 Jackson 混用导致返回内容错乱。
 
@@ -457,9 +517,7 @@ python3 tools/convert.py /tmp/api-enhanced/module src/main/resources/ncm-apis.js
 - `/music` 页面：
   - 连续获取播放地址受「网络与限流」的公开请求或个人请求额度约束。
   - 游客身份下会员歌曲只能试听或不能播放，页面会提示并跳过。
-  - 搜索结果（cloudsearch）和热搜榜（search_hot_detail）的返回结构是按上游文档写的，还没实测。
-  - 搜索联想（search_suggest 的 web 版）的返回结构也是按上游写的，没实测；单曲联想一般没有封面。
-  - 没有做 SEO 结构化数据，后续可以加。
+  - 单曲联想可能没有封面。歌曲、歌单、专辑和歌手详情提供结构化数据。
 - 等级划分（public / personal / write / auth / admin）是按接口名推断再人工修正的，见 `ncm-apis.json`，可以自行调整。
 
 ## 合规提醒
