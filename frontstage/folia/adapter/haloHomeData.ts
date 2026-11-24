@@ -1,8 +1,12 @@
-import type { MediaId, OnlineExploreProvider, ProviderCollection, ProviderPage } from '../types/onlineMusic';
+import type {
+    DailyStyleGroup, DailyStyleSelection, MediaId, OnlineExploreProvider, OnlineRecommendationProvider,
+    ProviderCollection, ProviderPage,
+} from '../types/onlineMusic';
 import type { NcmMePlaylist } from './generated/ncm-me-playlist';
 import { haloGet, musicHome, readPlaylist, toCollection, toSong, type HaloCollection, type HaloSong } from './haloApi';
 import { foliaSessionSignal, foliaUser, requireFoliaBinding } from './haloFoliaBinding';
-import { libraryApi, readOwnMusic } from './haloLibraryApi';
+import { libraryApi, readOwnMusic, writeOwnMusic } from './haloLibraryApi';
+import { getPersonalFmRequestOptions } from '../stores/usePersonalFmModeStore';
 
 type SourceArtist = { id: string; name: string };
 type SourceCreator = { id: string; nickname: string };
@@ -20,7 +24,7 @@ type SourceCollection = {
     creator?: SourceCreator;
 };
 
-function toFoliaCollection(raw: unknown, type = 'playlist') {
+export function toFoliaCollection(raw: unknown, type = 'playlist') {
     const row = raw as SourceCollection;
     return toCollection({
         id: row.id, name: row.name, coverUrl: row.coverImgUrl || row.picUrl,
@@ -62,12 +66,48 @@ const daily = (refresh = false) => readOwnMusic<{ songs: HaloSong[] }>(
 const recommended = () => readOwnMusic<{ recommend: SourceCollection[] }>(
     'recommendations/playlists', {}, requireFoliaBinding());
 
-export const haloRecommendations = {
+const historyDates = async () => (await readOwnMusic<{ dates: string[] }>(
+    'recommendations/daily/history', {}, requireFoliaBinding())).dates;
+
+export const haloRecommendations: OnlineRecommendationProvider = {
     getDailySongs: async (refresh?: boolean) => (await daily(refresh)).songs.map(toSong),
-    getPersonalFm: async () => (await readOwnMusic<{ songs: HaloSong[] }>(
-        'recommendations/fm', {}, requireFoliaBinding())).songs.map(toSong),
+    async getPersonalFm(options) {
+        const { mode, submode } = options ?? getPersonalFmRequestOptions('netease');
+        const query = { ...(mode ? { mode } : {}), ...(submode ? { submode } : {}) };
+        const data = await readOwnMusic<{ songs: HaloSong[] }>('recommendations/fm', query, requireFoliaBinding());
+        return data.songs.map(toSong);
+    },
     getRecommendedCollections: async (limit: number) =>
         (await recommended()).recommend.slice(0, limit).map(row => toFoliaCollection(row)),
+    getHistoryDates: historyDates,
+    getHistoryEntries: async () => (await historyDates()).map(date => ({ id: date, label: date })),
+    async getHistorySongs(entry) {
+        const date = encodeURIComponent(typeof entry === 'string' ? entry : entry.id);
+        const data = await readOwnMusic<{ songs: HaloSong[] }>(
+            'recommendations/daily/history/' + date, {}, requireFoliaBinding());
+        return data.songs.map(toSong);
+    },
+    async getDailyStyleGroups() {
+        return (await readOwnMusic<{ groups: DailyStyleGroup[] }>(
+            'recommendations/style/groups', {}, requireFoliaBinding())).groups;
+    },
+    async getDailyStyleSongs() {
+        const data = await readOwnMusic<{ songs: HaloSong[]; selection?: DailyStyleSelection }>(
+            'recommendations/style', {}, requireFoliaBinding());
+        return { songs: data.songs.map(toSong), selection: data.selection ?? null };
+    },
+    async setDailyStyle(selection) {
+        const signal = requireFoliaBinding();
+        await writeOwnMusic<void>('recommendations/style', 'PUT', signal, selection);
+        signal.throwIfAborted();
+    },
+    async dislikeSong(id) {
+        const signal = requireFoliaBinding();
+        const data = await writeOwnMusic<{ limitReached: boolean; replacement?: HaloSong }>(
+            'recommendations/dislike/' + encodeURIComponent(String(id)), 'POST', signal);
+        signal.throwIfAborted();
+        return { limitReached: data.limitReached, replacement: data.replacement && toSong(data.replacement) };
+    },
 };
 
 type HomeBlocks = { blocks: unknown[]; cursor?: string; hasMore?: boolean };

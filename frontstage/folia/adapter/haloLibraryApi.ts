@@ -38,7 +38,7 @@ async function request<T>(path: string, { signal, method = 'GET', body, timeoutM
 } = {}): Promise<T> {
     const timeout = AbortSignal.timeout(timeoutMs);
     const binding = path.startsWith('binding');
-    const unconfirmed = binding ? '暂时无法确认绑定请求结果。' : '提交结果暂时无法确认。请先刷新歌单再试。';
+    const unconfirmed = binding ? '暂时无法确认绑定请求结果。' : '提交结果暂时无法确认，请刷新后查看。';
     const headers = new Headers({ Accept: 'application/json' });
     if (method !== 'GET') {
         headers.set('X-NCM-Request', '1');
@@ -74,7 +74,12 @@ export function readOwnMusic<T>(path: string, query: Record<string, string | num
     Object.entries(query).forEach(([name, value]) => params.set(name, String(value)));
     return request<T>(mine + path + (params.size ? '?' + params : ''), { signal });
 }
+
+export function writeOwnMusic<T>(path: string, method: 'POST' | 'PUT', signal: AbortSignal, body?: object) {
+    return request<T>(mine + path, { method, signal, body });
+}
 const subscriptionPath = (id: string) => mine + 'subscriptions/' + segment(id);
+const albumSubscriptionPath = (id: string) => mine + 'albums/' + segment(id) + '/subscription';
 const tracksPath = (id: string) => 'playlists/' + segment(id) + '/tracks';
 
 export const bindingApi = {
@@ -96,11 +101,11 @@ export const libraryApi = {
         request<NcmMePlaylistTracks>(tracksPath(id) + paging(offset, limit), { signal }),
     createPlaylist: (body: NcmMePlaylistCreateRequest) => request<NcmMePlaylist>(mine + 'playlists', { method: 'POST', body }),
     deletePlaylist: (id: string) => request<void>(mine + 'playlists/' + segment(id), { method: 'DELETE' }),
-    addTracks: (id: string, songIds: string[]) => request<NcmMeTracksResult>(tracksPath(id), {
-        method: 'POST', body: { songIds },
+    addTracks: (id: string, songIds: string[], signal?: AbortSignal) => request<NcmMeTracksResult>(tracksPath(id), {
+        method: 'POST', body: { songIds }, signal,
     }),
-    removeTracks: (id: string, songIds: string[]) =>
-        request<NcmMeTracksResult>(tracksPath(id) + '?songIds=' + segment(songIds.join(',')), { method: 'DELETE' }),
+    removeTracks: (id: string, songIds: string[], signal?: AbortSignal) =>
+        request<NcmMeTracksResult>(tracksPath(id) + '?songIds=' + segment(songIds.join(',')), { method: 'DELETE', signal }),
     likes: (offset: number, limit: number, signal: AbortSignal) =>
         request<NcmMeSongPage>(mine + 'likes' + paging(offset, limit), { signal }),
     recent: (signal: AbortSignal) => request<NcmMeRecentRecords>(mine + 'records/recent', { signal }),
@@ -108,12 +113,16 @@ export const libraryApi = {
         request<NcmMeRankRecords>(mine + 'records/rank?type=' + range, { signal }),
     checkLikes: (ids: string[], signal: AbortSignal) =>
         request<NcmMeLikeCheck>(mine + 'likes/check?ids=' + segment(ids.join(',')), { signal }),
-    like: (id: string, liked: boolean) =>
-        request<NcmMeLikeResult>(mine + 'likes/' + segment(id), { method: liked ? 'PUT' : 'DELETE' }),
+    like: (id: string, liked: boolean, signal?: AbortSignal) =>
+        request<NcmMeLikeResult>(mine + 'likes/' + segment(id), { method: liked ? 'PUT' : 'DELETE', signal }),
     subscription: (id: string, signal: AbortSignal) =>
         request<NcmMeSubscriptionResult>(subscriptionPath(id), { signal }),
-    subscribe: (id: string, subscribed: boolean) =>
-        request<NcmMeSubscriptionResult>(subscriptionPath(id), { method: subscribed ? 'PUT' : 'DELETE' }),
+    subscribe: (id: string, subscribed: boolean, signal?: AbortSignal) =>
+        request<NcmMeSubscriptionResult>(subscriptionPath(id), { method: subscribed ? 'PUT' : 'DELETE', signal }),
+    albumSubscription: (id: string, signal: AbortSignal) =>
+        request<{ subscribed: boolean }>(albumSubscriptionPath(id), { signal }),
+    subscribeAlbum: (id: string, subscribed: boolean, signal: AbortSignal) =>
+        request<{ subscribed: boolean }>(albumSubscriptionPath(id), { method: subscribed ? 'PUT' : 'DELETE', signal }),
 };
 
 export function toPrivateSong(item: NcmMeSong) {

@@ -49,8 +49,11 @@ try {
         }
     }
     cpSync(models, join(project, 'src/halo/generated'), { recursive: true });
+    cpSync(join(directory, 'tests'), join(project, 'test/unit/halo'), { recursive: true });
     run('npm', ['ci', '--include=dev', '--ignore-scripts', '--no-audit', '--no-fund', '--prefer-offline'], project);
     run('npm', ['run', 'typecheck'], project);
+    run('npm', ['test', '--', 'test/unit/halo', 'test/unit/cache/themeCache.test.ts',
+        'test/unit/theme/themeGenerationRace.test.ts'], project);
     run('npm', ['run', 'build:web', '--', '--logLevel', 'warn'], project, {
         ...cleanEnv, FOLIA_BASE_PATH: base, VITE_LIBRARY_INITIAL_SUITE: 'grid',
         VERCEL_GIT_COMMIT_SHA: revision, VERCEL_GIT_COMMIT_REF: 'main',
@@ -79,13 +82,14 @@ try {
         'Corresponding upstream source: ' + upstream,
         'SHA-256: ' + sha256,
         'Extract the upstream archive, apply upstream.patch with patch -p1, and copy adapter into src/halo.',
+        'Copy tests into test/unit/halo for the Halo configuration sync checks.',
         'Copy api-models into src/halo/generated to compile against the plugin OpenAPI types.',
         'Build with Node.js 24 and npm ci, then npm run build:web with FOLIA_BASE_PATH=' + base,
         'The bundled build.mjs automates these steps in the Halo plugin source tree.',
         '',
     ].join('\n'));
     run('tar', ['-czf', join(source, 'halo-adaptation.tar.gz'),
-        '-C', directory, 'upstream.json', 'upstream.patch', 'adapter', 'build.mjs',
+        '-C', directory, 'upstream.json', 'upstream.patch', 'adapter', 'tests', 'build.mjs',
         '-C', work, 'api-models',
         '-C', notices, 'LICENSE', 'SOURCE.txt'], work);
     cpSync(join(notices, 'LICENSE'), join(source, 'LICENSE.txt'));

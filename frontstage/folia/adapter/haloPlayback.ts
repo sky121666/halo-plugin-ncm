@@ -5,7 +5,7 @@ import { clearPrefetchRuntime } from '../services/prefetchService';
 import { PlayerState, type SongResult } from '../types';
 import { useAudioSettingsStore } from '../stores/useAudioSettingsStore';
 import { usePlaybackStore } from '../stores/usePlaybackStore';
-import { haloSettings, isPrivateHaloSong, playbackPath, toSong, type HaloPlayMode } from './haloApi';
+import { haloSettings, isPrivateHaloSong, playbackPath, toSong } from './haloApi';
 import { haloSessionChanges } from './HaloAccount';
 
 const prefsKey = 'ncm-player:prefs';
@@ -41,43 +41,22 @@ function decode<T>(key: string): T | undefined {
     }
 }
 
-type Preferences = { volume?: number; muted?: boolean; mode?: HaloPlayMode };
-const storedModes: readonly HaloPlayMode[] = ['loop', 'single', 'shuffle', 'order'];
-const modeFromLoop = (mode: 'all' | 'off' | 'one'): HaloPlayMode =>
-    mode === 'off' ? 'order' : mode === 'one' ? 'single' : 'loop';
-const loopFromMode = (mode: HaloPlayMode) => mode === 'order' ? 'off' : mode === 'single' ? 'one' : 'all';
-function savePreferences(changes: Preferences) {
-    write(prefsKey, JSON.stringify({ ...decode<Preferences>(prefsKey), ...changes }));
-}
+type LegacyPlaybackPreferences = { volume?: number; muted?: boolean; mode?: 'loop' | 'order' | 'single' | 'shuffle' };
 
+/** 仅在配置同步初始化前恢复原浏览器的播放设置。 */
 export function applyHaloPlaybackPreferences() {
-    const prefs = decode<Preferences>(prefsKey);
+    const prefs = decode<LegacyPlaybackPreferences>(prefsKey);
     const store = useAudioSettingsStore;
-    const existing = store.getState();
-    const legacyMode = read('player_loop_mode');
-    const mode = prefs?.mode && storedModes.includes(prefs.mode) ? prefs.mode
-        : legacyMode === 'one' || legacyMode === 'off' || legacyMode === 'all'
-            ? modeFromLoop(legacyMode) : haloSettings.mode;
-    const legacyVolume = Number.parseFloat(read('player_volume') ?? '');
-    const preferredVolume = typeof prefs?.volume === 'number' && Number.isFinite(prefs.volume)
-        ? prefs.volume : legacyVolume;
-    const volume = Number.isFinite(preferredVolume) ? Math.min(1, Math.max(0, preferredVolume)) : haloSettings.volume;
+    const native = store.getState();
+    const mode = prefs?.mode;
+    const volume = prefs?.volume;
     store.setState({
-        volume,
-        isMuted: typeof prefs?.muted === 'boolean' ? prefs.muted : existing.isMuted,
-        loopMode: loopFromMode(mode),
-        enableMediaCache: false,
-    });
-    store.subscribe((state, previous) => {
-        const volumeChanged = state.volume !== previous.volume;
-        const muteChanged = state.isMuted !== previous.isMuted;
-        const modeChanged = state.loopMode !== previous.loopMode;
-        if (!volumeChanged && !muteChanged && !modeChanged) return;
-        const next: Preferences = {};
-        if (volumeChanged) next.volume = state.volume;
-        if (muteChanged) next.muted = state.isMuted;
-        if (modeChanged) next.mode = modeFromLoop(state.loopMode);
-        savePreferences(next);
+        volume: typeof volume === 'number' && Number.isFinite(volume) ? Math.min(1, Math.max(0, volume))
+            : read('player_volume') === null ? haloSettings.volume : native.volume,
+        loopMode: mode === 'order' ? 'off' : mode === 'single' ? 'one' : mode === 'loop' || mode === 'shuffle' ? 'all'
+            : read('player_loop_mode') !== null ? native.loopMode
+                : haloSettings.mode === 'single' ? 'one' : haloSettings.mode === 'order' ? 'off' : 'all',
+        isMuted: typeof prefs?.muted === 'boolean' ? prefs.muted : native.isMuted,
     });
 }
 

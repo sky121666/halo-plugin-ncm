@@ -20,18 +20,6 @@ const conflict = ref(false)
 const bound = ref<boolean>()
 const canManageAccounts = computed(() => utils.permission.has(['plugin:ncm:manage']))
 
-const playbackModeOptions = [
-  { label: '列表循环', value: 'loop', render: '列表循环' },
-  { label: '顺序播放', value: 'order', render: '顺序播放' },
-  { label: '单曲循环', value: 'single', render: '单曲循环' },
-]
-const playbackMode = computed({
-  get: () => (form.value?.settings.mode === 'shuffle' ? 'loop' : form.value?.settings.mode),
-  set: (mode) => {
-    if (form.value && mode) form.value.settings.mode = mode
-  },
-})
-
 async function load() {
   loading.value = true
   loadFailed.value = false
@@ -59,7 +47,6 @@ async function save() {
         settings: {
           ...settings,
           pageSize: Number(settings.pageSize),
-          volume: Number(settings.volume),
         },
       },
     })
@@ -219,27 +206,9 @@ onMounted(() => {
         <VCard role="group" aria-labelledby="ncm-music-playback" class="min-w-0">
           <template #header>
             <h3 id="ncm-music-playback" class="flex min-h-12 items-center px-4 py-2 font-medium">
-              播放默认值
+              播放行为
             </h3>
           </template>
-          <p class="mb-3 text-sm text-gray-600">默认模式和音量用于尚未保存播放偏好的浏览器。</p>
-          <FormKit
-            v-model="playbackMode"
-            type="toggle"
-            name="mode"
-            label="默认播放模式"
-            :options="playbackModeOptions"
-            render-type="text"
-          />
-          <FormKit
-            v-model="form.settings.volume"
-            type="number"
-            name="volume"
-            label="默认音量（%）"
-            :min="0"
-            :max="100"
-            validation="required|min:0|max:100"
-          />
           <FormKit
             v-model="form.settings.resume"
             type="switch"

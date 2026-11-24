@@ -7,6 +7,7 @@ import AppSplashGate from '../components/AppSplashGate';
 import { installNativeDragGuard } from '../utils/nativeDragGuard';
 import { applyHaloPlaybackPreferences } from './haloPlayback';
 import { HaloAccountProvider } from './HaloAccount';
+import { HaloConfigProvider } from './HaloConfigProvider';
 import '../index.css';
 
 Object.assign(globalThis, { Buffer });
@@ -15,6 +16,8 @@ applyHaloPlaybackPreferences();
 
 createRoot(document.getElementById('root')!).render(
     <MotionConfig reducedMotion="user">
-        <HaloAccountProvider><AppSplashGate><App /></AppSplashGate></HaloAccountProvider>
+        <HaloAccountProvider>
+            <HaloConfigProvider><AppSplashGate><App /></AppSplashGate></HaloConfigProvider>
+        </HaloAccountProvider>
     </MotionConfig>,
 );

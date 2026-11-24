@@ -8,6 +8,7 @@ import { foliaUser, setFoliaBinding } from './haloFoliaBinding';
 import type { NcmAccountView } from './generated/ncm-account-view';
 import type { NcmMeProfile } from './generated/ncm-me-profile';
 import { HaloAuthDialog } from './HaloAuthDialog';
+import { useHaloMusicAiAvailability } from './haloMusicAi';
 import { HaloBindingDialog } from './HaloBindingDialog';
 import { providerLabel, visibleBounds } from './HaloBindingMotion';
 
@@ -71,6 +72,7 @@ function accountControl(source: DialogOrigin | undefined, boundOnly: boolean) {
 
 export function HaloAccountProvider({ children }: { children: ReactNode }) {
     const [state, setState] = useState<AccountState>({ kind: 'loading' });
+    useHaloMusicAiAvailability(state.kind === 'account');
     const [dialog, setDialog] = useState<AccountDialog>();
     const origin = useRef<DialogOrigin | undefined>(undefined);
     const bindingSession = useRef(0);

@@ -5,6 +5,7 @@ export const pluginEntryTabId = 'ncm-entry'
 export const legacySiteAccountTabId = 'ncm-site-account'
 export const maintenanceTabId = 'ncm-maintenance'
 export const networkSettingsTabId = 'advanced'
+export const musicAiSettingsTabId = 'ai'
 // 沿用旧的访客与接口链接。
 export const apiManagementTabId = 'basic'
 export const apiRequestOptionsId = 'ncm-api-request-options'

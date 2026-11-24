@@ -54,8 +54,10 @@ const qualityLevels: Record<AudioQualityPreference, string> = {
     standard: 'standard', high: 'exhigh', ultra: 'exhigh', lossless: 'lossless', hires: 'hires',
 };
 
+export const playbackLevel = (quality: AudioQualityPreference) => qualityLevels[quality];
+
 export const playbackPath = (id: string, quality: AudioQualityPreference) =>
-    '/music/play/' + encodeURIComponent(id) + '?level=' + qualityLevels[quality];
+    '/music/play/' + encodeURIComponent(id) + '?level=' + playbackLevel(quality);
 
 export function searchKind(value: string | null): OmniSearchKind {
     return value === 'album' || value === 'playlist' || value === 'artist' ? value : 'song';
@@ -142,7 +144,8 @@ export function isPrivateHaloSong(song: SongResult) {
 
 export function haloTrackId(song: SongResult) {
     const ref = song.sourceRef;
-    return ref?.kind === 'online' && ref.providerId === 'netease' && /^[1-9]\d{0,19}$/.test(ref.mediaId)
+    return ref?.kind === 'online' && ref.providerId === 'netease' && ref.variant !== 'cloud'
+        && /^[1-9]\d{0,19}$/.test(ref.mediaId)
         ? ref.mediaId : undefined;
 }
 

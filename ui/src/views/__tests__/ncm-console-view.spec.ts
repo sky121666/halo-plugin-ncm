@@ -125,7 +125,7 @@ describe('网易云音乐工具入口', () => {
     },
     {
       permission: 'system:plugins:manage',
-      destinations: ['music-page', 'ncm-maintenance', 'basic', 'advanced'],
+      destinations: ['music-page', 'ncm-maintenance', 'basic', 'advanced', 'ai'],
       tools: true,
     },
     {
