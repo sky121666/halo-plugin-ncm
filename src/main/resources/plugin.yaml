@@ -2,9 +2,11 @@ apiVersion: plugin.halo.run/v1alpha1
 kind: Plugin
 metadata:
   name: plugin-ncm
+  annotations:
+    "store.halo.run/app-id": "app-lsaaxitg"
 spec:
   enabled: true
-  requires: ">=2.27.3"
+  requires: ">=2.27.0"
   pluginDependencies:
     ai-foundation?: ">=1.4.0 & <2.0.0"
   author:

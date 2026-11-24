@@ -1,0 +1,21 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    uses: halo-sigs/reusable-workflows/.github/workflows/plugin-cd.yaml@045a5dd72c61775ea923c0a3a58576f680143430 # v5.0.1
+    permissions:
+      contents: write
+    with:
+      ui-path: ui
+      java-version: "21"
+      node-version: "24.21.0"
+      pnpm-version: "10.33.0"
+      build-args: "test :ui:pnpmCheck"
+      app-id: app-lsaaxitg
+      skip-appstore-release: ${{ vars.HALO_APPSTORE_RELEASE != 'true' }}
+    secrets:
+      halo-pat: ${{ vars.HALO_APPSTORE_RELEASE == 'true' && secrets.HALO_PAT || '' }}

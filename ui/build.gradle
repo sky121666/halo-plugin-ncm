@@ -1,9 +1,17 @@
+import groovy.json.JsonSlurper
+
 plugins {
     id 'base'
     id "com.github.node-gradle.node" version "7.1.0"
 }
 
 group 'cn.sky.ncm.ui'
+
+node {
+    pnpmVersion.set(providers.fileContents(layout.projectDirectory.file('package.json')).asText.map { manifest ->
+        new JsonSlurper().parseText(manifest).packageManager.substring('pnpm@'.length())
+    })
+}
 
 tasks.register('pnpmBuild', PnpmTask) {
     group = 'build'
