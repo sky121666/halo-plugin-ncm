@@ -264,11 +264,12 @@ final class NcmVoMapper {
 
     /** 单个歌手节点（artists 接口的 artist，或搜索结果里的一项）。 */
     static ArtistVo artistOf(JsonNode a, List<SongVo> hot) {
+        List<String> aliases = texts(a.path("alias"));
         return ArtistVo.builder()
             .id(idOf(a))
             .name(a.path("name").asText(null))
-            .aliases(texts(a.path("alias")))
-            .coverUrl(https(a.path("picUrl").asText(a.path("img1v1Url").asText(null))))
+            .aliases(aliases.isEmpty() ? texts(a.path("transNames")) : aliases)
+            .coverUrl(https(a.path("picUrl").asText(a.path("cover").asText(a.path("img1v1Url").asText(null)))))
             .briefDesc(a.path("briefDesc").asText(null))
             .albumSize(a.path("albumSize").asInt(0))
             .musicSize(a.path("musicSize").asInt(0))
@@ -445,22 +446,46 @@ final class NcmVoMapper {
 
     // ---------- 歌词 / 用户 / 记录 ----------
 
-    /** lyric_new 的返回：{ lrc: { lyric }, tlyric: { lyric }, pureMusic, nolyric }。 */
+    /** 同时保留逐行数据和 Folia 所需的原始歌词格式。 */
     static LyricVo lyric(String songId, JsonNode body) {
-        String lrc = body.path("lrc").path("lyric").asText(null);
-        String tlrc = body.path("tlyric").path("lyric").asText(null);
+        Map<String, String> formats = new HashMap<>();
+        for (String field : List.of("lrc", "tlyric", "yrc", "ytlrc", "romalrc", "yromalrc")) {
+            String value = body.path(field).path("lyric").asText(null);
+            if (value == null || value.isBlank()) {
+                value = body.path("lrc").path(field).path("lyric").asText(null);
+            }
+            if (value != null && !value.isBlank()) {
+                formats.put(field, value);
+            }
+        }
+        String lrc = formats.get("lrc");
+        String tlrc = formats.get("tlyric");
         var lines = LrcParser.merge(lrc, tlrc);
         boolean hasTr = lines.stream().anyMatch(l -> l.getTranslation() != null);
         boolean instrumental = body.path("pureMusic").asBoolean(false) || body.path("nolyric").asBoolean(false)
-            || lines.isEmpty();
+            || (lines.isEmpty() && !formats.containsKey("yrc"));
         return LyricVo.builder()
             .songId(songId)
             .lines(lines)
             .lyric(lrc)
             .translatedLyric(hasTr ? tlrc : null)
+            .formats(Map.copyOf(formats))
             .hasTranslation(hasTr)
             .instrumental(instrumental)
             .build();
+    }
+
+    static List<Map<String, Long>> chorus(JsonNode body) {
+        JsonNode ranges = body.path("chorus").isArray() ? body.path("chorus") : body.path("data");
+        List<Map<String, Long>> result = new ArrayList<>();
+        for (JsonNode range : ranges) {
+            long start = range.path("startTime").asLong(-1);
+            long end = range.path("endTime").asLong(-1);
+            if (start >= 0 && end > start) {
+                result.add(Map.of("startTime", start, "endTime", end));
+            }
+        }
+        return result;
     }
 
     /** user_detail 的返回：{ level, listenSongs, profile }。 */

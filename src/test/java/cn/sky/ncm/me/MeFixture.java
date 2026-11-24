@@ -15,6 +15,7 @@ import cn.sky.ncm.api.ApiExecutor;
 import cn.sky.ncm.api.ApiRegistry;
 import cn.sky.ncm.client.NcmResponse;
 import cn.sky.ncm.client.RequestOptions;
+import cn.sky.ncm.page.PlayService;
 import cn.sky.ncm.security.SecretBox;
 import cn.sky.ncm.security.SecretStore;
 import cn.sky.ncm.setting.AdvancedSetting;
@@ -39,7 +40,8 @@ public class MeFixture {
     public final ApiExecutor executor = mock(ApiExecutor.class);
     public final SettingService settings = mock(SettingService.class);
     public final LikeCache likeCache = new LikeCache();
-    public final MeService service = new MeService(registry, executor, accounts, settings, likeCache);
+    public final PlayService plays = mock(PlayService.class);
+    public final MeService service = new MeService(registry, executor, accounts, settings, likeCache, plays);
 
     public MeFixture() {
         when(settings.basic()).thenReturn(Mono.just(BasicSetting.DEFAULT));

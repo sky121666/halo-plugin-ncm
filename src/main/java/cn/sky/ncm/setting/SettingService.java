@@ -14,14 +14,16 @@ public class SettingService {
     private final ReactiveSettingFetcher fetcher;
     private final FrontstageSettingsService frontstage;
     private final ApiAccessSettingsService access;
+    private final ClientConfigService preferences;
     private volatile Mono<AdvancedSetting> advanced;
     private volatile long advancedAt;
 
     public SettingService(ReactiveSettingFetcher fetcher, FrontstageSettingsService frontstage,
-                          ApiAccessSettingsService access) {
+                          ApiAccessSettingsService access, ClientConfigService preferences) {
         this.fetcher = fetcher;
         this.frontstage = frontstage;
         this.access = access;
+        this.preferences = preferences;
     }
 
     public Mono<BasicSetting> basic() {
@@ -29,7 +31,8 @@ public class SettingService {
     }
 
     public Mono<PlayerSetting> player() {
-        return frontstage.current().map(NcmFrontstageSettings::player).onErrorReturn(PlayerSetting.DEFAULT);
+        return frontstage.current().flatMap(page -> preferences.foliaPlayer(page.resume()))
+            .onErrorReturn(PlayerSetting.DEFAULT);
     }
 
     public Mono<PageSetting> page() {

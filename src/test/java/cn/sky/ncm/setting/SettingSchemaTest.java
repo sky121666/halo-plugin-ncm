@@ -21,10 +21,9 @@ class SettingSchemaTest {
             for (var entry : forms) {
                 var form = (Map<?, ?>) entry;
                 var schema = (List<?>) form.get("formSchema");
-                assertThat(schema)
-                    .as("%s has top-level defaults", form.get("group"))
-                    .anyMatch(node -> node instanceof Map<?, ?> field
-                        && field.containsKey("name") && field.containsKey("value"));
+                boolean hasDefault = schema.stream().anyMatch(node -> node instanceof Map<?, ?> field
+                    && field.containsKey("name") && field.containsKey("value"));
+                assertThat(hasDefault).as("%s has top-level defaults", form.get("group")).isTrue();
 
                 for (var node : schema) {
                     if (node instanceof Map<?, ?> layout && layout.containsKey("$el")) {

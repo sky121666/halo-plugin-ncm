@@ -19,6 +19,10 @@ public final class FoliaFeedPayload {
         return NcmVoMapper.songList(firstArray(body, paths), Map.of()).stream().limit(MAX_ITEMS).toList();
     }
 
+    public static SongVo song(JsonNode row) {
+        return NcmVoMapper.song(row, row.get("privilege"));
+    }
+
     public static List<SongVo> dailySongs(JsonNode body) {
         JsonNode data = body.path("data");
         List<SongVo> songs = songs(data, "dailySongs", "songs");

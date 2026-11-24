@@ -52,6 +52,27 @@ class NcmUcMeEndpointTest {
     }
 
     @Test
+    void cloudPlaybackCannotResolveAnIdOutsideTheBoundAccountsCloud() {
+        f.givenPersonalAccount("alice", 101L);
+        f.givenApi("user_cloud_detail", "{\"code\":200,\"data\":[{\"songId\":9}]}");
+        as("alice").get().uri("/me/-/cloud/8/play").exchange().expectStatus().isNotFound();
+        verify(f.plays, never()).resolveForAccount(any(), any(), anyMap());
+    }
+
+    @Test
+    void playbackReportUsesWriteGuardAndCurrentAccount() {
+        f.givenPersonalAccount("alice", 101L);
+        f.givenApi("scrobble_v1", "{\"code\":200}");
+        var client = as("alice");
+        String report = "{\"songId\":\"8\",\"playedSeconds\":45,\"totalSeconds\":120,\"quality\":\"lossless\"}";
+        client.post().uri("/me/-/records/playback").contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(report).exchange().expectStatus().isForbidden();
+        client.post().uri("/me/-/records/playback").contentType(MediaType.APPLICATION_JSON)
+            .header("X-NCM-Request", "1").bodyValue(report).exchange().expectStatus().isNoContent();
+        verify(f.executor, times(1)).execute(api("scrobble_v1"), anyMap(), any(RequestOptions.class));
+    }
+
+    @Test
     void likesCheckContract() {
         f.givenPersonalAccount("alice", 101L);
         f.givenApi("likelist", "{\"code\":200,\"ids\":[1,2]}");

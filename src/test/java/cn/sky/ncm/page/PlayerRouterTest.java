@@ -42,7 +42,9 @@ class PlayerRouterTest {
             .songId("1")
             .instrumental(false)
             .lines(List.of(line(1500L, "故事的小黄花", "Little yellow flowers")))
+            .formats(Map.of("yrc", "[1500,750](1500,750,0)故"))
             .build()));
+        when(finder.foliaChorus("1")).thenReturn(Mono.just(List.of(Map.of("startTime", 1500L, "endTime", 3000L))));
         var router = new PlayerRouter(settings, finder, new RateLimiter(), mock(PlayService.class));
         var web = WebTestClient.bindToRouterFunction(router.ncmPlayerRouter()).build();
 
@@ -50,7 +52,17 @@ class PlayerRouterTest {
             .expectStatus().isOk()
             .expectBody().jsonPath("$.lines[0].t").isEqualTo(1500)
             .jsonPath("$.lines[0].text").isEqualTo("故事的小黄花")
-            .jsonPath("$.lines[0].tr").isEqualTo("Little yellow flowers");
+            .jsonPath("$.lines[0].tr").isEqualTo("Little yellow flowers")
+            .jsonPath("$.formats").doesNotExist();
+
+        web.get().uri("/music/lyric/1?view=timed").exchange()
+            .expectStatus().isOk()
+            .expectBody().jsonPath("$.formats.yrc").isEqualTo("[1500,750](1500,750,0)故");
+
+        web.get().uri("/music/chorus/1").exchange()
+            .expectStatus().isOk()
+            .expectBody().jsonPath("$.chorus[0].startTime").isEqualTo(1500)
+            .jsonPath("$.chorus[0].endTime").isEqualTo(3000);
     }
 
     @Test

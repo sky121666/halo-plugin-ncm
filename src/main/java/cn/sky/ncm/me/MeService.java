@@ -22,9 +22,12 @@ import cn.sky.ncm.endpoint.dto.NcmMeSubscriptionResult;
 import cn.sky.ncm.endpoint.dto.NcmMeTracksResult;
 import cn.sky.ncm.finder.FoliaFeedPayload;
 import cn.sky.ncm.finder.NcmFinderImpl;
+import cn.sky.ncm.page.PlayService;
+import cn.sky.ncm.page.PlayerRouter;
 import cn.sky.ncm.setting.SettingService;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -66,14 +69,16 @@ public class MeService {
     private final AccountService accounts;
     private final SettingService settings;
     private final LikeCache likeCache;
+    private final PlayService plays;
 
     public MeService(ApiRegistry registry, ApiExecutor executor, AccountService accounts, SettingService settings,
-                     LikeCache likeCache) {
+                     LikeCache likeCache, PlayService plays) {
         this.registry = registry;
         this.executor = executor;
         this.accounts = accounts;
         this.settings = settings;
         this.likeCache = likeCache;
+        this.plays = plays;
     }
 
     // ---------- 身份 ----------
@@ -161,6 +166,21 @@ public class MeService {
                 "more", body.path("hasMore").asBoolean(false)));
     }
 
+    public Mono<Map<String, Boolean>> albumSubscription(MeIdentity identity, String albumId) {
+        return call("album_detail_dynamic", Map.of("id", albumId), identity, "查询专辑收藏状态").map(body -> {
+            JsonNode subscribed = body.path("isSub");
+            if (!subscribed.isBoolean()) {
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "网易云未返回专辑收藏状态");
+            }
+            return Map.of("subscribed", subscribed.asBoolean());
+        });
+    }
+
+    public Mono<Map<String, Boolean>> subscribeAlbum(MeIdentity identity, String albumId, boolean subscribed) {
+        return call("album_sub", Map.of("id", albumId, "t", subscribed ? "1" : "0"), identity,
+            subscribed ? "收藏专辑" : "取消收藏专辑").then(albumSubscription(identity, albumId));
+    }
+
     public Mono<Map<String, Object>> foliaDailySongs(MeIdentity identity, boolean refresh) {
         return call("recommend_songs", Map.of("afresh", Boolean.toString(refresh)), identity, "获取每日推荐")
             .map(body -> Map.of("songs", FoliaFeedPayload.dailySongs(body)));
@@ -176,9 +196,199 @@ public class MeService {
             .map(body -> Map.of("songs", FoliaFeedPayload.songs(body, "data")));
     }
 
+    public Mono<Map<String, Object>> foliaPersonalFm(MeIdentity identity, String mode, String submode) {
+        if ("DEFAULT".equals(mode)) {
+            return foliaPersonalFm(identity);
+        }
+        Map<String, String> query = new LinkedHashMap<>();
+        query.put("mode", mode);
+        if ("SCENE_RCMD".equals(mode) && submode != null) {
+            query.put("submode", submode);
+        }
+        return call("personal_fm_mode", query, identity, "获取私人 FM")
+            .map(body -> FoliaFeedPayload.songs(body, "data"))
+            .filter(songs -> !songs.isEmpty())
+            .map(songs -> Map.<String, Object>of("songs", songs))
+            .onErrorResume(ResponseStatusException.class, error -> error.getStatusCode() == HttpStatus.BAD_REQUEST
+                ? Mono.empty() : Mono.error(error))
+            .switchIfEmpty(Mono.defer(() -> foliaPersonalFm(identity)));
+    }
+
+    public Mono<Map<String, List<String>>> foliaHistoryDates(MeIdentity identity) {
+        return call("history_recommend_songs", Map.of(), identity, "获取历史日推").map(body -> {
+            JsonNode dates = body.path("data").path("dates");
+            if (!dates.isArray()) {
+                dates = body.path("dates").isArray() ? body.path("dates") : body.path("data");
+            }
+            List<String> result = new ArrayList<>();
+            for (JsonNode row : dates) {
+                String date = row.isTextual() ? row.asText() : row.path("date").asText();
+                if (date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                    result.add(date);
+                }
+            }
+            return Map.of("dates", result);
+        });
+    }
+
+    public Mono<Map<String, Object>> foliaHistorySongs(MeIdentity identity, String date) {
+        return call("history_recommend_songs_detail", Map.of("date", date), identity, "获取当日日推")
+            .map(body -> Map.of("songs", FoliaFeedPayload.dailySongs(body)));
+    }
+
+    public Mono<Map<String, Object>> foliaDailyStyleGroups(MeIdentity identity) {
+        return call("recommend_category_configs", Map.of(), identity, "获取推荐风格").map(body -> {
+            List<Map<String, Object>> groups = new ArrayList<>();
+            for (JsonNode row : body.path("data").path("categorys")) {
+                var group = dailyStyleGroup(row);
+                if (!group.isEmpty()) {
+                    groups.add(group);
+                }
+            }
+            return Map.of("groups", groups);
+        });
+    }
+
+    public Mono<Map<String, Object>> foliaDailyStyleSongs(MeIdentity identity) {
+        return call("recommend_category_songs", Map.of(), identity, "获取风格推荐").map(body -> {
+            JsonNode data = body.path("data");
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("songs", FoliaFeedPayload.songs(data, "dailySongs"));
+            JsonNode selected = data.path("tags");
+            var tags = dailyStyleTags(selected);
+            if (selected.hasNonNull("categoryId") && !tags.isEmpty()) {
+                result.put("selection", Map.of("groupId", selected.path("categoryId").asText(),
+                    "tagIds", tags.stream().map(tag -> tag.get("id")).toList()));
+            }
+            return result;
+        });
+    }
+
+    private static Map<String, Object> dailyStyleGroup(JsonNode row) {
+        var tags = dailyStyleTags(row);
+        return row.hasNonNull("categoryId") && !tags.isEmpty()
+            ? Map.of("id", row.path("categoryId").asText(), "name", row.path("categoryName").asText(), "tags", tags)
+            : Map.of();
+    }
+
+    private static List<Map<String, String>> dailyStyleTags(JsonNode row) {
+        List<Map<String, String>> tags = new ArrayList<>();
+        for (JsonNode tag : row.path("tagVOList")) {
+            if (tag.hasNonNull("tagId")) {
+                String id = tag.path("tagId").asText();
+                tags.add(Map.of("id", id, "name", tag.path("tagName").asText(id)));
+            }
+        }
+        return tags;
+    }
+
+    public Mono<Void> saveDailyStyle(MeIdentity identity, String groupId, List<String> tagIds) {
+        return call("recommend_category_set", Map.of("category", groupId, "tags", String.join(",", tagIds)),
+            identity, "保存推荐风格").doOnNext(body -> {
+                if (body.path("data").path("saveSuccess").isBoolean()
+                    && !body.path("data").path("saveSuccess").asBoolean()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "网易云未确认推荐风格");
+                }
+            }).then();
+    }
+
+    public Mono<Map<String, Object>> dislikeRecommendation(MeIdentity identity, String songId) {
+        return request("recommend_songs_dislike", Map.of("id", songId), identity, "更新推荐")
+            .map(response -> {
+                if (ncmCode(response) == 432) {
+                    return Map.of("limitReached", true);
+                }
+                JsonNode replacement = ensureOk(response, "更新推荐").path("data");
+                if (!replacement.hasNonNull("id")) {
+                    return Map.of("limitReached", false);
+                }
+                return Map.of("limitReached", false, "replacement", FoliaFeedPayload.song(replacement));
+            });
+    }
+
     public Mono<Map<String, Object>> foliaHome(MeIdentity identity, String cursor) {
         return call("homepage_block_page", NcmFinderImpl.foliaHomeParams(cursor), identity, "获取探索推荐")
             .map(FoliaFeedPayload::home);
+    }
+
+    public Mono<Map<String, Object>> foliaCloud(MeIdentity identity, int offset, int limit) {
+        return call("user_cloud", Map.of("offset", String.valueOf(offset), "limit", String.valueOf(limit)), identity,
+            "获取音乐云盘").map(body -> {
+                JsonNode rows = body.path("data");
+                if (!rows.isArray()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "网易云未返回云盘曲目列表");
+                }
+                List<Map<String, Object>> items = new ArrayList<>();
+                for (JsonNode row : rows) {
+                    String id = cloudId(row);
+                    if (!MeParams.ID.matcher(id).matches()) {
+                        continue;
+                    }
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("id", id);
+                    item.put("name", row.path("songName").asText(row.path("fileName").asText("未知曲目")));
+                    item.put("artist", row.path("artist").asText());
+                    JsonNode song = row.path("simpleSong");
+                    if (song.hasNonNull("id")) {
+                        item.put("song", FoliaFeedPayload.song(song));
+                    }
+                    items.add(item);
+                }
+                int nextOffset = offset + rows.size();
+                int count = body.path("count").asInt(nextOffset);
+                return Map.of("items", items, "total", count, "nextOffset", nextOffset,
+                    "hasMore", !rows.isEmpty() && body.path("hasMore").asBoolean(nextOffset < count));
+            });
+    }
+
+    private static String cloudId(JsonNode row) {
+        return row.path("songId").asText(row.path("simpleSong").path("id").asText());
+    }
+
+    private Mono<Void> requireCloudTrack(MeIdentity identity, String id) {
+        return call("user_cloud_detail", Map.of("id", id), identity, "查找云盘曲目").flatMap(body -> {
+            for (JsonNode item : body.path("data")) {
+                if (id.equals(cloudId(item))) {
+                    return Mono.empty();
+                }
+            }
+            return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "云盘没有这首歌"));
+        });
+    }
+
+    public Mono<Map<String, Object>> cloudPlay(MeIdentity identity, String id, String level) {
+        return requireCloudTrack(identity, id)
+            .then(Mono.defer(() -> plays.resolveForAccount(id, level, identity.cookie())))
+            .map(result -> PlayerRouter.playBody(id, result, true));
+    }
+
+    public Mono<Map<String, String>> cloudLyric(MeIdentity identity, String id) {
+        return requireCloudTrack(identity, id).then(Mono.defer(() -> withUid(identity)
+            .flatMap(owner -> call("cloud_lyric_get", Map.of("uid", owner.uid(), "sid", id), owner, "获取云盘歌词"))))
+            .map(body -> {
+                JsonNode data = body.path("data");
+                String lyric = body.path("lrc").asText(data.path("lrc").asText(
+                    body.path("lyric").asText(data.path("lyric").asText(""))));
+                return Map.of("lyric", lyric);
+            });
+    }
+
+    public Mono<Void> reportPlayback(MeIdentity identity, String id, long playedSeconds, Long totalSeconds,
+                                     String quality) {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("id", id);
+        params.put("time", String.valueOf(playedSeconds));
+        if (totalSeconds != null) {
+            params.put("total", String.valueOf(totalSeconds));
+        }
+        params.put("level", quality);
+        params.put("bitrate", switch (quality) {
+            case "standard" -> "128";
+            case "lossless" -> "999";
+            case "hires" -> "1999";
+            default -> "320";
+        });
+        return call("scrobble_v1", params, identity, "同步听歌记录").then();
     }
 
     public Mono<NcmMePlaylistTracks> playlistTracks(MeIdentity identity, String playlistId, int offset, int limit) {
@@ -205,6 +415,10 @@ public class MeService {
         return withUid(identity).flatMap(this::likedIds).map(all -> likeCheck(new HashSet<>(all), songIds));
     }
 
+    public Mono<Map<String, Object>> foliaLikedSongs(MeIdentity identity) {
+        return withUid(identity).flatMap(this::likedIds).map(ids -> Map.of("ids", ids, "whole", true));
+    }
+
     static NcmMeLikeCheck likeCheck(Set<String> liked, List<String> songIds) {
         Map<String, Boolean> map = new LinkedHashMap<>();
         for (String s : songIds) {
@@ -216,7 +430,12 @@ public class MeService {
     /** 喜欢的歌曲 ID（最近红心的在前），按用户缓存 60 秒。 */
     Mono<List<String>> likedIds(MeIdentity id) {
         return likeCache.get(id.username(), id.uid(),
-            () -> call("likelist", Map.of("uid", id.uid()), id, "获取喜欢的歌").map(MeMapper::likedIds));
+            () -> call("likelist", Map.of("uid", id.uid()), id, "获取喜欢的歌").map(body -> {
+                if (!body.path("ids").isArray()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "网易云未返回喜欢的歌曲列表");
+                }
+                return MeMapper.likedIds(body);
+            }));
     }
 
     public Mono<NcmMeRecentRecords> recent(MeIdentity id) {
@@ -354,6 +573,10 @@ public class MeService {
 
     /** 用本人的 Cookie 执行一个接口；返回成功时的 body，失败时抛 ResponseStatusException。 */
     Mono<JsonNode> call(String api, Map<String, String> query, MeIdentity id, String action) {
+        return request(api, query, id, action).map(r -> ensureOk(r, action));
+    }
+
+    private Mono<NcmResponse> request(String api, Map<String, String> query, MeIdentity id, String action) {
         ApiDef def = registry.find(api).orElse(null);
         if (def == null || !def.executable()) {
             return Mono.error(new IllegalStateException("接口 " + api + " 不可用"));
@@ -362,8 +585,7 @@ public class MeService {
                 new RequestOptions(def.crypto(), id.cookie(), null, s.realIp(), s.useRandomCnIp())))
             .timeout(REQUEST_TIMEOUT)
             .onErrorMap(TimeoutException.class, e -> new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT,
-                action + "超时，请稍后重试"))
-            .map(r -> ensureOk(r, action));
+                action + "超时，请稍后重试"));
     }
 
     static JsonNode ensureOk(NcmResponse r, String action) {

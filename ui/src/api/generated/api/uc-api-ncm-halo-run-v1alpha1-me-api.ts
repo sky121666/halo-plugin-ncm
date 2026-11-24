@@ -22,6 +22,8 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { DailyStyleRequest } from '../models';
+// @ts-ignore
 import type { NcmMeLikeCheck } from '../models';
 // @ts-ignore
 import type { NcmMeLikeResult } from '../models';
@@ -47,6 +49,8 @@ import type { NcmMeSubscriptionResult } from '../models';
 import type { NcmMeTracksRequest } from '../models';
 // @ts-ignore
 import type { NcmMeTracksResult } from '../models';
+// @ts-ignore
+import type { PlaybackReportRequest } from '../models';
 /**
  * UcApiNcmHaloRunV1alpha1MeApi - axios parameter creator
  * @export
@@ -250,6 +254,136 @@ export const UcApiNcmHaloRunV1alpha1MeApiAxiosParamCreator = function (configura
             };
         },
         /**
+         * 不喜欢这首推荐歌曲
+         * @param {string} id 歌曲 ID
+         * @param {string} xNCMRequest 固定为 1，防止跨站请求伪造
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        dislikeMyNcmRecommendation: async (id: string, xNCMRequest: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('dislikeMyNcmRecommendation', 'id', id)
+            // verify required parameter 'xNCMRequest' is not null or undefined
+            assertParamExists('dislikeMyNcmRecommendation', 'xNCMRequest', xNCMRequest)
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/recommendations/dislike/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (xNCMRequest != null) {
+                localVarHeaderParameter['X-NCM-Request'] = String(xNCMRequest);
+            }
+
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 查询专辑收藏状态
+         * @param {string} id 专辑 ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getMyNcmAlbumSubscription: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('getMyNcmAlbumSubscription', 'id', id)
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/albums/{id}/subscription`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 本人云盘曲目的歌词
+         * @param {string} id 云盘曲目 ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getMyNcmCloudLyrics: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('getMyNcmCloudLyrics', 'id', id)
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/cloud/{id}/lyric`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * 绑定的网易云账号概况
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -277,6 +411,43 @@ export const UcApiNcmHaloRunV1alpha1MeApiAxiosParamCreator = function (configura
 
 
     
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 风格推荐与当前选择
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getMyNcmStyleRecommendations: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/recommendations/style`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -376,6 +547,220 @@ export const UcApiNcmHaloRunV1alpha1MeApiAxiosParamCreator = function (configura
             };
         },
         /**
+         * 本人收藏的专辑
+         * @param {number} [offset] 从第几条开始，默认 0
+         * @param {number} [limit] 每页条数，1~100，默认 30
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmAlbums: async (offset?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/albums`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (offset !== undefined) {
+                localVarQueryParameter['offset'] = offset;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 音乐云盘曲目
+         * @param {number} [offset] 从第几条开始，默认 0
+         * @param {number} [limit] 每页条数，1~100，默认 30
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmCloudTracks: async (offset?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/cloud`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (offset !== undefined) {
+                localVarQueryParameter['offset'] = offset;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 每日推荐歌曲
+         * @param {string} [refresh] 请求更新每日推荐
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmDailySongs: async (refresh?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/recommendations/daily`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (refresh !== undefined) {
+                localVarQueryParameter['refresh'] = refresh;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 历史日推曲目
+         * @param {string} date 推荐日期 (YYYY-MM-DD)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmHistoricRecommendations: async (date: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'date' is not null or undefined
+            assertParamExists('listMyNcmHistoricRecommendations', 'date', date)
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/recommendations/daily/history/{date}`
+                .replace(`{${"date"}}`, encodeURIComponent(String(date)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 喜欢的歌曲 ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmLikedSongIds: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/likes/ids`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * 喜欢的歌（分页，每页最多 100 首）
          * @param {number} [offset] 从第几条开始，默认 0
          * @param {number} [limit] 每页条数，1~100，默认 30
@@ -409,6 +794,53 @@ export const UcApiNcmHaloRunV1alpha1MeApiAxiosParamCreator = function (configura
 
             if (limit !== undefined) {
                 localVarQueryParameter['limit'] = limit;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 私人 FM 歌曲
+         * @param {string} [mode] 私人 FM 模式
+         * @param {string} [submode] 场景子模式
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmPersonalFm: async (mode?: string, submode?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/recommendations/fm`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (mode !== undefined) {
+                localVarQueryParameter['mode'] = mode;
+            }
+
+            if (submode !== undefined) {
+                localVarQueryParameter['submode'] = submode;
             }
 
 
@@ -500,7 +932,7 @@ export const UcApiNcmHaloRunV1alpha1MeApiAxiosParamCreator = function (configura
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -542,7 +974,7 @@ export const UcApiNcmHaloRunV1alpha1MeApiAxiosParamCreator = function (configura
             }
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -579,7 +1011,160 @@ export const UcApiNcmHaloRunV1alpha1MeApiAxiosParamCreator = function (configura
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
-    
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 历史日推日期
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmRecommendationDates: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/recommendations/daily/history`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 推荐风格选项
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmRecommendationStyles: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/recommendations/style/groups`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 本人推荐歌单
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmRecommendedPlaylists: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/recommendations/playlists`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 本人探索推荐
+         * @param {string} [cursor] 下一页标记
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        readMyNcmExplore: async (cursor?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/recommendations/explore`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (cursor !== undefined) {
+                localVarQueryParameter['cursor'] = cursor;
+            }
+
+
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -634,7 +1219,201 @@ export const UcApiNcmHaloRunV1alpha1MeApiAxiosParamCreator = function (configura
             }
 
 
-    
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 同步本人实际听歌记录
+         * @param {string} xNCMRequest 固定为 1，防止跨站请求伪造
+         * @param {PlaybackReportRequest} playbackReportRequest
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        reportMyNcmPlayback: async (xNCMRequest: string, playbackReportRequest: PlaybackReportRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'xNCMRequest' is not null or undefined
+            assertParamExists('reportMyNcmPlayback', 'xNCMRequest', xNCMRequest)
+            // verify required parameter 'playbackReportRequest' is not null or undefined
+            assertParamExists('reportMyNcmPlayback', 'playbackReportRequest', playbackReportRequest)
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/records/playback`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (xNCMRequest != null) {
+                localVarHeaderParameter['X-NCM-Request'] = String(xNCMRequest);
+            }
+
+
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(playbackReportRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 本人云盘曲目的播放地址
+         * @param {string} id 云盘曲目 ID
+         * @param {string} [level] 期望音质
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        resolveMyNcmCloudTrack: async (id: string, level?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('resolveMyNcmCloudTrack', 'id', id)
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/cloud/{id}/play`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (level !== undefined) {
+                localVarQueryParameter['level'] = level;
+            }
+
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 保存推荐风格
+         * @param {string} xNCMRequest 固定为 1，防止跨站请求伪造
+         * @param {DailyStyleRequest} dailyStyleRequest
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        saveMyNcmRecommendationStyle: async (xNCMRequest: string, dailyStyleRequest: DailyStyleRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'xNCMRequest' is not null or undefined
+            assertParamExists('saveMyNcmRecommendationStyle', 'xNCMRequest', xNCMRequest)
+            // verify required parameter 'dailyStyleRequest' is not null or undefined
+            assertParamExists('saveMyNcmRecommendationStyle', 'dailyStyleRequest', dailyStyleRequest)
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/recommendations/style`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (xNCMRequest != null) {
+                localVarHeaderParameter['X-NCM-Request'] = String(xNCMRequest);
+            }
+
+
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(dailyStyleRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 收藏专辑
+         * @param {string} id 专辑 ID
+         * @param {string} xNCMRequest 固定为 1，防止跨站请求伪造
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        subscribeMyNcmAlbum: async (id: string, xNCMRequest: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('subscribeMyNcmAlbum', 'id', id)
+            // verify required parameter 'xNCMRequest' is not null or undefined
+            assertParamExists('subscribeMyNcmAlbum', 'xNCMRequest', xNCMRequest)
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/albums/{id}/subscription`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (xNCMRequest != null) {
+                localVarHeaderParameter['X-NCM-Request'] = String(xNCMRequest);
+            }
+
+
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -682,7 +1461,7 @@ export const UcApiNcmHaloRunV1alpha1MeApiAxiosParamCreator = function (configura
             }
 
 
-    
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -730,7 +1509,55 @@ export const UcApiNcmHaloRunV1alpha1MeApiAxiosParamCreator = function (configura
             }
 
 
-    
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 取消收藏专辑
+         * @param {string} id 专辑 ID
+         * @param {string} xNCMRequest 固定为 1，防止跨站请求伪造
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        unsubscribeMyNcmAlbum: async (id: string, xNCMRequest: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('unsubscribeMyNcmAlbum', 'id', id)
+            // verify required parameter 'xNCMRequest' is not null or undefined
+            assertParamExists('unsubscribeMyNcmAlbum', 'xNCMRequest', xNCMRequest)
+            const localVarPath = `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/albums/{id}/subscription`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (xNCMRequest != null) {
+                localVarHeaderParameter['X-NCM-Request'] = String(xNCMRequest);
+            }
+
+
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
@@ -851,6 +1678,43 @@ export const UcApiNcmHaloRunV1alpha1MeApiFp = function(configuration?: Configura
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * 不喜欢这首推荐歌曲
+         * @param {string} id 歌曲 ID
+         * @param {string} xNCMRequest 固定为 1，防止跨站请求伪造
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async dislikeMyNcmRecommendation(id: string, xNCMRequest: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.dislikeMyNcmRecommendation(id, xNCMRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.dislikeMyNcmRecommendation']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 查询专辑收藏状态
+         * @param {string} id 专辑 ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getMyNcmAlbumSubscription(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getMyNcmAlbumSubscription(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.getMyNcmAlbumSubscription']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 本人云盘曲目的歌词
+         * @param {string} id 云盘曲目 ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getMyNcmCloudLyrics(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getMyNcmCloudLyrics(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.getMyNcmCloudLyrics']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * 绑定的网易云账号概况
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -859,6 +1723,17 @@ export const UcApiNcmHaloRunV1alpha1MeApiFp = function(configuration?: Configura
             const localVarAxiosArgs = await localVarAxiosParamCreator.getMyNcmProfile(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.getMyNcmProfile']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 风格推荐与当前选择
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getMyNcmStyleRecommendations(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getMyNcmStyleRecommendations(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.getMyNcmStyleRecommendations']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -887,6 +1762,67 @@ export const UcApiNcmHaloRunV1alpha1MeApiFp = function(configuration?: Configura
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * 本人收藏的专辑
+         * @param {number} [offset] 从第几条开始，默认 0
+         * @param {number} [limit] 每页条数，1~100，默认 30
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async listMyNcmAlbums(offset?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listMyNcmAlbums(offset, limit, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.listMyNcmAlbums']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 音乐云盘曲目
+         * @param {number} [offset] 从第几条开始，默认 0
+         * @param {number} [limit] 每页条数，1~100，默认 30
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async listMyNcmCloudTracks(offset?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listMyNcmCloudTracks(offset, limit, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.listMyNcmCloudTracks']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 每日推荐歌曲
+         * @param {string} [refresh] 请求更新每日推荐
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async listMyNcmDailySongs(refresh?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listMyNcmDailySongs(refresh, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.listMyNcmDailySongs']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 历史日推曲目
+         * @param {string} date 推荐日期 (YYYY-MM-DD)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async listMyNcmHistoricRecommendations(date: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listMyNcmHistoricRecommendations(date, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.listMyNcmHistoricRecommendations']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 喜欢的歌曲 ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async listMyNcmLikedSongIds(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listMyNcmLikedSongIds(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.listMyNcmLikedSongIds']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * 喜欢的歌（分页，每页最多 100 首）
          * @param {number} [offset] 从第几条开始，默认 0
          * @param {number} [limit] 每页条数，1~100，默认 30
@@ -897,6 +1833,19 @@ export const UcApiNcmHaloRunV1alpha1MeApiFp = function(configuration?: Configura
             const localVarAxiosArgs = await localVarAxiosParamCreator.listMyNcmLikes(offset, limit, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.listMyNcmLikes']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 私人 FM 歌曲
+         * @param {string} [mode] 私人 FM 模式
+         * @param {string} [submode] 场景子模式
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async listMyNcmPersonalFm(mode?: string, submode?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listMyNcmPersonalFm(mode, submode, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.listMyNcmPersonalFm']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -948,6 +1897,51 @@ export const UcApiNcmHaloRunV1alpha1MeApiFp = function(configuration?: Configura
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * 历史日推日期
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async listMyNcmRecommendationDates(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listMyNcmRecommendationDates(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.listMyNcmRecommendationDates']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 推荐风格选项
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async listMyNcmRecommendationStyles(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listMyNcmRecommendationStyles(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.listMyNcmRecommendationStyles']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 本人推荐歌单
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async listMyNcmRecommendedPlaylists(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listMyNcmRecommendedPlaylists(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.listMyNcmRecommendedPlaylists']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 本人探索推荐
+         * @param {string} [cursor] 下一页标记
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async readMyNcmExplore(cursor?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.readMyNcmExplore(cursor, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.readMyNcmExplore']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * 把歌曲移出歌单；只能改自己创建的歌单
          * @param {string} id 歌单 ID
          * @param {string} songIds 歌曲 ID，英文逗号分隔，最多 100 个
@@ -959,6 +1953,58 @@ export const UcApiNcmHaloRunV1alpha1MeApiFp = function(configuration?: Configura
             const localVarAxiosArgs = await localVarAxiosParamCreator.removeMyNcmPlaylistTracks(id, songIds, xNCMRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.removeMyNcmPlaylistTracks']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 同步本人实际听歌记录
+         * @param {string} xNCMRequest 固定为 1，防止跨站请求伪造
+         * @param {PlaybackReportRequest} playbackReportRequest
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async reportMyNcmPlayback(xNCMRequest: string, playbackReportRequest: PlaybackReportRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.reportMyNcmPlayback(xNCMRequest, playbackReportRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.reportMyNcmPlayback']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 本人云盘曲目的播放地址
+         * @param {string} id 云盘曲目 ID
+         * @param {string} [level] 期望音质
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async resolveMyNcmCloudTrack(id: string, level?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.resolveMyNcmCloudTrack(id, level, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.resolveMyNcmCloudTrack']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 保存推荐风格
+         * @param {string} xNCMRequest 固定为 1，防止跨站请求伪造
+         * @param {DailyStyleRequest} dailyStyleRequest
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async saveMyNcmRecommendationStyle(xNCMRequest: string, dailyStyleRequest: DailyStyleRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.saveMyNcmRecommendationStyle(xNCMRequest, dailyStyleRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.saveMyNcmRecommendationStyle']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 收藏专辑
+         * @param {string} id 专辑 ID
+         * @param {string} xNCMRequest 固定为 1，防止跨站请求伪造
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async subscribeMyNcmAlbum(id: string, xNCMRequest: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.subscribeMyNcmAlbum(id, xNCMRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.subscribeMyNcmAlbum']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -985,6 +2031,19 @@ export const UcApiNcmHaloRunV1alpha1MeApiFp = function(configuration?: Configura
             const localVarAxiosArgs = await localVarAxiosParamCreator.unlikeMyNcmSong(songId, xNCMRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.unlikeMyNcmSong']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 取消收藏专辑
+         * @param {string} id 专辑 ID
+         * @param {string} xNCMRequest 固定为 1，防止跨站请求伪造
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async unsubscribeMyNcmAlbum(id: string, xNCMRequest: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.unsubscribeMyNcmAlbum(id, xNCMRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UcApiNcmHaloRunV1alpha1MeApi.unsubscribeMyNcmAlbum']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1047,12 +2106,47 @@ export const UcApiNcmHaloRunV1alpha1MeApiFactory = function (configuration?: Con
             return localVarFp.deleteMyNcmPlaylist(requestParameters.id, requestParameters.xNCMRequest, options).then((request) => request(axios, basePath));
         },
         /**
+         * 不喜欢这首推荐歌曲
+         * @param {UcApiNcmHaloRunV1alpha1MeApiDislikeMyNcmRecommendationRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        dislikeMyNcmRecommendation(requestParameters: UcApiNcmHaloRunV1alpha1MeApiDislikeMyNcmRecommendationRequest, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.dislikeMyNcmRecommendation(requestParameters.id, requestParameters.xNCMRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 查询专辑收藏状态
+         * @param {UcApiNcmHaloRunV1alpha1MeApiGetMyNcmAlbumSubscriptionRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getMyNcmAlbumSubscription(requestParameters: UcApiNcmHaloRunV1alpha1MeApiGetMyNcmAlbumSubscriptionRequest, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.getMyNcmAlbumSubscription(requestParameters.id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 本人云盘曲目的歌词
+         * @param {UcApiNcmHaloRunV1alpha1MeApiGetMyNcmCloudLyricsRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getMyNcmCloudLyrics(requestParameters: UcApiNcmHaloRunV1alpha1MeApiGetMyNcmCloudLyricsRequest, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.getMyNcmCloudLyrics(requestParameters.id, options).then((request) => request(axios, basePath));
+        },
+        /**
          * 绑定的网易云账号概况
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
         getMyNcmProfile(options?: RawAxiosRequestConfig): AxiosPromise<NcmMeProfile> {
             return localVarFp.getMyNcmProfile(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 风格推荐与当前选择
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getMyNcmStyleRecommendations(options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.getMyNcmStyleRecommendations(options).then((request) => request(axios, basePath));
         },
         /**
          * 查询歌单归属与当前账号收藏状态
@@ -1073,6 +2167,50 @@ export const UcApiNcmHaloRunV1alpha1MeApiFactory = function (configuration?: Con
             return localVarFp.likeMyNcmSong(requestParameters.songId, requestParameters.xNCMRequest, options).then((request) => request(axios, basePath));
         },
         /**
+         * 本人收藏的专辑
+         * @param {UcApiNcmHaloRunV1alpha1MeApiListMyNcmAlbumsRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmAlbums(requestParameters: UcApiNcmHaloRunV1alpha1MeApiListMyNcmAlbumsRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.listMyNcmAlbums(requestParameters.offset, requestParameters.limit, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 音乐云盘曲目
+         * @param {UcApiNcmHaloRunV1alpha1MeApiListMyNcmCloudTracksRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmCloudTracks(requestParameters: UcApiNcmHaloRunV1alpha1MeApiListMyNcmCloudTracksRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.listMyNcmCloudTracks(requestParameters.offset, requestParameters.limit, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 每日推荐歌曲
+         * @param {UcApiNcmHaloRunV1alpha1MeApiListMyNcmDailySongsRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmDailySongs(requestParameters: UcApiNcmHaloRunV1alpha1MeApiListMyNcmDailySongsRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.listMyNcmDailySongs(requestParameters.refresh, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 历史日推曲目
+         * @param {UcApiNcmHaloRunV1alpha1MeApiListMyNcmHistoricRecommendationsRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmHistoricRecommendations(requestParameters: UcApiNcmHaloRunV1alpha1MeApiListMyNcmHistoricRecommendationsRequest, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.listMyNcmHistoricRecommendations(requestParameters.date, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 喜欢的歌曲 ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmLikedSongIds(options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.listMyNcmLikedSongIds(options).then((request) => request(axios, basePath));
+        },
+        /**
          * 喜欢的歌（分页，每页最多 100 首）
          * @param {UcApiNcmHaloRunV1alpha1MeApiListMyNcmLikesRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
@@ -1080,6 +2218,15 @@ export const UcApiNcmHaloRunV1alpha1MeApiFactory = function (configuration?: Con
          */
         listMyNcmLikes(requestParameters: UcApiNcmHaloRunV1alpha1MeApiListMyNcmLikesRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<NcmMeSongPage> {
             return localVarFp.listMyNcmLikes(requestParameters.offset, requestParameters.limit, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 私人 FM 歌曲
+         * @param {UcApiNcmHaloRunV1alpha1MeApiListMyNcmPersonalFmRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmPersonalFm(requestParameters: UcApiNcmHaloRunV1alpha1MeApiListMyNcmPersonalFmRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.listMyNcmPersonalFm(requestParameters.mode, requestParameters.submode, options).then((request) => request(axios, basePath));
         },
         /**
          * 歌单信息和歌曲（分页，每页最多 100 首）
@@ -1116,6 +2263,39 @@ export const UcApiNcmHaloRunV1alpha1MeApiFactory = function (configuration?: Con
             return localVarFp.listMyNcmRecentRecords(options).then((request) => request(axios, basePath));
         },
         /**
+         * 历史日推日期
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmRecommendationDates(options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.listMyNcmRecommendationDates(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 推荐风格选项
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmRecommendationStyles(options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.listMyNcmRecommendationStyles(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 本人推荐歌单
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyNcmRecommendedPlaylists(options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.listMyNcmRecommendedPlaylists(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 本人探索推荐
+         * @param {UcApiNcmHaloRunV1alpha1MeApiReadMyNcmExploreRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        readMyNcmExplore(requestParameters: UcApiNcmHaloRunV1alpha1MeApiReadMyNcmExploreRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.readMyNcmExplore(requestParameters.cursor, options).then((request) => request(axios, basePath));
+        },
+        /**
          * 把歌曲移出歌单；只能改自己创建的歌单
          * @param {UcApiNcmHaloRunV1alpha1MeApiRemoveMyNcmPlaylistTracksRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
@@ -1123,6 +2303,42 @@ export const UcApiNcmHaloRunV1alpha1MeApiFactory = function (configuration?: Con
          */
         removeMyNcmPlaylistTracks(requestParameters: UcApiNcmHaloRunV1alpha1MeApiRemoveMyNcmPlaylistTracksRequest, options?: RawAxiosRequestConfig): AxiosPromise<NcmMeTracksResult> {
             return localVarFp.removeMyNcmPlaylistTracks(requestParameters.id, requestParameters.songIds, requestParameters.xNCMRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 同步本人实际听歌记录
+         * @param {UcApiNcmHaloRunV1alpha1MeApiReportMyNcmPlaybackRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        reportMyNcmPlayback(requestParameters: UcApiNcmHaloRunV1alpha1MeApiReportMyNcmPlaybackRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.reportMyNcmPlayback(requestParameters.xNCMRequest, requestParameters.playbackReportRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 本人云盘曲目的播放地址
+         * @param {UcApiNcmHaloRunV1alpha1MeApiResolveMyNcmCloudTrackRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        resolveMyNcmCloudTrack(requestParameters: UcApiNcmHaloRunV1alpha1MeApiResolveMyNcmCloudTrackRequest, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.resolveMyNcmCloudTrack(requestParameters.id, requestParameters.level, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 保存推荐风格
+         * @param {UcApiNcmHaloRunV1alpha1MeApiSaveMyNcmRecommendationStyleRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        saveMyNcmRecommendationStyle(requestParameters: UcApiNcmHaloRunV1alpha1MeApiSaveMyNcmRecommendationStyleRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.saveMyNcmRecommendationStyle(requestParameters.xNCMRequest, requestParameters.dailyStyleRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 收藏专辑
+         * @param {UcApiNcmHaloRunV1alpha1MeApiSubscribeMyNcmAlbumRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        subscribeMyNcmAlbum(requestParameters: UcApiNcmHaloRunV1alpha1MeApiSubscribeMyNcmAlbumRequest, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.subscribeMyNcmAlbum(requestParameters.id, requestParameters.xNCMRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 收藏歌单
@@ -1141,6 +2357,15 @@ export const UcApiNcmHaloRunV1alpha1MeApiFactory = function (configuration?: Con
          */
         unlikeMyNcmSong(requestParameters: UcApiNcmHaloRunV1alpha1MeApiUnlikeMyNcmSongRequest, options?: RawAxiosRequestConfig): AxiosPromise<NcmMeLikeResult> {
             return localVarFp.unlikeMyNcmSong(requestParameters.songId, requestParameters.xNCMRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 取消收藏专辑
+         * @param {UcApiNcmHaloRunV1alpha1MeApiUnsubscribeMyNcmAlbumRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        unsubscribeMyNcmAlbum(requestParameters: UcApiNcmHaloRunV1alpha1MeApiUnsubscribeMyNcmAlbumRequest, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.unsubscribeMyNcmAlbum(requestParameters.id, requestParameters.xNCMRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 取消收藏歌单
@@ -1239,6 +2464,55 @@ export interface UcApiNcmHaloRunV1alpha1MeApiDeleteMyNcmPlaylistRequest {
 }
 
 /**
+ * Request parameters for dislikeMyNcmRecommendation operation in UcApiNcmHaloRunV1alpha1MeApi.
+ * @export
+ * @interface UcApiNcmHaloRunV1alpha1MeApiDislikeMyNcmRecommendationRequest
+ */
+export interface UcApiNcmHaloRunV1alpha1MeApiDislikeMyNcmRecommendationRequest {
+    /**
+     * 歌曲 ID
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiDislikeMyNcmRecommendation
+     */
+    readonly id: string
+
+    /**
+     * 固定为 1，防止跨站请求伪造
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiDislikeMyNcmRecommendation
+     */
+    readonly xNCMRequest: string
+}
+
+/**
+ * Request parameters for getMyNcmAlbumSubscription operation in UcApiNcmHaloRunV1alpha1MeApi.
+ * @export
+ * @interface UcApiNcmHaloRunV1alpha1MeApiGetMyNcmAlbumSubscriptionRequest
+ */
+export interface UcApiNcmHaloRunV1alpha1MeApiGetMyNcmAlbumSubscriptionRequest {
+    /**
+     * 专辑 ID
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiGetMyNcmAlbumSubscription
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for getMyNcmCloudLyrics operation in UcApiNcmHaloRunV1alpha1MeApi.
+ * @export
+ * @interface UcApiNcmHaloRunV1alpha1MeApiGetMyNcmCloudLyricsRequest
+ */
+export interface UcApiNcmHaloRunV1alpha1MeApiGetMyNcmCloudLyricsRequest {
+    /**
+     * 云盘曲目 ID
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiGetMyNcmCloudLyrics
+     */
+    readonly id: string
+}
+
+/**
  * Request parameters for getMyNcmSubscription operation in UcApiNcmHaloRunV1alpha1MeApi.
  * @export
  * @interface UcApiNcmHaloRunV1alpha1MeApiGetMyNcmSubscriptionRequest
@@ -1274,6 +2548,76 @@ export interface UcApiNcmHaloRunV1alpha1MeApiLikeMyNcmSongRequest {
 }
 
 /**
+ * Request parameters for listMyNcmAlbums operation in UcApiNcmHaloRunV1alpha1MeApi.
+ * @export
+ * @interface UcApiNcmHaloRunV1alpha1MeApiListMyNcmAlbumsRequest
+ */
+export interface UcApiNcmHaloRunV1alpha1MeApiListMyNcmAlbumsRequest {
+    /**
+     * 从第几条开始，默认 0
+     * @type {number}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiListMyNcmAlbums
+     */
+    readonly offset?: number
+
+    /**
+     * 每页条数，1~100，默认 30
+     * @type {number}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiListMyNcmAlbums
+     */
+    readonly limit?: number
+}
+
+/**
+ * Request parameters for listMyNcmCloudTracks operation in UcApiNcmHaloRunV1alpha1MeApi.
+ * @export
+ * @interface UcApiNcmHaloRunV1alpha1MeApiListMyNcmCloudTracksRequest
+ */
+export interface UcApiNcmHaloRunV1alpha1MeApiListMyNcmCloudTracksRequest {
+    /**
+     * 从第几条开始，默认 0
+     * @type {number}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiListMyNcmCloudTracks
+     */
+    readonly offset?: number
+
+    /**
+     * 每页条数，1~100，默认 30
+     * @type {number}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiListMyNcmCloudTracks
+     */
+    readonly limit?: number
+}
+
+/**
+ * Request parameters for listMyNcmDailySongs operation in UcApiNcmHaloRunV1alpha1MeApi.
+ * @export
+ * @interface UcApiNcmHaloRunV1alpha1MeApiListMyNcmDailySongsRequest
+ */
+export interface UcApiNcmHaloRunV1alpha1MeApiListMyNcmDailySongsRequest {
+    /**
+     * 请求更新每日推荐
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiListMyNcmDailySongs
+     */
+    readonly refresh?: string
+}
+
+/**
+ * Request parameters for listMyNcmHistoricRecommendations operation in UcApiNcmHaloRunV1alpha1MeApi.
+ * @export
+ * @interface UcApiNcmHaloRunV1alpha1MeApiListMyNcmHistoricRecommendationsRequest
+ */
+export interface UcApiNcmHaloRunV1alpha1MeApiListMyNcmHistoricRecommendationsRequest {
+    /**
+     * 推荐日期 (YYYY-MM-DD)
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiListMyNcmHistoricRecommendations
+     */
+    readonly date: string
+}
+
+/**
  * Request parameters for listMyNcmLikes operation in UcApiNcmHaloRunV1alpha1MeApi.
  * @export
  * @interface UcApiNcmHaloRunV1alpha1MeApiListMyNcmLikesRequest
@@ -1292,6 +2636,27 @@ export interface UcApiNcmHaloRunV1alpha1MeApiListMyNcmLikesRequest {
      * @memberof UcApiNcmHaloRunV1alpha1MeApiListMyNcmLikes
      */
     readonly limit?: number
+}
+
+/**
+ * Request parameters for listMyNcmPersonalFm operation in UcApiNcmHaloRunV1alpha1MeApi.
+ * @export
+ * @interface UcApiNcmHaloRunV1alpha1MeApiListMyNcmPersonalFmRequest
+ */
+export interface UcApiNcmHaloRunV1alpha1MeApiListMyNcmPersonalFmRequest {
+    /**
+     * 私人 FM 模式
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiListMyNcmPersonalFm
+     */
+    readonly mode?: string
+
+    /**
+     * 场景子模式
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiListMyNcmPersonalFm
+     */
+    readonly submode?: string
 }
 
 /**
@@ -1337,6 +2702,20 @@ export interface UcApiNcmHaloRunV1alpha1MeApiListMyNcmRankRecordsRequest {
 }
 
 /**
+ * Request parameters for readMyNcmExplore operation in UcApiNcmHaloRunV1alpha1MeApi.
+ * @export
+ * @interface UcApiNcmHaloRunV1alpha1MeApiReadMyNcmExploreRequest
+ */
+export interface UcApiNcmHaloRunV1alpha1MeApiReadMyNcmExploreRequest {
+    /**
+     * 下一页标记
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiReadMyNcmExplore
+     */
+    readonly cursor?: string
+}
+
+/**
  * Request parameters for removeMyNcmPlaylistTracks operation in UcApiNcmHaloRunV1alpha1MeApi.
  * @export
  * @interface UcApiNcmHaloRunV1alpha1MeApiRemoveMyNcmPlaylistTracksRequest
@@ -1360,6 +2739,90 @@ export interface UcApiNcmHaloRunV1alpha1MeApiRemoveMyNcmPlaylistTracksRequest {
      * 固定为 1，防止跨站请求伪造
      * @type {string}
      * @memberof UcApiNcmHaloRunV1alpha1MeApiRemoveMyNcmPlaylistTracks
+     */
+    readonly xNCMRequest: string
+}
+
+/**
+ * Request parameters for reportMyNcmPlayback operation in UcApiNcmHaloRunV1alpha1MeApi.
+ * @export
+ * @interface UcApiNcmHaloRunV1alpha1MeApiReportMyNcmPlaybackRequest
+ */
+export interface UcApiNcmHaloRunV1alpha1MeApiReportMyNcmPlaybackRequest {
+    /**
+     * 固定为 1，防止跨站请求伪造
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiReportMyNcmPlayback
+     */
+    readonly xNCMRequest: string
+
+    /**
+     *
+     * @type {PlaybackReportRequest}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiReportMyNcmPlayback
+     */
+    readonly playbackReportRequest: PlaybackReportRequest
+}
+
+/**
+ * Request parameters for resolveMyNcmCloudTrack operation in UcApiNcmHaloRunV1alpha1MeApi.
+ * @export
+ * @interface UcApiNcmHaloRunV1alpha1MeApiResolveMyNcmCloudTrackRequest
+ */
+export interface UcApiNcmHaloRunV1alpha1MeApiResolveMyNcmCloudTrackRequest {
+    /**
+     * 云盘曲目 ID
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiResolveMyNcmCloudTrack
+     */
+    readonly id: string
+
+    /**
+     * 期望音质
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiResolveMyNcmCloudTrack
+     */
+    readonly level?: string
+}
+
+/**
+ * Request parameters for saveMyNcmRecommendationStyle operation in UcApiNcmHaloRunV1alpha1MeApi.
+ * @export
+ * @interface UcApiNcmHaloRunV1alpha1MeApiSaveMyNcmRecommendationStyleRequest
+ */
+export interface UcApiNcmHaloRunV1alpha1MeApiSaveMyNcmRecommendationStyleRequest {
+    /**
+     * 固定为 1，防止跨站请求伪造
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiSaveMyNcmRecommendationStyle
+     */
+    readonly xNCMRequest: string
+
+    /**
+     *
+     * @type {DailyStyleRequest}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiSaveMyNcmRecommendationStyle
+     */
+    readonly dailyStyleRequest: DailyStyleRequest
+}
+
+/**
+ * Request parameters for subscribeMyNcmAlbum operation in UcApiNcmHaloRunV1alpha1MeApi.
+ * @export
+ * @interface UcApiNcmHaloRunV1alpha1MeApiSubscribeMyNcmAlbumRequest
+ */
+export interface UcApiNcmHaloRunV1alpha1MeApiSubscribeMyNcmAlbumRequest {
+    /**
+     * 专辑 ID
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiSubscribeMyNcmAlbum
+     */
+    readonly id: string
+
+    /**
+     * 固定为 1，防止跨站请求伪造
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiSubscribeMyNcmAlbum
      */
     readonly xNCMRequest: string
 }
@@ -1402,6 +2865,27 @@ export interface UcApiNcmHaloRunV1alpha1MeApiUnlikeMyNcmSongRequest {
      * 固定为 1，防止跨站请求伪造
      * @type {string}
      * @memberof UcApiNcmHaloRunV1alpha1MeApiUnlikeMyNcmSong
+     */
+    readonly xNCMRequest: string
+}
+
+/**
+ * Request parameters for unsubscribeMyNcmAlbum operation in UcApiNcmHaloRunV1alpha1MeApi.
+ * @export
+ * @interface UcApiNcmHaloRunV1alpha1MeApiUnsubscribeMyNcmAlbumRequest
+ */
+export interface UcApiNcmHaloRunV1alpha1MeApiUnsubscribeMyNcmAlbumRequest {
+    /**
+     * 专辑 ID
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiUnsubscribeMyNcmAlbum
+     */
+    readonly id: string
+
+    /**
+     * 固定为 1，防止跨站请求伪造
+     * @type {string}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApiUnsubscribeMyNcmAlbum
      */
     readonly xNCMRequest: string
 }
@@ -1479,6 +2963,39 @@ export class UcApiNcmHaloRunV1alpha1MeApi extends BaseAPI {
     }
 
     /**
+     * 不喜欢这首推荐歌曲
+     * @param {UcApiNcmHaloRunV1alpha1MeApiDislikeMyNcmRecommendationRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public dislikeMyNcmRecommendation(requestParameters: UcApiNcmHaloRunV1alpha1MeApiDislikeMyNcmRecommendationRequest, options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).dislikeMyNcmRecommendation(requestParameters.id, requestParameters.xNCMRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 查询专辑收藏状态
+     * @param {UcApiNcmHaloRunV1alpha1MeApiGetMyNcmAlbumSubscriptionRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public getMyNcmAlbumSubscription(requestParameters: UcApiNcmHaloRunV1alpha1MeApiGetMyNcmAlbumSubscriptionRequest, options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).getMyNcmAlbumSubscription(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 本人云盘曲目的歌词
+     * @param {UcApiNcmHaloRunV1alpha1MeApiGetMyNcmCloudLyricsRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public getMyNcmCloudLyrics(requestParameters: UcApiNcmHaloRunV1alpha1MeApiGetMyNcmCloudLyricsRequest, options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).getMyNcmCloudLyrics(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * 绑定的网易云账号概况
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -1486,6 +3003,16 @@ export class UcApiNcmHaloRunV1alpha1MeApi extends BaseAPI {
      */
     public getMyNcmProfile(options?: RawAxiosRequestConfig) {
         return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).getMyNcmProfile(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 风格推荐与当前选择
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public getMyNcmStyleRecommendations(options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).getMyNcmStyleRecommendations(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1511,6 +3038,60 @@ export class UcApiNcmHaloRunV1alpha1MeApi extends BaseAPI {
     }
 
     /**
+     * 本人收藏的专辑
+     * @param {UcApiNcmHaloRunV1alpha1MeApiListMyNcmAlbumsRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public listMyNcmAlbums(requestParameters: UcApiNcmHaloRunV1alpha1MeApiListMyNcmAlbumsRequest = {}, options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).listMyNcmAlbums(requestParameters.offset, requestParameters.limit, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 音乐云盘曲目
+     * @param {UcApiNcmHaloRunV1alpha1MeApiListMyNcmCloudTracksRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public listMyNcmCloudTracks(requestParameters: UcApiNcmHaloRunV1alpha1MeApiListMyNcmCloudTracksRequest = {}, options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).listMyNcmCloudTracks(requestParameters.offset, requestParameters.limit, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 每日推荐歌曲
+     * @param {UcApiNcmHaloRunV1alpha1MeApiListMyNcmDailySongsRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public listMyNcmDailySongs(requestParameters: UcApiNcmHaloRunV1alpha1MeApiListMyNcmDailySongsRequest = {}, options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).listMyNcmDailySongs(requestParameters.refresh, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 历史日推曲目
+     * @param {UcApiNcmHaloRunV1alpha1MeApiListMyNcmHistoricRecommendationsRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public listMyNcmHistoricRecommendations(requestParameters: UcApiNcmHaloRunV1alpha1MeApiListMyNcmHistoricRecommendationsRequest, options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).listMyNcmHistoricRecommendations(requestParameters.date, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 喜欢的歌曲 ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public listMyNcmLikedSongIds(options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).listMyNcmLikedSongIds(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * 喜欢的歌（分页，每页最多 100 首）
      * @param {UcApiNcmHaloRunV1alpha1MeApiListMyNcmLikesRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
@@ -1519,6 +3100,17 @@ export class UcApiNcmHaloRunV1alpha1MeApi extends BaseAPI {
      */
     public listMyNcmLikes(requestParameters: UcApiNcmHaloRunV1alpha1MeApiListMyNcmLikesRequest = {}, options?: RawAxiosRequestConfig) {
         return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).listMyNcmLikes(requestParameters.offset, requestParameters.limit, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 私人 FM 歌曲
+     * @param {UcApiNcmHaloRunV1alpha1MeApiListMyNcmPersonalFmRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public listMyNcmPersonalFm(requestParameters: UcApiNcmHaloRunV1alpha1MeApiListMyNcmPersonalFmRequest = {}, options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).listMyNcmPersonalFm(requestParameters.mode, requestParameters.submode, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1564,6 +3156,47 @@ export class UcApiNcmHaloRunV1alpha1MeApi extends BaseAPI {
     }
 
     /**
+     * 历史日推日期
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public listMyNcmRecommendationDates(options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).listMyNcmRecommendationDates(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 推荐风格选项
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public listMyNcmRecommendationStyles(options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).listMyNcmRecommendationStyles(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 本人推荐歌单
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public listMyNcmRecommendedPlaylists(options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).listMyNcmRecommendedPlaylists(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 本人探索推荐
+     * @param {UcApiNcmHaloRunV1alpha1MeApiReadMyNcmExploreRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public readMyNcmExplore(requestParameters: UcApiNcmHaloRunV1alpha1MeApiReadMyNcmExploreRequest = {}, options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).readMyNcmExplore(requestParameters.cursor, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * 把歌曲移出歌单；只能改自己创建的歌单
      * @param {UcApiNcmHaloRunV1alpha1MeApiRemoveMyNcmPlaylistTracksRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
@@ -1572,6 +3205,50 @@ export class UcApiNcmHaloRunV1alpha1MeApi extends BaseAPI {
      */
     public removeMyNcmPlaylistTracks(requestParameters: UcApiNcmHaloRunV1alpha1MeApiRemoveMyNcmPlaylistTracksRequest, options?: RawAxiosRequestConfig) {
         return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).removeMyNcmPlaylistTracks(requestParameters.id, requestParameters.songIds, requestParameters.xNCMRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 同步本人实际听歌记录
+     * @param {UcApiNcmHaloRunV1alpha1MeApiReportMyNcmPlaybackRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public reportMyNcmPlayback(requestParameters: UcApiNcmHaloRunV1alpha1MeApiReportMyNcmPlaybackRequest, options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).reportMyNcmPlayback(requestParameters.xNCMRequest, requestParameters.playbackReportRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 本人云盘曲目的播放地址
+     * @param {UcApiNcmHaloRunV1alpha1MeApiResolveMyNcmCloudTrackRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public resolveMyNcmCloudTrack(requestParameters: UcApiNcmHaloRunV1alpha1MeApiResolveMyNcmCloudTrackRequest, options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).resolveMyNcmCloudTrack(requestParameters.id, requestParameters.level, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 保存推荐风格
+     * @param {UcApiNcmHaloRunV1alpha1MeApiSaveMyNcmRecommendationStyleRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public saveMyNcmRecommendationStyle(requestParameters: UcApiNcmHaloRunV1alpha1MeApiSaveMyNcmRecommendationStyleRequest, options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).saveMyNcmRecommendationStyle(requestParameters.xNCMRequest, requestParameters.dailyStyleRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 收藏专辑
+     * @param {UcApiNcmHaloRunV1alpha1MeApiSubscribeMyNcmAlbumRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public subscribeMyNcmAlbum(requestParameters: UcApiNcmHaloRunV1alpha1MeApiSubscribeMyNcmAlbumRequest, options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).subscribeMyNcmAlbum(requestParameters.id, requestParameters.xNCMRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1594,6 +3271,17 @@ export class UcApiNcmHaloRunV1alpha1MeApi extends BaseAPI {
      */
     public unlikeMyNcmSong(requestParameters: UcApiNcmHaloRunV1alpha1MeApiUnlikeMyNcmSongRequest, options?: RawAxiosRequestConfig) {
         return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).unlikeMyNcmSong(requestParameters.songId, requestParameters.xNCMRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 取消收藏专辑
+     * @param {UcApiNcmHaloRunV1alpha1MeApiUnsubscribeMyNcmAlbumRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UcApiNcmHaloRunV1alpha1MeApi
+     */
+    public unsubscribeMyNcmAlbum(requestParameters: UcApiNcmHaloRunV1alpha1MeApiUnsubscribeMyNcmAlbumRequest, options?: RawAxiosRequestConfig) {
+        return UcApiNcmHaloRunV1alpha1MeApiFp(this.configuration).unsubscribeMyNcmAlbum(requestParameters.id, requestParameters.xNCMRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

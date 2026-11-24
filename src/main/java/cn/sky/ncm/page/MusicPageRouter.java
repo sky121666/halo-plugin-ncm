@@ -16,6 +16,7 @@ import cn.sky.ncm.finder.vo.SongVo;
 import cn.sky.ncm.finder.vo.SuggestGroupVo;
 import cn.sky.ncm.finder.vo.SuggestItemVo;
 import cn.sky.ncm.gateway.NcmGateway;
+import cn.sky.ncm.me.MeParams;
 import cn.sky.ncm.security.ClientIp;
 import cn.sky.ncm.security.RateLimiter;
 import cn.sky.ncm.setting.PageSetting;
@@ -79,6 +80,8 @@ public class MusicPageRouter {
             .andRoute(GET("/music/playlist/" + ID_PATTERN), this::playlist)
             .andRoute(GET("/music/album/" + ID_PATTERN), this::album)
             .andRoute(GET("/music/artist/" + ID_PATTERN), this::artist)
+            .andRoute(GET("/music/artist/" + ID_PATTERN + "/{section:profile|songs|albums}"), this::artistSection)
+            .andRoute(GET("/music/songs"), this::songs)
             .andRoute(GET("/music/song/" + ID_PATTERN), this::song);
     }
 
@@ -226,6 +229,37 @@ public class MusicPageRouter {
                     artist.getBriefDesc(), artist.getCoverUrl(), artist.getUrl(), item, Map.of()));
             })
             .onErrorResume(NcmUnavailableException.class, e -> unavailable(r, s, e)));
+    }
+
+    Mono<ServerResponse> artistSection(ServerRequest r) {
+        String id = r.pathVariable("id");
+        String section = r.pathVariable("section");
+        int offset = queryInteger(r, "offset", 0, 0, Integer.MAX_VALUE - 200);
+        int limit = queryInteger(r, "limit", 30, 1, 200);
+        return opened().then(settings.advanced()).flatMap(advanced -> {
+            String ip = ClientIp.resolve(r, advanced);
+            if (!limiter.tryAcquire("music-artist:" + ip, advanced.publicLimit())) {
+                return json(HttpStatus.TOO_MANY_REQUESTS, Map.of("error", "rate-limited"), NO_STORE);
+            }
+            return finder.foliaArtist(id, section, offset, limit).switchIfEmpty(notFound())
+                .flatMap(body -> json(HttpStatus.OK, body, NO_STORE));
+        }).onErrorResume(NcmUnavailableException.class, error ->
+            json(HttpStatus.SERVICE_UNAVAILABLE, Map.of("error", "unavailable"), NO_STORE));
+    }
+
+    Mono<ServerResponse> songs(ServerRequest r) {
+        return Mono.defer(() -> {
+            String ids = String.join(",", MeParams.idList(r.queryParam("ids").orElse(""), "歌曲 ID", 200));
+            return opened().then(settings.advanced()).flatMap(advanced -> {
+                String ip = ClientIp.resolve(r, advanced);
+                if (!limiter.tryAcquire("music-songs:" + ip, advanced.publicLimit())) {
+                    return json(HttpStatus.TOO_MANY_REQUESTS, Map.of("error", "rate-limited"), NO_STORE);
+                }
+                return finder.songs(ids).collectList()
+                    .flatMap(items -> json(HttpStatus.OK, Map.of("items", items), NO_STORE));
+            });
+        }).onErrorResume(NcmUnavailableException.class, error ->
+            json(HttpStatus.SERVICE_UNAVAILABLE, Map.of("error", "unavailable"), NO_STORE));
     }
 
     Mono<ServerResponse> song(ServerRequest r) {

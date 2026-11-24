@@ -74,4 +74,30 @@ class NcmFinderImplTest {
             .assertNext(s -> assertEquals("2", s.getId()))
             .verifyComplete();
     }
+
+    @Test
+    void foliaArtistReadsTheRequestedPageOfWorks() throws Exception {
+        var mapper = new ObjectMapper();
+        var page = Map.of("id", "1", "offset", "50", "limit", "2");
+        var songs = mapper.readTree("""
+            {"songs":[{"id":51,"name":"Song"}],"total":90,"more":true}
+            """);
+        var albums = mapper.readTree("""
+            {"hotAlbums":[{"id":7,"name":"Album","size":8}],"more":false}
+            """);
+        when(source.call("artist_songs", page, FinderSource.As.ANONYMOUS)).thenReturn(Mono.just(songs));
+        when(source.call("artist_album", page, FinderSource.As.ANONYMOUS)).thenReturn(Mono.just(albums));
+
+        StepVerifier.create(finder.foliaArtist("1", "songs", 50, 2))
+            .assertNext(result -> {
+                assertEquals(51, result.get("nextOffset"));
+                assertEquals(90, result.get("total"));
+                assertEquals(true, result.get("hasMore"));
+            }).verifyComplete();
+        StepVerifier.create(finder.foliaArtist("1", "albums", 50, 2))
+            .assertNext(result -> {
+                assertEquals(51, result.get("nextOffset"));
+                assertEquals(false, result.get("hasMore"));
+            }).verifyComplete();
+    }
 }

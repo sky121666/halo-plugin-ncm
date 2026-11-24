@@ -79,6 +79,38 @@ class MeServiceTest {
     }
 
     @Test
+    void albumSubscriptionReturnsTheAccountStateAfterTheWrite() {
+        f.givenApi("album_sub", "{\"code\":200}");
+        f.givenApi("album_detail_dynamic", "{\"code\":200,\"isSub\":true}");
+        var identity = f.identity("reader", "101");
+        StepVerifier.create(f.service.subscribeAlbum(identity, "123", true))
+            .assertNext(result -> assertEquals(true, result.get("subscribed")))
+            .verifyComplete();
+        verify(f.executor).execute(api("album_sub"), argThat(params ->
+            "123".equals(params.get("id")) && "1".equals(params.get("t"))),
+            argThat(options -> identity.cookie().equals(options.cookie())));
+    }
+
+    @Test
+    void sceneRadioPassesTheSceneAndFallsBackWhenTheModeReturnsNoSongs() {
+        f.givenApi("personal_fm_mode", "{\"code\":200,\"data\":[]}");
+        f.givenApi("personal_fm", "{\"code\":200,\"data\":[{\"id\":123,\"name\":\"FM\"}]}");
+        StepVerifier.create(f.service.foliaPersonalFm(f.identity("reader", "101"), "SCENE_RCMD", "STUDY"))
+            .assertNext(result -> assertEquals(1, ((List<?>) result.get("songs")).size()))
+            .verifyComplete();
+        verify(f.executor).execute(api("personal_fm_mode"), argThat(params ->
+            "SCENE_RCMD".equals(params.get("mode")) && "STUDY".equals(params.get("submode"))), any());
+    }
+
+    @Test
+    void dailyRecommendationDislikeReportsTheQuotaResult() {
+        f.givenApi("recommend_songs_dislike", "{\"code\":432}");
+        StepVerifier.create(f.service.dislikeRecommendation(f.identity("reader", "101"), "99"))
+            .assertNext(result -> assertEquals(true, result.get("limitReached")))
+            .verifyComplete();
+    }
+
+    @Test
     void recentSongLimitAndPlaylistFailureAreIndependent() {
         String record = "{\"playTime\":1700000000000,\"data\":{\"id\":123,\"name\":\"测试\"}}";
         String records = String.join(",", java.util.Collections.nCopies(105, record));

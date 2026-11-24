@@ -123,3 +123,39 @@ spec:
             href: /console/plugins/plugin-ncm?tab=basic#ncm-api-request-options
             class: mb-4 inline-block text-sm text-gray-700 underline underline-offset-4
           children: 配置通用接口缓存与请求兼容
+    - group: ai
+      label: 音乐 AI
+      formSchema:
+        # FormKit 显示默认开启。迁移时仍能识别尚未保存过的开关。
+        - $cmp: FormKit
+          props:
+            type: switch
+            id: ncm_ai_enabled
+            name: enabled
+            label: 启用音乐 AI
+            value: true
+            help: 控制歌曲配色和歌词分词。请先在 AI Foundation 设置默认语言模型。
+        - $formkit: radio
+          if: "$get(ncm_ai_enabled).value"
+          id: ncm_ai_audience
+          name: audience
+          label: 使用范围
+          value: signed-in
+          preserve: true
+          options:
+            - label: 所有已登录账号
+              value: signed-in
+            - label: 仅指定角色
+              value: roles
+        - $formkit: roleSelect
+          if: '$get(ncm_ai_enabled).value && $get(ncm_ai_audience).value === "roles"'
+          name: allowedRoles
+          label: 允许使用的角色
+          value: []
+          multiple: true
+          searchable: true
+          preserve: true
+          excludedNames: [anonymous, authenticated, role-template-ncm-public, role-template-ncm-personal]
+          placeholder: 搜索或选择 Halo 角色
+          validation: required
+          help: 账号拥有任意一个所选角色即可使用。Halo 的「访客」角色是已登录的普通账号。

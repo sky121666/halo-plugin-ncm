@@ -2,6 +2,8 @@
 .npmignore
 .openapi-generator-ignore
 api.ts
+api/api-ncm-ai-halo-run-v1alpha1-music-ai-api.ts
+api/api-ncm-halo-run-v1alpha1-client-config-api.ts
 api/api-ncm-halo-run-v1alpha1-ncm-api.ts
 api/console-api-ncm-halo-run-v1alpha1-api-access-settings-api.ts
 api/console-api-ncm-halo-run-v1alpha1-debug-api.ts
@@ -18,7 +20,9 @@ configuration.ts
 git_push.sh
 index.ts
 models/add-operation.ts
+models/capabilities.ts
 models/copy-operation.ts
+models/daily-style-request.ts
 models/index.ts
 models/json-patch-inner.ts
 models/move-operation.ts
@@ -29,6 +33,9 @@ models/ncm-api-meta-list.ts
 models/ncm-api-meta.ts
 models/ncm-captcha-request.ts
 models/ncm-cellphone-login-request.ts
+models/ncm-config-restore.ts
+models/ncm-config-snapshot.ts
+models/ncm-config-write.ts
 models/ncm-device-status.ts
 models/ncm-featured-item.ts
 models/ncm-featured-list.ts
@@ -60,8 +67,16 @@ models/ncm-me-song.ts
 models/ncm-me-subscription-result.ts
 models/ncm-me-tracks-request.ts
 models/ncm-me-tracks-result.ts
+models/ncm-my-config.ts
 models/ncm-qr-confirm-request.ts
 models/ncm-qr-key.ts
+models/palette.ts
+models/playback-report-request.ts
 models/remove-operation.ts
 models/replace-operation.ts
+models/segmentation-input.ts
+models/segmentation.ts
 models/test-operation.ts
+models/theme-input.ts
+models/theme-pair.ts
+models/theme-word-color.ts

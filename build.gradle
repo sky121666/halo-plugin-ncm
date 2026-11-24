@@ -14,8 +14,10 @@ repositories {
 dependencies {
     implementation platform('run.halo.tools.platform:plugin:2.27.0')
     compileOnly 'run.halo.app:api'
+    compileOnly 'run.halo.aifoundation:api:1.4.0'
 
     testImplementation 'run.halo.app:api'
+    testImplementation 'run.halo.aifoundation:api:1.4.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -39,6 +41,10 @@ test {
 tasks.named('processResources') {
     from('LICENSE') { into 'META-INF' }
     from('licenses') { into 'META-INF/licenses' }
+    from('frontstage/folia/adapter/foliaConfigPolicy.json') {
+        into 'config-clients'
+        rename { 'folia.json' }
+    }
 }
 
 // 把 ui/ 构建出的完整产物目录打进插件包的 ui/ 目录（Halo 2.25+ 从这里加载插件前端，ESM 需要整个目录）
@@ -91,12 +97,18 @@ halo {
 }
 
 haloPlugin {
+    watchDomains {
+        foliaSource {
+            files files('frontstage/folia/')
+        }
+    }
     openApi {
         groupingRules {
             ncmApis {
                 displayName = 'Extension API for plugin-ncm'
                 pathsToMatch = [
                     '/apis/api.ncm.halo.run/v1alpha1/**',
+                    '/apis/api.ncm-ai.halo.run/v1alpha1/**',
                     '/apis/console.api.ncm.halo.run/v1alpha1/**',
                     '/apis/uc.api.ncm.halo.run/v1alpha1/**',
                 ]

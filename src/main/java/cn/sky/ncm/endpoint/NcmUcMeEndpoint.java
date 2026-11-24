@@ -29,6 +29,8 @@ import cn.sky.ncm.setting.SettingService;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
@@ -107,14 +109,42 @@ public class NcmUcMeEndpoint implements CustomEndpoint {
                     "本人创建和收藏的歌单：“我喜欢的音乐”在最前，然后是自己创建的，最后是收藏的"), NcmMePlaylistList.class))
             .GET(MINE + "albums", this::albums, b -> returns(pageParams(
                 op(b, "ListMyNcmAlbums", TAG, "本人收藏的专辑")), java.util.Map.class))
+            .GET(MINE + "cloud", this::cloud, b -> returns(pageParams(
+                op(b, "ListMyNcmCloudTracks", TAG, "音乐云盘曲目")), java.util.Map.class))
+            .GET(MINE + "cloud/{id}/play", this::cloudPlay, b -> returns(queryParam(pathParam(
+                op(b, "ResolveMyNcmCloudTrack", TAG, "本人云盘曲目的播放地址"), "id", "云盘曲目 ID"),
+                "level", "期望音质", false), java.util.Map.class))
+            .GET(MINE + "cloud/{id}/lyric", this::cloudLyric, b -> returns(pathParam(
+                op(b, "GetMyNcmCloudLyrics", TAG, "本人云盘曲目的歌词"), "id", "云盘曲目 ID"), java.util.Map.class))
+            .GET(MINE + "albums/{id}/subscription", r -> albumSubscription(r, null), b -> returns(pathParam(
+                op(b, "GetMyNcmAlbumSubscription", TAG, "查询专辑收藏状态"), "id", "专辑 ID"), java.util.Map.class))
+            .PUT(MINE + "albums/{id}/subscription", r -> albumSubscription(r, true), b -> returns(writeHeader(pathParam(
+                op(b, "SubscribeMyNcmAlbum", TAG, "收藏专辑"), "id", "专辑 ID")), java.util.Map.class))
+            .DELETE(MINE + "albums/{id}/subscription", r -> albumSubscription(r, false), b -> returns(writeHeader(pathParam(
+                op(b, "UnsubscribeMyNcmAlbum", TAG, "取消收藏专辑"), "id", "专辑 ID")), java.util.Map.class))
             .GET(MINE + "recommendations/daily", r -> handle(r, false, Mono.just(
                 id -> me.foliaDailySongs(id, "true".equals(r.queryParam("refresh").orElse(""))))),
                 b -> returns(queryParam(op(b, "ListMyNcmDailySongs", TAG, "每日推荐歌曲"),
                     "refresh", "请求更新每日推荐", false), java.util.Map.class))
             .GET(MINE + "recommendations/playlists", r -> handle(r, false, Mono.just(me::foliaRecommendedPlaylists)),
                 b -> returns(op(b, "ListMyNcmRecommendedPlaylists", TAG, "本人推荐歌单"), java.util.Map.class))
-            .GET(MINE + "recommendations/fm", r -> handle(r, false, Mono.just(me::foliaPersonalFm)),
-                b -> returns(op(b, "ListMyNcmPersonalFm", TAG, "私人 FM 歌曲"), java.util.Map.class))
+            .GET(MINE + "recommendations/fm", this::personalFm, b -> returns(queryParam(queryParam(
+                op(b, "ListMyNcmPersonalFm", TAG, "私人 FM 歌曲"), "mode", "私人 FM 模式", false),
+                "submode", "场景子模式", false), java.util.Map.class))
+            .GET(MINE + "recommendations/daily/history", r -> handle(r, false, Mono.just(me::foliaHistoryDates)),
+                b -> returns(op(b, "ListMyNcmRecommendationDates", TAG, "历史日推日期"), java.util.Map.class))
+            .GET(MINE + "recommendations/daily/history/{date}", this::historySongs,
+                b -> returns(pathParam(op(b, "ListMyNcmHistoricRecommendations", TAG, "历史日推曲目"),
+                    "date", "推荐日期 (YYYY-MM-DD)"), java.util.Map.class))
+            .GET(MINE + "recommendations/style/groups", r -> handle(r, false, Mono.just(me::foliaDailyStyleGroups)),
+                b -> returns(op(b, "ListMyNcmRecommendationStyles", TAG, "推荐风格选项"), java.util.Map.class))
+            .GET(MINE + "recommendations/style", r -> handle(r, false, Mono.just(me::foliaDailyStyleSongs)),
+                b -> returns(op(b, "GetMyNcmStyleRecommendations", TAG, "风格推荐与当前选择"), java.util.Map.class))
+            .PUT(MINE + "recommendations/style", this::saveDailyStyle, b -> returnsNothing(writeHeader(jsonBody(
+                op(b, "SaveMyNcmRecommendationStyle", TAG, "保存推荐风格"), DailyStyleRequest.class))))
+            .POST(MINE + "recommendations/dislike/{id}", this::dislikeRecommendation, b -> returns(writeHeader(
+                pathParam(op(b, "DislikeMyNcmRecommendation", TAG, "不喜欢这首推荐歌曲"), "id", "歌曲 ID")),
+                java.util.Map.class))
             .GET(MINE + "recommendations/explore", this::explore, b -> returns(queryParam(
                 op(b, "ReadMyNcmExplore", TAG, "本人探索推荐"), "cursor", "下一页标记", false), java.util.Map.class))
             .POST(MINE + "playlists", this::createPlaylist, b -> returns(writeHeader(jsonBody(
@@ -133,6 +163,8 @@ public class NcmUcMeEndpoint implements CustomEndpoint {
             .GET(MINE + "likes/check", this::checkLikes, b -> returns(queryParam(
                 op(b, "CheckMyNcmLikes", TAG, "批量查询歌曲是否已红心；喜欢列表按用户缓存约 60 秒"),
                 "ids", "歌曲 ID，英文逗号分隔，最多 200 个", true), NcmMeLikeCheck.class))
+            .GET(MINE + "likes/ids", r -> handle(r, false, Mono.just(me::foliaLikedSongs)),
+                b -> returns(op(b, "ListMyNcmLikedSongIds", TAG, "喜欢的歌曲 ID"), java.util.Map.class))
             .GET(MINE + "likes", this::likes, b -> returns(pageParams(
                 op(b, "ListMyNcmLikes", TAG, "喜欢的歌（分页，每页最多 100 首）")), NcmMeSongPage.class))
             .PUT(MINE + "likes/{songId}", r -> like(r, true), b -> returns(writeHeader(pathParam(
@@ -144,6 +176,8 @@ public class NcmUcMeEndpoint implements CustomEndpoint {
             .GET(MINE + "records/rank", this::rank, b -> returns(queryParam(
                 op(b, "ListMyNcmRankRecords", TAG, "听歌排行"), "type", "week（最近一周，默认）或 all（所有时间）", false),
                 NcmMeRankRecords.class))
+            .POST(MINE + "records/playback", this::reportPlayback, b -> returnsNothing(writeHeader(jsonBody(
+                op(b, "ReportMyNcmPlayback", TAG, "同步本人实际听歌记录"), PlaybackReportRequest.class))))
             .GET(MINE + "subscriptions/{playlistId}", this::subscription, b -> returns(pathParam(
                 op(b, "GetMyNcmSubscription", TAG, "查询歌单归属与当前账号收藏状态"),
                 "playlistId", "歌单 ID"), NcmMeSubscriptionResult.class))
@@ -162,6 +196,99 @@ public class NcmUcMeEndpoint implements CustomEndpoint {
             int offset = MeParams.offset(r.queryParam("offset"));
             int limit = MeParams.limit(r.queryParam("limit"));
             return (Action) id -> me.foliaAlbums(id, offset, limit);
+        }));
+    }
+
+    Mono<ServerResponse> cloud(ServerRequest r) {
+        return handle(r, false, Mono.fromCallable(() -> {
+            int offset = MeParams.offset(r.queryParam("offset"));
+            int limit = MeParams.limit(r.queryParam("limit"));
+            return (Action) identity -> me.foliaCloud(identity, offset, limit);
+        }));
+    }
+
+    Mono<ServerResponse> cloudPlay(ServerRequest r) {
+        return handle(r, false, Mono.fromCallable(() -> {
+            String id = MeParams.id(r.pathVariable("id"), "云盘曲目 ID");
+            String level = r.queryParam("level").orElse("standard");
+            return (Action) identity -> me.cloudPlay(identity, id, level);
+        }));
+    }
+
+    Mono<ServerResponse> cloudLyric(ServerRequest r) {
+        return handle(r, false, Mono.fromCallable(() -> {
+            String id = MeParams.id(r.pathVariable("id"), "云盘曲目 ID");
+            return (Action) identity -> me.cloudLyric(identity, id);
+        }));
+    }
+
+    public record PlaybackReportRequest(String songId, long playedSeconds, Long totalSeconds, String quality) {
+    }
+
+    Mono<ServerResponse> reportPlayback(ServerRequest r) {
+        return handle(r, true, readJson(r, PlaybackReportRequest.class).map(body -> {
+            String id = MeParams.id(body.songId(), "歌曲 ID");
+            if (body.playedSeconds() < 30 || (body.totalSeconds() != null && body.totalSeconds() < body.playedSeconds())) {
+                throw new ServerWebInputException("播放时长无效");
+            }
+            String quality = switch (body.quality() == null ? "" : body.quality()) {
+                case "standard", "lossless", "hires" -> body.quality();
+                default -> "exhigh";
+            };
+            return (Action) identity -> me.reportPlayback(identity, id, body.playedSeconds(), body.totalSeconds(), quality);
+        }));
+    }
+
+    Mono<ServerResponse> albumSubscription(ServerRequest r, Boolean subscribed) {
+        return handle(r, subscribed != null, Mono.fromCallable(() -> {
+            String id = MeParams.id(r.pathVariable("id"), "专辑 ID");
+            return (Action) identity -> subscribed == null ? me.albumSubscription(identity, id)
+                : me.subscribeAlbum(identity, id, subscribed);
+        }));
+    }
+
+    Mono<ServerResponse> personalFm(ServerRequest r) {
+        return handle(r, false, Mono.fromCallable(() -> {
+            String mode = r.queryParam("mode").filter(value -> !value.isEmpty()).orElse("DEFAULT");
+            String submode = r.queryParam("submode").filter(value -> !value.isEmpty()).orElse(null);
+            if (!mode.matches("[A-Za-z0-9_-]{1,40}")
+                || (submode != null && !submode.matches("[A-Za-z0-9_-]{1,40}"))) {
+                throw new ServerWebInputException("私人 FM 模式无效");
+            }
+            return (Action) identity -> me.foliaPersonalFm(identity, mode, submode);
+        }));
+    }
+
+    Mono<ServerResponse> historySongs(ServerRequest r) {
+        return handle(r, false, Mono.fromCallable(() -> {
+            String date = r.pathVariable("date");
+            try {
+                if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                    throw new ServerWebInputException("推荐日期应为 YYYY-MM-DD");
+                }
+                LocalDate.parse(date);
+            } catch (DateTimeParseException e) {
+                throw new ServerWebInputException("推荐日期无效");
+            }
+            return (Action) identity -> me.foliaHistorySongs(identity, date);
+        }));
+    }
+
+    public record DailyStyleRequest(String groupId, List<String> tagIds) {
+    }
+
+    Mono<ServerResponse> saveDailyStyle(ServerRequest r) {
+        return handle(r, true, readJson(r, DailyStyleRequest.class).map(body -> {
+            String group = MeParams.id(body.groupId(), "风格分组");
+            List<String> tags = MeParams.idList(body.tagIds(), "风格标签", MeParams.MAX_TRACK_IDS);
+            return (Action) identity -> me.saveDailyStyle(identity, group, tags);
+        }));
+    }
+
+    Mono<ServerResponse> dislikeRecommendation(ServerRequest r) {
+        return handle(r, true, Mono.fromCallable(() -> {
+            String id = MeParams.id(r.pathVariable("id"), "歌曲 ID");
+            return (Action) identity -> me.dislikeRecommendation(identity, id);
         }));
     }
 

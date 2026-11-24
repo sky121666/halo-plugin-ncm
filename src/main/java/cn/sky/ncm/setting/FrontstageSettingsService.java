@@ -44,13 +44,21 @@ public class FrontstageSettingsService {
         return store.read().map(this::snapshot);
     }
 
+    public Mono<PlayerSetting> legacyPlayer() {
+        return store.read().map(saved -> saved.settings().player());
+    }
+
     public Mono<NcmFrontstageConfig> save(NcmFrontstageConfig request) {
         return Mono.defer(() -> {
             if (request.revision() == null || request.settings() == null) {
                 return Mono.error(new ServerWebInputException("缺少配置版本或音乐页设置"));
             }
-            request.settings().validateForSave();
-            return store.save(request.revision(), request.settings()).map(this::snapshot);
+            return store.read().flatMap(stored -> {
+                // 保留旧播放器字段用于兼容与回滚。站点播放偏好由独立发布接口写入。
+                var settings = request.settings().withLegacyPlaybackDefaults(stored.settings());
+                settings.validateForSave();
+                return store.save(request.revision(), settings).map(this::snapshot);
+            });
         });
     }
 

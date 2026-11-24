@@ -39,7 +39,8 @@ public class NcmFrontstageSettingsEndpoint implements CustomEndpoint {
                         .switchIfEmpty(Mono.error(new ServerWebInputException("缺少请求体"))))
                     .flatMap(service::save), NcmFrontstageConfig.class),
                 builder -> returns(writeHeader(jsonBody(op(builder, "UpdateNcmFrontstageSettings", TAG,
-                    "保存音乐页设置，版本冲突时返回 409"), NcmFrontstageConfig.class)), NcmFrontstageConfig.class))
+                    "保存音乐页设置，旧播放模式和音量字段在写入时忽略。版本冲突时返回 409"),
+                    NcmFrontstageConfig.class)), NcmFrontstageConfig.class))
             .build();
     }
 

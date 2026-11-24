@@ -49,7 +49,12 @@ public class PlayService {
      * @param message    给访客看的说明（status 不是 ok 时）
      */
     public record PlayResult(String status, String url, Long trialStart, Long trialEnd, String level, long br,
-                             String identity, String message) {
+                             String identity, String message, Double gain) {
+
+        public PlayResult(String status, String url, Long trialStart, Long trialEnd, String level, long br,
+                          String identity, String message) {
+            this(status, url, trialStart, trialEnd, level, br, identity, message, null);
+        }
 
         public boolean ok() {
             return "ok".equals(status);
@@ -113,6 +118,12 @@ public class PlayService {
         }));
     }
 
+    /** 云盘取址只使用已核验归属的绑定账号。 */
+    public Mono<PlayResult> resolveForAccount(String id, String level, Map<String, String> cookie) {
+        var who = new Who(new Identity("user", cookie), null, "user");
+        return settings.basic().flatMap(setting -> fetch(id, level(level), setting, who));
+    }
+
     private Mono<PlayResult> fetch(String id, String level, BasicSetting setting, Who who) {
         return bootstrap.ready()
             .then(Mono.defer(() -> tools.resolveSongUrl(Map.of("id", id, "level", level),
@@ -152,10 +163,12 @@ public class PlayService {
             case FULL, TRIAL -> {
                 boolean trial = availability == ToolApis.SongAvailability.TRIAL;
                 JsonNode range = item.path("freeTrialInfo");
+                double gain = item.path("gain").asDouble(Double.NaN);
                 yield new PlayResult("ok", su.url(),
                     trial ? toMs(range.path("start").asDouble(0)) : null,
                     trial ? toMs(range.path("end").asDouble(0)) : null,
-                    item.path("level").asText(level), item.path("br").asLong(0), identity, null);
+                    item.path("level").asText(level), item.path("br").asLong(0), identity, null,
+                    Double.isFinite(gain) ? gain : null);
             }
             case UNAVAILABLE -> new PlayResult("unavailable", null, null, null, level, 0, identity,
                 unavailableMessage(item, identity));

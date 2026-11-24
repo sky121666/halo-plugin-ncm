@@ -67,7 +67,7 @@ export const ConsoleApiNcmHaloRunV1alpha1FrontstageSettingsApiAxiosParamCreator 
             };
         },
         /**
-         * 保存音乐页设置，版本冲突时返回 409
+         * 保存音乐页设置，旧播放模式和音量字段在写入时忽略。版本冲突时返回 409
          * @param {string} xNCMRequest 同源写入请求填写 1
          * @param {NcmFrontstageConfig} ncmFrontstageConfig 
          * @param {*} [options] Override http request option.
@@ -138,7 +138,7 @@ export const ConsoleApiNcmHaloRunV1alpha1FrontstageSettingsApiFp = function(conf
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 保存音乐页设置，版本冲突时返回 409
+         * 保存音乐页设置，旧播放模式和音量字段在写入时忽略。版本冲突时返回 409
          * @param {string} xNCMRequest 同源写入请求填写 1
          * @param {NcmFrontstageConfig} ncmFrontstageConfig 
          * @param {*} [options] Override http request option.
@@ -169,7 +169,7 @@ export const ConsoleApiNcmHaloRunV1alpha1FrontstageSettingsApiFactory = function
             return localVarFp.getNcmFrontstageSettings(options).then((request) => request(axios, basePath));
         },
         /**
-         * 保存音乐页设置，版本冲突时返回 409
+         * 保存音乐页设置，旧播放模式和音量字段在写入时忽略。版本冲突时返回 409
          * @param {ConsoleApiNcmHaloRunV1alpha1FrontstageSettingsApiUpdateNcmFrontstageSettingsRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -219,7 +219,7 @@ export class ConsoleApiNcmHaloRunV1alpha1FrontstageSettingsApi extends BaseAPI {
     }
 
     /**
-     * 保存音乐页设置，版本冲突时返回 409
+     * 保存音乐页设置，旧播放模式和音量字段在写入时忽略。版本冲突时返回 409
      * @param {ConsoleApiNcmHaloRunV1alpha1FrontstageSettingsApiUpdateNcmFrontstageSettingsRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}

@@ -106,7 +106,10 @@ class FrontstageSettingsServiceTest {
         var saved = service.save(new NcmFrontstageConfig(initial.revision(), edited)).block(WAIT);
         assertThat(saved).isNotNull();
         assertThat(saved.revision()).isGreaterThan(initial.revision());
-        assertThat(service.current().block(WAIT)).isEqualTo(edited);
+        var expected = edited.withLegacyPlaybackDefaults(initial.settings());
+        assertThat(saved.settings()).isEqualTo(expected);
+        assertThat(service.current().block(WAIT)).isEqualTo(expected);
+        assertThat(service.legacyPlayer().block(WAIT)).isEqualTo(new PlayerSetting("loop", 100, false));
         assertThat(resources.get(ProxySettings.CONFIG).getData()).isEqualTo(storedBefore);
 
         var technical = copy(resources.get(ProxySettings.CONFIG));

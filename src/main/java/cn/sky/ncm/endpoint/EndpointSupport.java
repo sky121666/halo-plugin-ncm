@@ -185,6 +185,11 @@ final class EndpointSupport {
             .description("获取二维码时返回的 key").implementation(String.class));
     }
 
+    static Builder pathParam(Builder b, String name, String description) {
+        return b.parameter(parameterBuilder().name(name).in(ParameterIn.PATH).required(true)
+            .description(description).implementation(String.class));
+    }
+
     static Builder writeHeader(Builder b) {
         return b.parameter(parameterBuilder().name(REQUEST_HEADER).in(ParameterIn.HEADER).required(true)
             .description("同源写入请求填写 1").implementation(String.class));

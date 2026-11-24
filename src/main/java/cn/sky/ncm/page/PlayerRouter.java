@@ -33,6 +33,8 @@ import reactor.core.publisher.Mono;
  *     status：ok（200）/ unavailable 没有可用音源（404）/ service 服务不可用（503）/ rate_limited（429）。
  *     身份每次请求时决定，见 {@link PlayService}。fresh=1 时不读缓存。
  * GET /music/lyric/{id}   歌词 JSON：{ id, instrumental, lines: [{ t（毫秒）, text, tr（译文，可能没有） }] }
+ *     view=timed 时附带 formats，包含 Folia 可解析的 LRC、YRC、译文和罗马音。
+ * GET /music/chorus/{id}  副歌时间区间（毫秒）。
  *     网易云出错时 503（error: "unavailable"）。
  * </pre>
  * 都按访客限流：登录用户按用户名（「高级 → 个人接口每分钟请求数」），其他按 IP（「公开接口每分钟请求数」），超出时 429。
@@ -59,6 +61,7 @@ public class PlayerRouter {
     @Bean
     RouterFunction<ServerResponse> ncmPlayerRouter() {
         return route(GET("/music/lyric/" + MusicPageRouter.ID_PATTERN), this::lyric)
+            .andRoute(GET("/music/chorus/" + MusicPageRouter.ID_PATTERN), this::chorus)
             .andRoute(GET("/music/play/" + MusicPageRouter.ID_PATTERN), this::play);
     }
 
@@ -98,7 +101,7 @@ public class PlayerRouter {
         };
     }
 
-    static Map<String, Object> playBody(String id, PlayService.PlayResult p, boolean withUrl) {
+    public static Map<String, Object> playBody(String id, PlayService.PlayResult p, boolean withUrl) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("id", id);
         body.put("status", p.status());
@@ -113,6 +116,9 @@ public class PlayerRouter {
         }
         body.put("level", p.level());
         body.put("br", p.br());
+        if (p.gain() != null) {
+            body.put("gain", p.gain());
+        }
         body.put("identity", p.identity());
         body.put("message", p.message());
         return body;
@@ -124,6 +130,7 @@ public class PlayerRouter {
 
     Mono<ServerResponse> lyric(ServerRequest r) {
         String id = r.pathVariable("id");
+        boolean timed = r.queryParam("view").filter("timed"::equals).isPresent();
         return settings.advanced()
             .flatMap(adv -> {
                 String ip = NcmGateway.clientIp(r, adv);
@@ -131,7 +138,13 @@ public class PlayerRouter {
                     return MusicPageRouter.json(HttpStatus.TOO_MANY_REQUESTS, empty(id), MusicPageRouter.NO_STORE);
                 }
                 return finder.lyric(id)
-                    .flatMap(v -> MusicPageRouter.json(HttpStatus.OK, lyricJson(id, v), LYRIC_CACHE))
+                    .flatMap(v -> {
+                        Map<String, Object> body = lyricJson(id, v);
+                        if (timed && v.getFormats() != null) {
+                            body.put("formats", v.getFormats());
+                        }
+                        return MusicPageRouter.json(HttpStatus.OK, body, LYRIC_CACHE);
+                    })
                     .switchIfEmpty(Mono.defer(() ->
                         MusicPageRouter.json(HttpStatus.OK, empty(id), MusicPageRouter.NO_STORE)))
                     // 网易云出错或超时：明确返回 503，不缓存，下次再试
@@ -141,6 +154,22 @@ public class PlayerRouter {
                         return MusicPageRouter.json(HttpStatus.SERVICE_UNAVAILABLE, body, MusicPageRouter.NO_STORE);
                     });
             });
+    }
+
+    Mono<ServerResponse> chorus(ServerRequest r) {
+        String id = r.pathVariable("id");
+        return settings.advanced().flatMap(advanced -> {
+            String ip = NcmGateway.clientIp(r, advanced);
+            if (!limiter.tryAcquire("music-chorus:" + ip, advanced.publicLimit())) {
+                return MusicPageRouter.json(HttpStatus.TOO_MANY_REQUESTS, Map.of("error", "rate-limited"),
+                    MusicPageRouter.NO_STORE);
+            }
+            return finder.foliaChorus(id).defaultIfEmpty(List.of())
+                .flatMap(ranges -> MusicPageRouter.json(HttpStatus.OK, Map.of("code", 200, "chorus", ranges),
+                    LYRIC_CACHE));
+        }).onErrorResume(NcmUnavailableException.class, error ->
+            MusicPageRouter.json(HttpStatus.SERVICE_UNAVAILABLE, Map.of("error", "unavailable"),
+                MusicPageRouter.NO_STORE));
     }
 
     static Map<String, Object> lyricJson(String id, LyricVo v) {

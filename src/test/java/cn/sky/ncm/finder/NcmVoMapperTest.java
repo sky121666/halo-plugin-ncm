@@ -103,4 +103,17 @@ class NcmVoMapperTest {
         assertTrue(vo.getInstrumental());
         assertFalse(vo.getHasTranslation());
     }
+
+    @Test
+    void wordTimingWithoutLrcIsStillAValidLyric() throws Exception {
+        var vo = NcmVoMapper.lyric("1", json("""
+            {'lrc':{'yrc':{'lyric':'[1500,750](1500,750,0)春'}},
+             'ytlrc':{'lyric':'[00:01.50]Spring'},
+             'yromalrc':{'lyric':'[00:01.50]chun'}}
+            """));
+        assertFalse(vo.getInstrumental());
+        assertEquals("[1500,750](1500,750,0)春", vo.getFormats().get("yrc"));
+        assertEquals("[00:01.50]Spring", vo.getFormats().get("ytlrc"));
+        assertEquals("[00:01.50]chun", vo.getFormats().get("yromalrc"));
+    }
 }

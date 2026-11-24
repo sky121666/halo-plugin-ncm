@@ -238,6 +238,44 @@ public class NcmFinderImpl implements NcmFinder {
             .map(b -> NcmVoMapper.artist(b, n));
     }
 
+    public Mono<Map<String, Object>> foliaArtist(String id, String section, int offset, int limit) {
+        if (!validId(id)) {
+            return Mono.empty();
+        }
+        String artistId = id.trim();
+        Map<String, String> page = Map.of("id", artistId, "offset", String.valueOf(offset),
+            "limit", String.valueOf(limit));
+        return switch (section) {
+            case "profile" -> call("artist_detail", Map.of("id", artistId), As.ANONYMOUS)
+                .map(body -> body.path("data").path("artist"))
+                .filter(artist -> artist.hasNonNull("id"))
+                .map(artist -> Map.of("artist", NcmVoMapper.artistOf(artist, List.of())));
+            case "songs" -> call("artist_songs", page, As.ANONYMOUS)
+                .map(body -> artistPage("artist_songs", body, "songs", NcmVoMapper.songs(body), offset));
+            case "albums" -> call("artist_album", page, As.ANONYMOUS)
+                .map(body -> artistPage("artist_album", body, "hotAlbums",
+                    FoliaFeedPayload.collections(body.path("hotAlbums")), offset));
+            default -> Mono.empty();
+        };
+    }
+
+    private static Map<String, Object> artistPage(String api, JsonNode body, String field, List<?> items, int offset) {
+        JsonNode rows = body.path(field);
+        if (!rows.isArray()) {
+            throw new NcmUnavailableException(api, "网易云未返回歌手作品列表");
+        }
+        int nextOffset = offset + rows.size();
+        int total = body.path("total").asInt(-1);
+        Map<String, Object> page = new LinkedHashMap<>();
+        page.put("items", items);
+        page.put("nextOffset", nextOffset);
+        page.put("hasMore", !rows.isEmpty() && body.path("more").asBoolean(nextOffset < total));
+        if (total >= 0) {
+            page.put("total", total);
+        }
+        return page;
+    }
+
     @Override
     public Mono<LyricVo> lyric(String id) {
         if (!validId(id)) {
@@ -245,6 +283,13 @@ public class NcmFinderImpl implements NcmFinder {
         }
         String sid = id.trim();
         return call("lyric_new", Map.of("id", sid), As.PUBLIC).map(b -> NcmVoMapper.lyric(sid, b));
+    }
+
+    public Mono<List<Map<String, Long>>> foliaChorus(String id) {
+        if (!validId(id)) {
+            return Mono.empty();
+        }
+        return call("song_chorus", Map.of("id", id.trim()), As.ANONYMOUS).map(NcmVoMapper::chorus);
     }
 
     @Override

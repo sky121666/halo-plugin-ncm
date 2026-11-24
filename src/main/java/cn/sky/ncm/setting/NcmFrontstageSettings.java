@@ -39,6 +39,11 @@ public record NcmFrontstageSettings(Boolean enabled, String title, String descri
         return new PlayerSetting(mode, volume, resume);
     }
 
+    NcmFrontstageSettings withLegacyPlaybackDefaults(NcmFrontstageSettings stored) {
+        return new NcmFrontstageSettings(enabled, title, description, pageSize, searchEnabled, suggestEnabled,
+            siteProfile, sitePlaylists, siteRecent, siteRank, siteRecommend, stored.mode(), stored.volume(), resume);
+    }
+
     void validateForSave() {
         if (Stream.of(enabled, title, description, pageSize, searchEnabled, suggestEnabled, siteProfile,
                 sitePlaylists, siteRecent, siteRank, siteRecommend, mode, volume, resume).anyMatch(Objects::isNull)) {
