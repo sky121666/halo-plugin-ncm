@@ -44,6 +44,29 @@ class SecretBoxTest {
     }
 
     @Test
+    void defaultKeyUsesTheConfiguredHaloWorkDirectory(@TempDir Path dir) {
+        Path workDir = dir.resolve("halo-work");
+        var first = new SecretBox(workDir, null, null);
+        String encrypted = first.encrypt("test credential");
+
+        assertTrue(Files.isRegularFile(workDir.resolve("plugin-ncm/secret.key")));
+        assertEquals("test credential", new SecretBox(workDir, null, null).decrypt(encrypted));
+    }
+
+    @Test
+    void configuredKeyFileKeepsAnExistingKeyUsable(@TempDir Path dir) {
+        Path explicitKey = dir.resolve("prior/secret.key");
+        Path workDir = dir.resolve("halo-work");
+        var first = new SecretBox(workDir, null, explicitKey.toString());
+        String encrypted = first.encrypt("test credential");
+        var restored = new SecretBox(dir.resolve("other-halo-work"), null, explicitKey.toString());
+
+        assertTrue(Files.isRegularFile(explicitKey));
+        assertTrue(Files.notExists(workDir.resolve("plugin-ncm/secret.key")));
+        assertEquals("test credential", restored.decrypt(encrypted));
+    }
+
+    @Test
     void keyFileIsCreatedOnceAndReused(@TempDir Path dir) throws Exception {
         Path f = dir.resolve("plugin-ncm/secret.key");
         byte[] k1 = SecretBox.loadOrCreate(f);

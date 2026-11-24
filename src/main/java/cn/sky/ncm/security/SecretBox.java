@@ -19,7 +19,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import run.halo.app.plugin.PluginsRootGetter;
 
 /**
  * 敏感字段的加密（AES-256-GCM），存储格式为 "enc:v1:" + base64(iv | 密文 | tag)。
@@ -29,7 +31,7 @@ import org.springframework.stereotype.Component;
  * 密钥来源，按优先级：
  * <ol>
  *   <li>环境变量 NCM_SECRET_KEY（任意字符串，取 SHA-256 作为密钥）</li>
- *   <li>密钥文件：环境变量 NCM_SECRET_FILE 指定的路径，否则 {HALO_WORK_DIR 或 ~/.halo2}/plugin-ncm/secret.key；
+ *   <li>密钥文件：环境变量 NCM_SECRET_FILE 指定的路径，否则 {Halo 工作目录}/plugin-ncm/secret.key；
  *       不存在时自动生成</li>
  *   <li>以上都不可用时只放在内存里：插件重启后已绑定的账号需要重新绑定（后台设备状态会提示）</li>
  * </ol>
@@ -47,14 +49,21 @@ public class SecretBox {
     private final SecretKey key;
     private final String source;
 
-    public SecretBox() {
-        String env = System.getenv("NCM_SECRET_KEY");
+    @Autowired
+    public SecretBox(PluginsRootGetter pluginsRoot) {
+        this(pluginsRoot.get().toAbsolutePath().normalize().getParent(),
+            System.getenv("NCM_SECRET_KEY"), System.getenv("NCM_SECRET_FILE"));
+    }
+
+    SecretBox(Path workDir, String env, String explicitKeyFile) {
         if (env != null && !env.isBlank()) {
             this.key = new SecretKeySpec(sha256(env), "AES");
             this.source = "env";
             return;
         }
-        Path file = keyFile();
+        Path file = explicitKeyFile == null || explicitKeyFile.isBlank()
+            ? workDir.resolve("plugin-ncm").resolve("secret.key")
+            : Path.of(explicitKeyFile).toAbsolutePath();
         byte[] k = null;
         String src = "file";
         try {
@@ -124,16 +133,6 @@ public class SecretBox {
         } catch (GeneralSecurityException | IllegalArgumentException e) {
             throw new SecretException("无法解密（密钥已更换或数据损坏）", e);
         }
-    }
-
-    static Path keyFile() {
-        String explicit = System.getenv("NCM_SECRET_FILE");
-        if (explicit != null && !explicit.isBlank()) {
-            return Path.of(explicit);
-        }
-        String work = System.getenv("HALO_WORK_DIR");
-        Path dir = work != null && !work.isBlank() ? Path.of(work) : Path.of(System.getProperty("user.home"), ".halo2");
-        return dir.resolve("plugin-ncm").resolve("secret.key");
     }
 
     static byte[] loadOrCreate(Path file) throws IOException {
