@@ -17,10 +17,12 @@ public class NcmApiMeta {
     @Schema(description = "移植状态", requiredMode = Schema.RequiredMode.REQUIRED, allowableValues = {"ready", "custom", "unsupported", "manual"})
     private String status;
 
-    @Schema(description = "前台调用路径（相对 /apis/api.ncm.halo.run/v1alpha1）", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "通用调用路径（相对 /apis/api.ncm.halo.run/v1alpha1），内部和未实现接口为空",
+        requiredMode = Schema.RequiredMode.REQUIRED)
     private String path;
 
-    @Schema(description = "按当前设置能否从前台调用（auth、admin 等级永远不能）", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "接口已实现且具有通用调用入口，实际请求仍需满足权限与绑定要求",
+        requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean open;
 
     @Schema(description = "是否可使用游客身份执行后台只读调试", requiredMode = Schema.RequiredMode.REQUIRED)

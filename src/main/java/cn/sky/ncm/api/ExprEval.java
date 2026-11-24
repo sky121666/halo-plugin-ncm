@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,6 +21,8 @@ import java.util.regex.Pattern;
  * null 表示 JS 的 undefined。
  */
 public final class ExprEval {
+
+    private static final Pattern PATH_VALUE = Pattern.compile("[A-Za-z0-9._~-]+");
 
     public static final Map<String, String> RESOURCE_TYPE_MAP = Map.of(
         "0", "R_SO_4_", "1", "R_MV_5_", "2", "A_PL_0_", "3", "R_AL_3_",
@@ -42,6 +45,15 @@ public final class ExprEval {
     public static String template(String tpl, Map<String, Object> query) {
         var p = new Parser("`" + tpl + "`", query);
         return (String) p.expr();
+    }
+
+    static String apiPath(String tpl, Map<String, Object> query) {
+        return new Parser("`" + tpl + "`", query).template(value -> {
+            if (!PATH_VALUE.matcher(value).matches() || ".".equals(value) || "..".equals(value)) {
+                throw new IllegalArgumentException("接口路径参数无效");
+            }
+            return value;
+        });
     }
 
     static Object parseInt(Object v) {
@@ -322,12 +334,16 @@ public final class ExprEval {
         }
 
         String template() {
+            return template(UnaryOperator.identity());
+        }
+
+        String template(UnaryOperator<String> interpolate) {
             var sb = new StringBuilder();
             pos++;
             while (pos < s.length() && s.charAt(pos) != '`') {
                 if (s.startsWith("${", pos)) {
                     pos += 2;
-                    sb.append(Js.string(expr()));
+                    sb.append(interpolate.apply(Js.string(expr())));
                     expect("}");
                     continue;
                 }

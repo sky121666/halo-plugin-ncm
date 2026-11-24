@@ -15,7 +15,7 @@ import cn.sky.ncm.bootstrap.NcmBootstrap;
 import cn.sky.ncm.client.NcmResponse;
 import cn.sky.ncm.client.RequestOptions;
 import cn.sky.ncm.gateway.ResponseCache;
-import cn.sky.ncm.setting.BasicSetting;
+import cn.sky.ncm.setting.AdvancedSetting;
 import cn.sky.ncm.setting.FinderSetting;
 import cn.sky.ncm.setting.SettingService;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -35,7 +35,7 @@ class FinderSourceTest {
 
     @BeforeEach
     void setUp() {
-        when(settings.basic()).thenReturn(Mono.just(BasicSetting.DEFAULT));
+        when(settings.advanced()).thenReturn(Mono.just(AdvancedSetting.DEFAULT));
         when(settings.finder()).thenReturn(Mono.just(FinderSetting.DEFAULT));
         when(bootstrap.ready()).thenReturn(Mono.empty());
         source = new FinderSource(new ApiRegistry(), executor, settings, bootstrap, new ResponseCache());

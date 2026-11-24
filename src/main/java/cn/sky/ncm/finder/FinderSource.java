@@ -7,7 +7,7 @@ import cn.sky.ncm.bootstrap.NcmBootstrap;
 import cn.sky.ncm.client.NcmResponse;
 import cn.sky.ncm.client.RequestOptions;
 import cn.sky.ncm.gateway.ResponseCache;
-import cn.sky.ncm.setting.BasicSetting;
+import cn.sky.ncm.setting.AdvancedSetting;
 import cn.sky.ncm.setting.SettingService;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.time.Duration;
@@ -69,7 +69,7 @@ public class FinderSource {
         if (def == null) {
             return Mono.error(new NcmUnavailableException(api, "接口 " + api + " 不可用"));
         }
-        return Mono.zip(settings.basic(), settings.finder())
+        return Mono.zip(settings.advanced(), settings.finder())
             .flatMap(t -> {
                 int ttl = t.getT2().cacheTtl();
                 String key = "finder|" + api + "|anonymous|" + new TreeMap<>(query);
@@ -130,7 +130,7 @@ public class FinderSource {
         }
     }
 
-    static RequestOptions options(ApiDef def, BasicSetting s) {
+    static RequestOptions options(ApiDef def, AdvancedSetting s) {
         return new RequestOptions(def.crypto(), Map.of(), null, s.realIp(), s.useRandomCnIp());
     }
 }

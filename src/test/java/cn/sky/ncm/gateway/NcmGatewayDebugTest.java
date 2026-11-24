@@ -3,6 +3,8 @@ package cn.sky.ncm.gateway;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -15,9 +17,9 @@ import cn.sky.ncm.api.ApiRegistry;
 import cn.sky.ncm.bootstrap.NcmBootstrap;
 import cn.sky.ncm.client.NcmResponse;
 import cn.sky.ncm.client.RequestOptions;
+import cn.sky.ncm.endpoint.NcmApiEndpoint;
 import cn.sky.ncm.security.RateLimiter;
 import cn.sky.ncm.setting.AdvancedSetting;
-import cn.sky.ncm.setting.BasicSetting;
 import cn.sky.ncm.setting.SettingService;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import java.util.List;
@@ -49,7 +51,55 @@ class NcmGatewayDebugTest {
     private final WebTestClient web = WebTestClient.bindToRouterFunction(RouterFunctions.route()
         .GET("/debug/{name}", r -> gateway.debug(r, "operator"))
         .POST("/debug/{name}", r -> gateway.debug(r, "operator"))
-        .build()).build();
+        .build().and(new NcmApiEndpoint(gateway, registry).endpoint())).build();
+
+    @Test
+    void aRegisteredPublicReadUsesGuestAndConsumesItsQuota() {
+        when(registry.find("album_list")).thenReturn(Optional.of(definition("album_list", "public")));
+        when(settings.advanced()).thenReturn(Mono.just(AdvancedSetting.DEFAULT));
+        when(limiter.tryAcquire(startsWith("ip:"), eq(120))).thenReturn(true, false);
+        when(bootstrap.ready()).thenReturn(Mono.empty());
+        when(resolver.resolve("public")).thenReturn(Mono.just(Identity.anonymous()));
+        when(executor.execute(any(ApiDef.class), anyMap(), any(RequestOptions.class)))
+            .thenReturn(Mono.just(new NcmResponse(200, JsonNodeFactory.instance.objectNode().put("code", 200), List.of())));
+
+        web.get().uri("/public/album_list").exchange().expectStatus().isOk();
+        web.get().uri("/public/album_list").exchange().expectStatus().isEqualTo(429);
+        var options = ArgumentCaptor.forClass(RequestOptions.class);
+        verify(executor).execute(any(ApiDef.class), anyMap(), options.capture());
+        assertThat(options.getValue().cookie()).isEmpty();
+    }
+
+    @Test
+    void aRegisteredWriteRequiresThePersonalPostRouteAndRequestHeader() {
+        when(registry.find("like")).thenReturn(Optional.of(definition("like", "write")));
+
+        web.get().uri("/public/like").exchange().expectStatus().isForbidden();
+        web.get().uri("/personal/like").exchange().expectStatus().isForbidden();
+        web.post().uri("/personal/like").exchange().expectStatus().isForbidden();
+        verifyNoInteractions(resolver, executor);
+    }
+
+    @Test
+    void anAuthorizedWriteUsesTheResolvedPersonalBinding() {
+        var bound = new Identity("user", Map.of("MUSIC_U", "test-credential"));
+        var auth = UsernamePasswordAuthenticationToken.authenticated("owner", "unused", List.of());
+        when(registry.find("like")).thenReturn(Optional.of(definition("like", "write")));
+        when(settings.advanced()).thenReturn(Mono.just(AdvancedSetting.DEFAULT));
+        when(limiter.tryAcquire("user:owner", 120)).thenReturn(true);
+        when(bootstrap.ready()).thenReturn(Mono.empty());
+        when(resolver.resolve("write")).thenReturn(Mono.just(bound));
+        when(executor.execute(any(ApiDef.class), anyMap(), anyMap(), any(RequestOptions.class)))
+            .thenReturn(Mono.just(new NcmResponse(200, JsonNodeFactory.instance.objectNode().put("code", 200), List.of())));
+        var authorized = WebTestClient.bindToRouterFunction(new NcmApiEndpoint(gateway, registry).endpoint())
+            .webFilter((exchange, chain) -> chain.filter(exchange)
+                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth))).build();
+
+        authorized.post().uri("/personal/like").header(NcmGateway.REQUEST_HEADER, "1").exchange().expectStatus().isOk();
+        var options = ArgumentCaptor.forClass(RequestOptions.class);
+        verify(executor).execute(any(ApiDef.class), anyMap(), anyMap(), options.capture());
+        assertThat(options.getValue().cookie()).isEqualTo(bound.cookie());
+    }
 
     @Test
     void blocksMutationsAndInternalOperationsBeforeResolvingCredentials() {
@@ -64,8 +114,7 @@ class NcmGatewayDebugTest {
     @Test
     void readonlyDebugUsesGuestBypassesSharedCacheAndRedactsResponse() {
         when(limiter.tryAcquire("debug:operator", 30)).thenReturn(true);
-        when(registry.find("album")).thenReturn(Optional.of(definition("album", "public")));
-        when(settings.basic()).thenReturn(Mono.just(BasicSetting.CLOSED));
+        when(registry.find("album_list")).thenReturn(Optional.of(definition("album_list", "public")));
         when(settings.advanced()).thenReturn(Mono.just(AdvancedSetting.DEFAULT));
         when(bootstrap.ready()).thenReturn(Mono.empty());
         var body = JsonNodeFactory.instance.objectNode().put("code", 200);
@@ -73,7 +122,7 @@ class NcmGatewayDebugTest {
         when(executor.execute(any(ApiDef.class), anyMap(), anyMap(), any(RequestOptions.class)))
             .thenReturn(Mono.just(new NcmResponse(200, body, List.of())));
 
-        web.get().uri("/debug/album?id=1")
+        web.get().uri("/debug/album_list?limit=1")
             .exchange().expectStatus().isOk().expectHeader().valueMatches("Cache-Control", ".*no-store.*")
             .expectBody().jsonPath("$.album.name").isEqualTo("示例专辑")
             .jsonPath("$.album.sessionToken").doesNotExist();

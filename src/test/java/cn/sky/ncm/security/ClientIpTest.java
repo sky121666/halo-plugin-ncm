@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class ClientIpTest {
 
     static AdvancedSetting adv(Boolean trust, String proxies, Integer hops) {
-        return new AdvancedSetting("", trust, 120, 120, 100, proxies, hops, "", null, null, null);
+        return new AdvancedSetting("", trust, 120, 120, 100, proxies, hops, "", null, null, null, null, null, null);
     }
 
     static final AdvancedSetting DEFAULT = AdvancedSetting.DEFAULT;

@@ -2,6 +2,7 @@ package cn.sky.ncm.setting;
 
 import static cn.sky.ncm.setting.VersionedSettingsStore.readGroup;
 
+import cn.sky.ncm.security.SecretStore;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -20,6 +21,7 @@ import tools.jackson.databind.node.ObjectNode;
 public class FrontstageSettingsService {
 
     static final String CONFIG = "plugin-ncm-frontstage-configmap";
+    static final String LEGACY_API_CONFIG = "plugin-ncm-api-access-configmap";
     static final String SETTINGS = VersionedSettingsStore.SETTINGS;
     private static final JsonMapper JSON = JsonMapper.shared();
     private final ReactiveExtensionClient client;
@@ -71,16 +73,25 @@ public class FrontstageSettingsService {
     }
 
     private Mono<Void> migrateTechnicalSettings() {
-        return Mono.defer(() -> technicalConfig().flatMap(config -> {
+        return Mono.defer(() -> Mono.zip(technicalConfig(), legacyApiSettings()).flatMap(configs -> {
+            var config = configs.getT1();
             var data = config.getData() == null
                 ? new LinkedHashMap<String, String>() : new LinkedHashMap<>(config.getData());
             var existing = readGroup(data, "advanced", ObjectNode.class, JSON.createObjectNode());
             var updated = existing.deepCopy();
             var oldPage = readGroup(data, "page", ObjectNode.class, JSON.createObjectNode());
             var oldFinder = readGroup(data, "finder", ObjectNode.class, JSON.createObjectNode());
+            var oldApi = readGroup(data, "basic", ObjectNode.class, JSON.createObjectNode()).setAll(configs.getT2());
             migrateNumber(updated, "musicSearchPerMinute", oldPage, "searchPerMinute", PageSetting.DEFAULT.searchLimit());
             migrateNumber(updated, "musicSuggestPerMinute", oldPage, "suggestPerMinute", PageSetting.DEFAULT.suggestLimit());
             migrateNumber(updated, "siteContentCacheSeconds", oldFinder, "cacheSeconds", FinderSetting.DEFAULT.cacheTtl());
+            migrateNumber(updated, "apiCacheSeconds", oldApi, "cacheSeconds", AdvancedSetting.DEFAULT.apiCacheTtl());
+            if (!updated.hasNonNull("realIp")) {
+                updated.put("realIp", oldApi.path("realIp").asText(""));
+            }
+            if (!updated.hasNonNull("randomCnIp")) {
+                updated.put("randomCnIp", oldApi.path("randomCnIp").asBoolean(false));
+            }
             if (updated.equals(existing)) {
                 return Mono.empty();
             }
@@ -89,6 +100,14 @@ public class FrontstageSettingsService {
             return client.update(config);
         })).retryWhen(Retry.backoff(3, Duration.ofMillis(50))
             .filter(OptimisticLockingFailureException.class::isInstance)).then();
+    }
+
+    private Mono<ObjectNode> legacyApiSettings() {
+        return client.fetch(ConfigMap.class, LEGACY_API_CONFIG)
+            .filter(config -> SecretStore.ownedConfigMap(config)
+                && "api-access-settings".equals(config.getMetadata().getLabels().get(SecretStore.LABEL_PURPOSE)))
+            .map(config -> readGroup(config.getData(), SETTINGS, ObjectNode.class, JSON.createObjectNode()))
+            .defaultIfEmpty(JSON.createObjectNode());
     }
 
     private static void migrateNumber(ObjectNode target, String newKey, ObjectNode legacy, String oldKey, int fallback) {

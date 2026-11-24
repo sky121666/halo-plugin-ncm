@@ -6,7 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 import RiMusic2Line from '~icons/ri/music-2-line'
 import {
   accountsTabId,
-  apiManagementTabId,
+  apiDebugTabId,
   featuredTabId,
   maintenanceTabId,
   musicPageTabId,
@@ -40,7 +40,7 @@ watch(
   ([tab, canView, canEdit, debug]) => {
     if (route.name !== 'NcmConsole' || !canView || tab !== 'maintenance') return
     if (route.query.view === 'api' && debug) {
-      void router.replace(pluginSettingsRoute(apiManagementTabId, 'debug'))
+      void router.replace(pluginSettingsRoute(apiDebugTabId))
     } else if (canEdit) {
       void router.replace(pluginSettingsRoute(maintenanceTabId))
     }

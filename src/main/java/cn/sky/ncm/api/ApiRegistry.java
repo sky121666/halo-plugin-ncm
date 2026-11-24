@@ -32,7 +32,7 @@ public class ApiRegistry {
                 n.path("fields").fields().forEachRemaining(f -> fields.put(f.getKey(), f.getValue().asText()));
                 List<String[]> pre = new ArrayList<>();
                 n.path("pre").forEach(p -> pre.add(new String[] {p.path(0).asText(), p.path(1).asText()}));
-                map.put(e.getKey(), new ApiDef(e.getKey(), n.path("tier").asText("public"),
+                map.put(e.getKey(), new ApiDef(e.getKey(), n.path("tier").asText("admin"),
                     n.path("status").asText("manual"), n.path("uri").asText(null),
                     n.path("crypto").asText(""), n.path("checkToken").asText(""), fields, pre,
                     n.path("post").asText(null)));
@@ -48,7 +48,7 @@ public class ApiRegistry {
         if (name == null) {
             return Optional.empty();
         }
-        return Optional.ofNullable(apis.get(name.replace('-', '_')));
+        return Optional.ofNullable(apis.getOrDefault(name, apis.get(name.replace('-', '_'))));
     }
 
     public Collection<ApiDef> all() {

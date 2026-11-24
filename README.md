@@ -20,7 +20,7 @@
 | 已绑定网易云 | 音乐页与小播放器按本人网易云权限播放 | 推荐、私人 FM、我的歌单、喜欢的歌、收藏、最近播放、排行与云盘按本人权限读取 |
 | 有站长绑定的 Halo 用户 | 本人可在音乐页使用自己在后台完成的绑定。也可以另行绑定个人账号，个人绑定优先 | 有对应 Halo 角色才可管理站点内容和插件。站点默认偏好由超级管理员发布 |
 
-公开接口、主题公开数据和游客取址固定使用网易云游客身份。启用更多接口只改变可调用范围。站长在后台绑定的账号用于本人播放、个人曲库和受控的后台歌单核验。
+公开接口、主题公开数据和游客取址固定使用网易云游客身份。通用接口按已标定的能力调用。站长在后台绑定的账号用于本人播放、个人曲库和受控的后台歌单核验。
 
 同一 Halo 账户在前台、个人中心和后台使用同一个登录用户标识。网易云绑定以 Halo 服务器认证的用户标识定位，修改显示名称不影响绑定。参见 [Halo 用户与权限](https://docs.halo.run/guide/use/users)。
 
@@ -48,8 +48,8 @@
 | 工具 → 网抑云 → 工具设置 | 站点小播放器、音乐 AI 和角色范围 |
 | 插件 → 网抑云 → 管理入口 | 依权限直达产品设置、接口与维护 |
 | 插件 → 网抑云 → 维护 | 查看设备、凭据与代理状态，重新初始化游客或重置设备 |
-| 插件 → 网抑云 → 接口管理 | 通用 API 的开放范围、缓存、请求兼容与游客只读调试 |
-| 插件 → 网抑云 → 网络与限流 | 出站代理、可信反代、请求额度、主题查询缓存和上传大小 |
+| 插件 → 网抑云 → 接口调试 | 查看接口能力，使用游客身份调试公开只读接口 |
+| 插件 → 网抑云 → 网络与限流 | 出站代理与请求头、可信反代、请求额度、通用接口与主题查询缓存、上传大小 |
 
 「网抑云管理」用于站长绑定与精选歌单。「网抑云接口调试」用于游客只读调试，也控制有权限用户的音乐页开发者入口。技术设置使用 Halo 插件管理权限。超级管理员可在音乐页快速打开后台设置。
 
@@ -110,17 +110,26 @@ Halo 主题可用 `ncmFinder` 提供的 Thymeleaf 数据。启用插件时才能
 
 | 前缀或路径 | 用途 |
 | --- | --- |
-| `/apis/api.ncm.halo.run/v1alpha1/public/{name}` | 游客公开读取，支持范围由「接口开放」控制 |
+| `/apis/api.ncm.halo.run/v1alpha1/public/{name}` | 游客公开读取，调用已实现的 `public` 接口 |
 | `/apis/api.ncm.halo.run/v1alpha1/personal/{name}` | 本人网易云绑定的读取或授权写入 |
 | `/apis/api.ncm.halo.run/v1alpha1/meta/apis` | 接口清单及 `open`、`debuggable` 等字段 |
 | `/apis/uc.api.ncm.halo.run/v1alpha1/binding` | 本人的绑定状态、扫码、手机绑定及解绑 |
 | `/apis/uc.api.ncm.halo.run/v1alpha1/me/-/` | 个人曲库、收藏、搜索推荐、最近播放和云盘。歌单曲目由 `playlists/{id}/tracks` 处理 |
-| `/apis/console.api.ncm.halo.run/v1alpha1/` | 站长绑定、设备、精选发布、调试、音乐页、接口开放和工具设置 |
+| `/apis/console.api.ncm.halo.run/v1alpha1/` | 站长绑定、设备、精选发布、调试、音乐页和工具设置 |
 | `/apis/api.ncm-ai.halo.run/v1alpha1/` | 登录用户的 `GET capabilities/-`、`POST themes` 和 `POST segmentations` |
 | `/music/play/{id}`、`/music/lyric/{id}`、`/music/search/suggest` | 同源播放取址、歌词和搜索联想 |
 | `/music/card/{type}/{id}` | 文章音乐卡片读取 |
 
-接口目录含 459 个移植条目，其中 456 个可执行。常用只读清单与实际授权见 [OpenApis](src/main/java/cn/sky/ncm/api/OpenApis.java) 和 [Halo 角色模板](src/main/resources/extensions/role-templates.yaml)。调试台使用游客身份、独立额度和脱敏响应。写操作使用 Halo 同源会话，并要求相应接口方法及 `X-NCM-Request: 1`。
+接口目录含 459 个移植条目，其中 456 个在插件内部可执行。通用调用由 [接口能力清单](src/main/resources/ncm-apis.json) 与 [Halo 角色模板](src/main/resources/extensions/role-templates.yaml) 共同决定。目录里的 `open` 表示接口已实现且有通用调用路径。
+
+| 能力 | 调用规则 |
+| --- | --- |
+| `public` 公开只读 | `GET /public/{name}`，使用网易云游客身份 |
+| `personal` 本人只读 | `GET /personal/{name}`，需要 Halo 登录及本人绑定 |
+| `write` 本人写入 | `POST /personal/{name}`，需要 Halo 对应权限、本人绑定及 `X-NCM-Request: 1` |
+| `auth`、`admin` 登录与内部工具 | 由插件内流程、专用登录或管理接口使用 |
+
+调试台以游客身份调用公开只读接口，使用独立额度和脱敏响应。
 
 `GET /music/play/{id}?format=json&level=standard` 返回 `status`、`url`、`identity`、`level`、`br` 和可选试听范围。试听起止是毫秒。`identity` 为 `guest` 或 `user`。省略 `format=json` 时成功取址会返回 302。音源缺失、上游故障和限流分别用 404、503、429 表示。请求的 `fresh=1` 可在音频加载失败后跳过已有的取址缓存。
 
@@ -145,7 +154,8 @@ Halo 主题可用 `ncmFinder` 提供的 Thymeleaf 数据。启用插件时才能
 - **加密密钥**可通过 `NCM_SECRET_KEY` 或 `NCM_SECRET_FILE` 配置。默认持久化到 `{Halo 工作目录}/plugin-ncm/secret.key`。备份数据库时一并保管密钥。密钥丢失后需要重新绑定。
 - **出站代理**在「网络与限流」配置。需要认证时选择存有代理用户名和密码的 Halo Secret。可信反代识别关系到站点入口的访客 IP 计算。
 - **请求额度**按路由组计数。公开通用 API 默认每 IP 每分钟 120 次，个人与写入默认每 Halo 账号每分钟 120 次，搜索和联想分别为 20 和 60 次。播放取址用公开或个人额度的两倍，后台游客只读调试每操作者每分钟 30 次。首页及部分详情目前依赖缓存和上游访问控制，相关额度覆盖见 [路由实现](src/main/java/cn/sky/ncm/page/MusicPageRouter.java)。
-- **上传额度**由「网络与限流」「缓存与上传」管理，单文件默认上限为 100 MB。通用上传接口要求本人绑定、开放对应写接口和 `multipart/form-data`。可用操作与参数见 [上传接口](src/main/java/cn/sky/ncm/api/more/UploadApis.java)。
+- **上传额度**由「网络与限流」「缓存与上传」管理，单文件默认上限为 100 MB。通用上传接口要求 Halo 写入权限、本人绑定和 `multipart/form-data`。可用操作与参数见 [上传接口](src/main/java/cn/sky/ncm/api/more/UploadApis.java)。
+- **接口设置升级**保留旧的缓存秒数和出站 IP 请求头设置，并归入「网络与限流」。旧的范围与额外名单升级后忽略。
 - **升级兼容**支持旧账号、设备和代理凭据迁入 Secret。旧的公开访问身份、站长代播音质和调用方 Cookie 设置在新版读取时会忽略。最近播放和个性化推荐留在绑定用户的个人功能里，旧主题的对应 Finder 方法返回空列表。
 
 ## 构建与开发

@@ -33,13 +33,13 @@ export interface NcmApiMeta {
      */
     'name': string;
     /**
-     * 按当前设置能否从前台调用（auth、admin 等级永远不能）
+     * 接口已实现且具有通用调用入口，实际请求仍需满足权限与绑定要求
      * @type {boolean}
      * @memberof NcmApiMeta
      */
     'open': boolean;
     /**
-     * 前台调用路径（相对 /apis/api.ncm.halo.run/v1alpha1）
+     * 通用调用路径（相对 /apis/api.ncm.halo.run/v1alpha1），内部和未实现接口为空
      * @type {string}
      * @memberof NcmApiMeta
      */

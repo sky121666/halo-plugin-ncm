@@ -73,7 +73,7 @@ public class FeaturedRemote {
 
     /** 用游客身份真实取一次音频地址（和 /music/play 用同一个取址过程）。 */
     public Mono<ToolApis.SongUrl> probe(String songId) {
-        return settings.basic().flatMap(s -> bootstrap.ready().then(Mono.defer(() -> tools.resolveSongUrl(
+        return settings.advanced().flatMap(s -> bootstrap.ready().then(Mono.defer(() -> tools.resolveSongUrl(
                 Map.of("id", songId, "level", "standard"),
                 new RequestOptions("", Identity.anonymous().cookie(), null, s.realIp(), s.useRandomCnIp())))))
             .timeout(TIMEOUT);
@@ -84,7 +84,7 @@ public class FeaturedRemote {
         if (def == null) {
             return Mono.error(new IllegalStateException("接口 " + api + " 不可用"));
         }
-        return settings.basic().flatMap(s -> bootstrap.ready().then(Mono.defer(() -> executor.execute(def, query,
+        return settings.advanced().flatMap(s -> bootstrap.ready().then(Mono.defer(() -> executor.execute(def, query,
                 new RequestOptions(def.crypto(), who.cookie(), null, s.realIp(), s.useRandomCnIp())))))
             .timeout(TIMEOUT);
     }

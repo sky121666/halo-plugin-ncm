@@ -8,7 +8,7 @@ import cn.sky.ncm.bootstrap.NcmBootstrap;
 import cn.sky.ncm.client.RequestOptions;
 import cn.sky.ncm.gateway.Identity;
 import cn.sky.ncm.gateway.IdentityResolver;
-import cn.sky.ncm.setting.BasicSetting;
+import cn.sky.ncm.setting.AdvancedSetting;
 import cn.sky.ncm.setting.SettingService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
@@ -98,7 +98,7 @@ public class PlayService {
      */
     public Mono<PlayResult> resolve(String id, String level, boolean fresh) {
         String lv = level(level);
-        return settings.basic().flatMap(s -> who().flatMap(w -> {
+        return settings.advanced().flatMap(s -> who().flatMap(w -> {
             if (w.cacheKey() == null) {
                 return fetch(id, lv, s, w);
             }
@@ -119,10 +119,10 @@ public class PlayService {
     /** 云盘取址只使用已核验归属的绑定账号。 */
     public Mono<PlayResult> resolveForAccount(String id, String level, Map<String, String> cookie) {
         var who = new Who(new Identity("user", cookie), null, "user");
-        return settings.basic().flatMap(setting -> fetch(id, level(level), setting, who));
+        return settings.advanced().flatMap(setting -> fetch(id, level(level), setting, who));
     }
 
-    private Mono<PlayResult> fetch(String id, String level, BasicSetting setting, Who who) {
+    private Mono<PlayResult> fetch(String id, String level, AdvancedSetting setting, Who who) {
         return bootstrap.ready()
             .then(Mono.defer(() -> tools.resolveSongUrl(Map.of("id", id, "level", level),
                 new RequestOptions("", who.identity().cookie(), null, setting.realIp(), setting.useRandomCnIp()))))

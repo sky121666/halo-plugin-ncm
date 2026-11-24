@@ -4,7 +4,7 @@ import { computed, defineAsyncComponent, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
   accountsRoute,
-  apiManagementTabId,
+  apiDebugTabId,
   maintenanceTabId,
   networkSettingsTabId,
   pluginSettingsRoute,
@@ -27,7 +27,7 @@ watch(
   legacyLink,
   (active) => {
     if (!active) return
-    const target = pluginSettingsRoute(apiManagementTabId, canDebug.value ? 'debug' : undefined)
+    const target = pluginSettingsRoute(canDebug.value ? apiDebugTabId : networkSettingsTabId)
     if (canMaintain.value) {
       void router.replace(target)
     } else {

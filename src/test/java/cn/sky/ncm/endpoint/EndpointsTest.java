@@ -15,8 +15,6 @@ import cn.sky.ncm.bootstrap.NcmBootstrap;
 import cn.sky.ncm.endpoint.dto.NcmCaptchaRequest;
 import cn.sky.ncm.endpoint.dto.NcmCellphoneLoginRequest;
 import cn.sky.ncm.gateway.NcmGateway;
-import cn.sky.ncm.setting.SettingService;
-import cn.sky.ncm.setting.ApiAccessSettingsService;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.reactive.function.server.MockServerRequest;
@@ -49,14 +47,12 @@ class EndpointsTest {
 
     @Test
     void routersBuildWithOpenApiDocs() {
-        assertNotNull(new NcmApiEndpoint(mock(NcmGateway.class), mock(ApiRegistry.class),
-            mock(SettingService.class)).endpoint());
+        assertNotNull(new NcmApiEndpoint(mock(NcmGateway.class), mock(ApiRegistry.class)).endpoint());
         assertNotNull(new NcmUcEndpoint(mock(AccountService.class), mock(QrLoginService.class),
             mock(PhoneLoginService.class)).endpoint());
         assertNotNull(new NcmConsoleEndpoint(mock(AccountService.class), mock(QrLoginService.class),
             mock(NcmGateway.class), mock(NcmBootstrap.class),
             mock(PhoneLoginService.class)).endpoint());
-        assertNotNull(new NcmApiAccessSettingsEndpoint(mock(ApiAccessSettingsService.class)).endpoint());
     }
 
     static MockServerRequest body(Object b) {

@@ -156,7 +156,7 @@ metadata:
     rbac.authorization.halo.run/aggregate-to-role-template-manage-plugins: "true"
 rules:
   - apiGroups: [ "console.api.ncm.halo.run" ]
-    resources: [ "api-access-settings", "tool-settings" ]
+    resources: [ "tool-settings" ]
     resourceNames: [ "-" ]
     verbs: [ "get", "update" ]
   - apiGroups: [ "console.api.ncm.halo.run" ]

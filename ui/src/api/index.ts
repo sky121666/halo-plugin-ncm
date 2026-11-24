@@ -2,7 +2,6 @@ import { axiosInstance } from '@halo-dev/api-client'
 import {
   ApiNcmHaloRunV1alpha1ClientConfigApi,
   ApiNcmHaloRunV1alpha1NcmApi,
-  ConsoleApiNcmHaloRunV1alpha1ApiAccessSettingsApi,
   ConsoleApiNcmHaloRunV1alpha1DebugApi,
   ConsoleApiNcmHaloRunV1alpha1DeviceApi,
   ConsoleApiNcmHaloRunV1alpha1FeaturedPlaylistApi,
@@ -38,11 +37,6 @@ export const ncmConsoleApiClient = {
     axiosInstance,
   ),
   debug: new ConsoleApiNcmHaloRunV1alpha1DebugApi(undefined, '', axiosInstance),
-  apiAccessSettings: new ConsoleApiNcmHaloRunV1alpha1ApiAccessSettingsApi(
-    undefined,
-    '',
-    axiosInstance,
-  ),
   frontstageSettings: new ConsoleApiNcmHaloRunV1alpha1FrontstageSettingsApi(
     undefined,
     '',
@@ -61,9 +55,9 @@ export const PUBLIC_API_BASE = '/apis/api.ncm.halo.run/v1alpha1'
 export type Tier = NcmApiMeta['tier']
 
 export const TIER_LABEL: Record<Tier, string> = {
-  public: '公开',
-  personal: '个人',
-  write: '写操作',
+  public: '公开只读',
+  personal: '本人只读',
+  write: '本人写入',
   auth: '登录',
   admin: '工具',
 }

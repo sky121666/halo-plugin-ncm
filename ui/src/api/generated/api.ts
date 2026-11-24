@@ -17,7 +17,6 @@
 export * from './api/api-ncm-ai-halo-run-v1alpha1-music-ai-api';
 export * from './api/api-ncm-halo-run-v1alpha1-client-config-api';
 export * from './api/api-ncm-halo-run-v1alpha1-ncm-api';
-export * from './api/console-api-ncm-halo-run-v1alpha1-api-access-settings-api';
 export * from './api/console-api-ncm-halo-run-v1alpha1-debug-api';
 export * from './api/console-api-ncm-halo-run-v1alpha1-device-api';
 export * from './api/console-api-ncm-halo-run-v1alpha1-featured-playlist-api';

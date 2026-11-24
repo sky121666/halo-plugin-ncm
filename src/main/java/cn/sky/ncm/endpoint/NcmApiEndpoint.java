@@ -12,7 +12,6 @@ import cn.sky.ncm.api.ApiRegistry;
 import cn.sky.ncm.api.DebugApiPolicy;
 import cn.sky.ncm.endpoint.dto.NcmApiMetaList;
 import cn.sky.ncm.gateway.NcmGateway;
-import cn.sky.ncm.setting.SettingService;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Set;
@@ -44,12 +43,10 @@ public class NcmApiEndpoint implements CustomEndpoint {
 
     private final NcmGateway gateway;
     private final ApiRegistry registry;
-    private final SettingService settings;
 
-    public NcmApiEndpoint(NcmGateway gateway, ApiRegistry registry, SettingService settings) {
+    public NcmApiEndpoint(NcmGateway gateway, ApiRegistry registry) {
         this.gateway = gateway;
         this.registry = registry;
-        this.settings = settings;
     }
 
     @Override
@@ -77,7 +74,7 @@ public class NcmApiEndpoint implements CustomEndpoint {
     }
 
     Mono<ServerResponse> listApis(ServerRequest request) {
-        return ok(settings.basic().map(basic -> {
+        return ok(Mono.fromSupplier(() -> {
             ObjectNode out = JsonNodeFactory.instance.objectNode();
             var list = out.putArray("items");
             registry.all().forEach(d -> {
@@ -85,9 +82,10 @@ public class NcmApiEndpoint implements CustomEndpoint {
                 n.put("name", d.name());
                 n.put("tier", d.tier());
                 n.put("status", d.status());
-                n.put("path", ("public".equals(d.tier()) ? "/public/" : "/personal/") + d.name());
-                boolean frontTier = "public".equals(d.tier()) || "personal".equals(d.tier()) || "write".equals(d.tier());
-                n.put("open", frontTier && d.executable() && basic.apiOpen(d.name()));
+                boolean publicRead = PUBLIC.contains(d.tier());
+                boolean callable = d.executable() && (publicRead || PERSONAL.contains(d.tier()));
+                n.put("path", callable ? (publicRead ? "/public/" : "/personal/") + d.name() : "");
+                n.put("open", callable);
                 n.put("debuggable", DebugApiPolicy.readable(d));
             });
             out.put("total", registry.all().size());

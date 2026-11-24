@@ -8,8 +8,7 @@ export const maintenanceTabId = 'ncm-maintenance'
 export const networkSettingsTabId = 'advanced'
 export const musicAiSettingsTabId = 'ai'
 // 沿用旧的访客与接口链接。
-export const apiManagementTabId = 'basic'
-export const apiRequestOptionsId = 'ncm-api-request-options'
+export const apiDebugTabId = 'basic'
 export const pluginDisplayName = '网抑云'
 const pluginName = 'plugin-ncm'
 export const siteAccountConsoleUrl = `/console/ncm?tab=${accountsTabId}`
@@ -35,6 +34,6 @@ export function miniPlayerSettingsRoute(playlistId: string) {
   return { ...route, query: { ...route.query, playlist: playlistId } }
 }
 
-export function pluginSettingsRoute(tab: string, view?: 'debug') {
-  return { name: 'PluginDetail', params: { name: pluginName }, query: { tab, view } }
+export function pluginSettingsRoute(tab: string) {
+  return { name: 'PluginDetail', params: { name: pluginName }, query: { tab } }
 }

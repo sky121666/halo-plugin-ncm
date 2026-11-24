@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import cn.sky.ncm.security.SecretStore;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -181,43 +182,38 @@ class FrontstageSettingsServiceTest {
     }
 
     @Test
-    void migratesApiAccessIndependentlyOfNativeAndFrontstageSettings() {
-        putTechnical(Map.of("basic", """
-            {"publicIdentity":"site","siteMaxLevel":"standard","apiScope":"all","extraApis":"album",
-             "allowClientCookie":false,"cacheSeconds":0,"realIp":"","randomCnIp":false}
-            """, "advanced", "{\"rateLimitPublic\":40}"));
-        service.initialize().block(WAIT);
-        var technicalBefore = Map.copyOf(resources.get(ProxySettings.CONFIG).getData());
-        var frontstageBefore = service.read().block(WAIT);
-        var access = new ApiAccessSettingsService(client);
-        access.initialize().block(WAIT);
-        var storedBeforeUpgrade = copy(resources.get(ApiAccessSettingsService.CONFIG));
-        storedBeforeUpgrade.setData(Map.of("settings", """
-            {"publicIdentity":"site","siteMaxLevel":"standard","allowClientCookie":true,"apiScope":"all",
-             "extraApis":"album","cacheSeconds":0,"realIp":"","randomCnIp":false}
+    void migratesOnlyLegacyNetworkOptionsAndPreservesExistingValues() {
+        var basic = """
+            {"apiScope":"closed","extraApis":"album","cacheSeconds":45,"realIp":"192.0.2.10","randomCnIp":true}
+            """;
+        putTechnical(Map.of("basic", basic, "advanced", "{\"rateLimitPublic\":40,\"realIp\":\"\"}"));
+        var legacy = new ConfigMap();
+        var metadata = new Metadata();
+        metadata.setName(FrontstageSettingsService.LEGACY_API_CONFIG);
+        metadata.setVersion(0L);
+        metadata.setLabels(Map.of(SecretStore.LABEL_PLUGIN, SecretStore.PLUGIN_NAME,
+            SecretStore.LABEL_PURPOSE, "api-access-settings"));
+        legacy.setMetadata(metadata);
+        legacy.setData(Map.of("settings", """
+            {"apiScope":"all","extraApis":"album_list","cacheSeconds":0,"realIp":"192.0.2.11","randomCnIp":false}
             """));
-        client.update(storedBeforeUpgrade).block(WAIT);
+        resources.put(metadata.getName(), legacy);
 
-        var initial = access.read().block(WAIT);
-        assertThat(initial).isNotNull();
-        assertThat(initial.settings()).isEqualTo(new NcmApiAccessSettings(
-            "all", "album", 0, "", false));
-        assertThat(access.current().block(WAIT).allApisOpen()).isTrue();
-        var edited = new NcmApiAccessSettings("common", "", 300, "", false);
-        var saved = access.save(new NcmApiAccessConfig(initial.revision(), edited)).block(WAIT);
-        assertThat(saved).isNotNull();
-        assertThat(access.current().block(WAIT).allApisOpen()).isFalse();
-        assertThat(resources.get(ApiAccessSettingsService.CONFIG).getData().get("settings"))
-            .doesNotContain("publicIdentity", "siteMaxLevel", "allowClientCookie");
-        access.initialize().block(WAIT);
+        service.initialize().block(WAIT);
+        var saved = resources.get(ProxySettings.CONFIG);
+        var json = saved.getData().get("advanced");
+        var advanced = JsonMapper.shared().readValue(json, AdvancedSetting.class);
+        assertThat(advanced.apiCacheTtl()).isZero();
+        assertThat(advanced.realIp()).isEmpty();
+        assertThat(advanced.useRandomCnIp()).isFalse();
+        assertThat(advanced.publicLimit()).isEqualTo(40);
+        assertThat(json).doesNotContain("apiScope", "extraApis");
+        assertThat(saved.getData().get("basic")).isEqualTo(basic);
+        assertThat(resources.get(metadata.getName()).getData()).isEqualTo(legacy.getData());
 
-        assertThat(access.read().block(WAIT)).isEqualTo(saved);
-        assertThat(service.read().block(WAIT)).isEqualTo(frontstageBefore);
-        assertThat(resources.get(ProxySettings.CONFIG).getData()).isEqualTo(technicalBefore);
-        StepVerifier.create(access.save(initial))
-            .expectErrorSatisfies(error -> assertThat(((ResponseStatusException) error).getStatusCode())
-                .isEqualTo(HttpStatus.CONFLICT))
-            .verify(WAIT);
+        service.initialize().block(WAIT);
+        assertThat(resources.get(ProxySettings.CONFIG).getMetadata().getVersion())
+            .isEqualTo(saved.getMetadata().getVersion());
     }
 
     @Test

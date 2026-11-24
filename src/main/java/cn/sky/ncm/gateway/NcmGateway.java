@@ -12,7 +12,6 @@ import cn.sky.ncm.client.RequestOptions;
 import cn.sky.ncm.security.ClientIp;
 import cn.sky.ncm.security.RateLimiter;
 import cn.sky.ncm.setting.AdvancedSetting;
-import cn.sky.ncm.setting.BasicSetting;
 import cn.sky.ncm.setting.SettingService;
 import java.net.URI;
 import java.util.LinkedHashMap;
@@ -93,12 +92,7 @@ public class NcmGateway {
             return respond(denied);
         }
         boolean allowFiles = "write".equals(def.tier());
-        return Mono.zip(settings.advanced(), settings.basic()).flatMap(st -> {
-            AdvancedSetting adv = st.getT1();
-            BasicSetting basic = st.getT2();
-            if (!debug && !basic.apiOpen(name)) {
-                return respond(NcmResponse.error(403, "该接口尚未开放。管理员可在「接口管理 → 接口开放」调整。"));
-            }
+        return settings.advanced().flatMap(adv -> {
             Mono<Boolean> quota = debug ? Mono.just(true) : rateLimit(request, def, adv);
             return quota
             .flatMap(allowed -> !allowed
@@ -110,7 +104,7 @@ public class NcmGateway {
                 Map<String, UploadFile> files = p.files();
                 query.remove("cookie");
                 Mono<Identity> identity = debug ? Mono.just(Identity.anonymous()) : resolver.resolve(def.tier());
-                return identity.flatMap(id -> call(def, query, files, id, basic,
+                return identity.flatMap(id -> call(def, query, files, id, adv,
                     !debug && request.method() == HttpMethod.GET));
             })
             .flatMap(response -> debug ? respondDebug(response) : respond(response))
@@ -167,11 +161,11 @@ public class NcmGateway {
     }
 
     private Mono<NcmResponse> call(ApiDef def, Map<String, String> query, Map<String, UploadFile> files,
-                                   Identity id, BasicSetting setting, boolean isGet) {
+                                   Identity id, AdvancedSetting setting, boolean isGet) {
         RequestOptions options = new RequestOptions(def.crypto(), id.cookie(), null, setting.realIp(),
             setting.useRandomCnIp());
         boolean cacheable = isGet && "public".equals(def.tier()) && !def.name().startsWith("song_url")
-            && setting.cacheTtl() > 0;
+            && setting.apiCacheTtl() > 0;
         if (!cacheable) {
             return executor.execute(def, query, files, options);
         }
@@ -180,7 +174,7 @@ public class NcmGateway {
         if (hit != null) {
             return Mono.just(hit);
         }
-        return executor.execute(def, query, options).doOnNext(r -> cache.put(key, r, setting.cacheTtl()));
+        return executor.execute(def, query, options).doOnNext(r -> cache.put(key, r, setting.apiCacheTtl()));
     }
 
     record Params(Map<String, String> query, Map<String, UploadFile> files) {

@@ -2,6 +2,7 @@ package cn.sky.ncm.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,5 +49,8 @@ class ExprEvalTest {
     @Test
     void uriTemplate() {
         assertEquals("/api/v1/album/42", ExprEval.template("/api/v1/album/${query.id}", q));
+        assertEquals("/api/v1/album/42", ExprEval.apiPath("/api/v1/album/${query.id}", q));
+        assertThrows(IllegalArgumentException.class,
+            () -> ExprEval.apiPath("/api/v1/album/${query.id}", Map.of("id", "two words")));
     }
 }

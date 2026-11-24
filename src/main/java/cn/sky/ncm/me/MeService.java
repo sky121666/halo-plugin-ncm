@@ -581,7 +581,7 @@ public class MeService {
         if (def == null || !def.executable()) {
             return Mono.error(new IllegalStateException("接口 " + api + " 不可用"));
         }
-        return settings.basic().flatMap(s -> executor.execute(def, new LinkedHashMap<>(query),
+        return settings.advanced().flatMap(s -> executor.execute(def, new LinkedHashMap<>(query),
                 new RequestOptions(def.crypto(), id.cookie(), null, s.realIp(), s.useRandomCnIp())))
             .timeout(REQUEST_TIMEOUT)
             .onErrorMap(TimeoutException.class, e -> new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT,

@@ -31,6 +31,14 @@ spec:
               help: 代理用户名
             - key: password
               help: 代理密码
+        - $formkit: text
+          name: realIp
+          label: 发往网易云的固定 IP 请求头
+          help: 设置出站请求的 X-Real-IP 和 X-Forwarded-For。
+        - $formkit: switch
+          name: randomCnIp
+          label: 出站请求使用随机中国大陆 IP
+          help: 固定 IP 请求头留空时生效。
         - $el: h3
           attrs:
             class: mb-3 mt-6 max-w-lg border-t border-gray-200 pt-4 text-sm font-medium
@@ -90,6 +98,13 @@ spec:
             class: mb-3 mt-6 max-w-lg border-t border-gray-200 pt-4 text-sm font-medium
           children: 缓存与上传
         - $formkit: number
+          name: apiCacheSeconds
+          label: 通用公开接口缓存（秒）
+          placeholder: '300'
+          min: 0
+          validation: required|min:0
+          help: 默认 300 秒。0 表示关闭。
+        - $formkit: number
           name: siteContentCacheSeconds
           label: 音乐页与主题查询缓存（秒）
           placeholder: '600'
@@ -103,8 +118,3 @@ spec:
           value: 100
           min: 1
           max: 1024
-        - $el: a
-          attrs:
-            href: /console/plugins/plugin-ncm?tab=basic#ncm-api-request-options
-            class: mb-4 inline-block text-sm text-gray-700 underline underline-offset-4
-          children: 通用接口的缓存与请求兼容

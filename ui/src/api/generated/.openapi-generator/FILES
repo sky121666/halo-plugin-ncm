@@ -5,7 +5,6 @@ api.ts
 api/api-ncm-ai-halo-run-v1alpha1-music-ai-api.ts
 api/api-ncm-halo-run-v1alpha1-client-config-api.ts
 api/api-ncm-halo-run-v1alpha1-ncm-api.ts
-api/console-api-ncm-halo-run-v1alpha1-api-access-settings-api.ts
 api/console-api-ncm-halo-run-v1alpha1-debug-api.ts
 api/console-api-ncm-halo-run-v1alpha1-device-api.ts
 api/console-api-ncm-halo-run-v1alpha1-featured-playlist-api.ts
@@ -28,8 +27,6 @@ models/index.ts
 models/json-patch-inner.ts
 models/move-operation.ts
 models/ncm-account-view.ts
-models/ncm-api-access-config.ts
-models/ncm-api-access-settings.ts
 models/ncm-api-meta-list.ts
 models/ncm-api-meta.ts
 models/ncm-captcha-request.ts

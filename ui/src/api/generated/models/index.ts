@@ -5,8 +5,6 @@ export * from './daily-style-request';
 export * from './json-patch-inner';
 export * from './move-operation';
 export * from './ncm-account-view';
-export * from './ncm-api-access-config';
-export * from './ncm-api-access-settings';
 export * from './ncm-api-meta';
 export * from './ncm-api-meta-list';
 export * from './ncm-captcha-request';

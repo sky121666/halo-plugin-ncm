@@ -95,6 +95,6 @@ class ProxySettingsTest {
 
     private void configure(String address, String reference) {
         when(fetcher.fetch("advanced", AdvancedSetting.class)).thenReturn(Mono.just(
-            new AdvancedSetting(address, true, 120, 120, 100, "", 1, reference, null, null, null)));
+            new AdvancedSetting(address, true, 120, 120, 100, "", 1, reference, null, null, null, null, null, null)));
     }
 }

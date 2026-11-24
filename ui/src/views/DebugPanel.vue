@@ -162,7 +162,7 @@ onMounted(load)
       <VSpace direction="column" align="stretch">
         <SearchInput v-model="keyword" placeholder="搜索接口名" />
         <VSpace spacing="lg">
-          <FilterDropdown v-model="tier" label="等级" :items="TIER_ITEMS" />
+          <FilterDropdown v-model="tier" label="能力" :items="TIER_ITEMS" />
           <FilterDropdown v-model="availability" label="状态" :items="AVAILABILITY_ITEMS" />
         </VSpace>
       </VSpace>
@@ -199,10 +199,6 @@ onMounted(load)
                         {{ STATUS_LABEL[a.status] ?? a.status }}
                       </span>
                       <VTag :theme="TIER_THEME[a.tier]">{{ TIER_LABEL[a.tier] }}</VTag>
-                      <VTag
-                        v-if="a.open === false && ['public', 'personal', 'write'].includes(a.tier)"
-                        >未开放</VTag
-                      >
                     </div>
                   </template>
                 </VEntityField>
@@ -264,14 +260,7 @@ onMounted(load)
           v-if="!current.debuggable && current.status !== 'unsupported'"
           type="info"
           title="仅查看接口信息"
-          description="游客只读调试限于已核对的公开接口。"
-          :closable="false"
-        />
-        <VAlert
-          v-if="current.open === false && current.debuggable"
-          type="info"
-          title="仅调试可用"
-          description="通用接口入口尚未开放此接口。"
+          description="调试台仅执行返回数据的公开只读接口。"
           :closable="false"
         />
         <VAlert v-if="publicUrl" type="success" title="访客可直接访问的地址" :closable="false">

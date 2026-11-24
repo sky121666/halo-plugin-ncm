@@ -10,7 +10,7 @@
   一句 return request(`uri`, data, createOption(query, 'crypto', 'checkToken'))，
   或 const res = await request(...) 后接 avatarImgId_str 改名。其余一律标为 manual。
 - 字段值只允许 ExprEval.java 支持的语法（两边语法保持一致）。
-- 已有 json 中的 tier（等级）和 status=custom（手写）/ unsupported（不移植）会被保留；新增模块默认 tier=public，请人工复核。
+- 已有 json 中的 tier（等级）和 status=custom（手写）/ unsupported（不移植）会被保留；新增模块默认 tier=admin，标定能力后才可对外调用。
 """
 import json
 import os
@@ -285,7 +285,7 @@ def main(module_dir, out_path):
         if not f.endswith(".js"): continue
         name = f[:-3]
         prev = old.get(name, {})
-        e = {"tier": prev.get("tier", "public")}
+        e = {"tier": prev.get("tier", "admin")}
         if prev.get("status") in ("custom", "unsupported"):
             e = dict(prev)
         else:

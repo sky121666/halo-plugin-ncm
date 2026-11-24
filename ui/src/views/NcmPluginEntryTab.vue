@@ -5,7 +5,7 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
   accountsRoute,
-  apiManagementTabId,
+  apiDebugTabId,
   featuredRoute,
   maintenanceTabId,
   musicPageSettingsRoute,
@@ -15,7 +15,6 @@ import {
   toolSettingsRoute,
 } from '@/consoleNavigation'
 
-const canConfigure = computed(() => utils.permission.has(['system:plugins:manage']))
 const groups = computed(() => [
   {
     id: 'tools',
@@ -57,19 +56,12 @@ const groups = computed(() => [
         route: pluginSettingsRoute(maintenanceTabId),
         permission: 'system:plugins:manage',
       },
-      canConfigure.value
-        ? {
-            label: '接口管理',
-            description: '管理接口开放范围与请求缓存，可按权限切换到接口调试。',
-            route: pluginSettingsRoute(apiManagementTabId),
-            permission: 'system:plugins:manage',
-          }
-        : {
-            label: '接口调试',
-            description: '以游客身份调用常用只读接口。',
-            route: pluginSettingsRoute(apiManagementTabId, 'debug'),
-            permission: 'plugin:ncm:debug',
-          },
+      {
+        label: '接口调试',
+        description: '查看接口能力，以游客身份调试公开只读接口。',
+        route: pluginSettingsRoute(apiDebugTabId),
+        permission: 'plugin:ncm:debug',
+      },
       {
         label: '网络与限流',
         description: '配置代理、请求额度和缓存。',

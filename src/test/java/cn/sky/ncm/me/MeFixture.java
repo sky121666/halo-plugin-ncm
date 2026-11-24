@@ -19,7 +19,7 @@ import cn.sky.ncm.page.PlayService;
 import cn.sky.ncm.security.SecretBox;
 import cn.sky.ncm.security.SecretStore;
 import cn.sky.ncm.setting.AdvancedSetting;
-import cn.sky.ncm.setting.BasicSetting;
+import cn.sky.ncm.setting.AdvancedSetting;
 import cn.sky.ncm.setting.SettingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -44,7 +44,7 @@ public class MeFixture {
     public final MeService service = new MeService(registry, executor, accounts, settings, likeCache, plays);
 
     public MeFixture() {
-        when(settings.basic()).thenReturn(Mono.just(BasicSetting.DEFAULT));
+        when(settings.advanced()).thenReturn(Mono.just(AdvancedSetting.DEFAULT));
         when(settings.advanced()).thenReturn(Mono.just(AdvancedSetting.DEFAULT));
         // 没有特别说明的账号都不存在
         when(client.fetch(org.mockito.ArgumentMatchers.eq(NcmAccount.class), any())).thenReturn(Mono.empty());

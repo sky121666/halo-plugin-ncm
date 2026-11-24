@@ -26,7 +26,7 @@ class ApiRegistryTest {
                 for (String[] p : d.pre()) {
                     q.put(p[0], ExprEval.eval(p[1], q));
                 }
-                ExprEval.template(d.uri(), q);
+                ExprEval.apiPath(d.uri(), q);
                 d.fields().values().forEach(v -> ExprEval.eval(v, q));
             }, d.name());
             assertTrue(d.uri().startsWith("/api/"), d.name() + " uri");
@@ -65,6 +65,13 @@ class ApiRegistryTest {
         var registry = new ApiRegistry();
         for (String name : List.of("user_replacephone", "playlist_privacy", "yunbei_rcmd_song")) {
             assertEquals("write", registry.find(name).orElseThrow().tier(), name);
+        }
+        for (String name : List.of("digitalAlbum_ordering", "rep_ugc_activity_collect", "rep_ugc_user_collect-vip",
+                "vip_growthpoint_get", "vip_growthpoint_getall", "listentogether_heatbeat")) {
+            assertEquals("write", registry.find(name).orElseThrow().tier(), name);
+        }
+        for (String name : List.of("pl_count", "song_purchased", "listen_data_total", "artist_new_song_playall")) {
+            assertEquals("personal", registry.find(name).orElseThrow().tier(), name);
         }
         assertFalse(registry.find("song_like_check").map(d -> "write".equals(d.tier())).orElse(true));
     }

@@ -216,7 +216,7 @@
   }
  },
  "artist_new_mv": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/sub/artist/new/works/mv/list",
   "crypto": "weapi",
@@ -226,7 +226,7 @@
   }
  },
  "artist_new_song": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/sub/artist/new/works/song/list",
   "crypto": "weapi",
@@ -236,7 +236,7 @@
   }
  },
  "artist_new_song_mv_list_v2": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/sub/artist/new/works/song-mv/list/v2",
   "crypto": "eapi",
@@ -248,7 +248,7 @@
   }
  },
  "artist_new_song_playall": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/sub/artist/new/works/song/playall",
   "crypto": "eapi",
@@ -810,7 +810,7 @@
   }
  },
  "digitalAlbum_ordering": {
-  "tier": "public",
+  "tier": "write",
   "status": "ready",
   "uri": "/api/ordering/web/digital",
   "crypto": "weapi",
@@ -1200,7 +1200,7 @@
   }
  },
  "fans_group_user_group_detail": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/social/fansgroup/bff/user/group/detail/get",
   "crypto": "eapi",
@@ -1209,7 +1209,7 @@
   }
  },
  "fans_group_user_groups": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/social/fansgroup/bff/user/groups/get",
   "crypto": "eapi",
@@ -1413,7 +1413,7 @@
   }
  },
  "listen_data_song_play_rank": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/content/activity/listen/data/song/play/rank",
   "crypto": "default",
@@ -1423,14 +1423,14 @@
   }
  },
  "listen_data_today_song": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/content/activity/listen/data/today/song/play/rank",
   "crypto": "default",
   "fields": {}
  },
  "listen_data_total": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/content/activity/listen/data/total",
   "crypto": "default",
@@ -1464,7 +1464,7 @@
   }
  },
  "listentogether_heatbeat": {
-  "tier": "personal",
+  "tier": "write",
   "status": "ready",
   "uri": "/api/listen/together/heartbeat",
   "crypto": "default",
@@ -1955,7 +1955,7 @@
   }
  },
  "pl_count": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/pl/count",
   "crypto": "weapi",
@@ -2398,7 +2398,7 @@
   "status": "custom"
  },
  "rep_ugc_activity_collect": {
-  "tier": "public",
+  "tier": "write",
   "status": "ready",
   "uri": "/api/rep/ugc/activity/collect",
   "crypto": "eapi",
@@ -2407,7 +2407,7 @@
   }
  },
  "rep_ugc_activity_get": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/rep/ugc/activity/get",
   "crypto": "eapi",
@@ -2434,7 +2434,7 @@
   "status": "custom"
  },
  "rep_ugc_user_collect-vip": {
-  "tier": "personal",
+  "tier": "write",
   "status": "ready",
   "uri": "/api/rep/ugc/user/collect-vip",
   "crypto": "eapi",
@@ -2443,7 +2443,7 @@
   }
  },
  "rep_ugc_user_get": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/rep/ugc/user/get",
   "crypto": "eapi",
@@ -2806,7 +2806,7 @@
   "status": "custom"
  },
  "song_downlist": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/member/song/downlist",
   "crypto": "default",
@@ -2892,7 +2892,7 @@
   }
  },
  "song_monthdownlist": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/member/song/monthdownlist",
   "crypto": "default",
@@ -2923,7 +2923,7 @@
   }
  },
  "song_purchased": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/single/mybought/song/list",
   "crypto": "weapi",
@@ -2953,7 +2953,7 @@
   }
  },
  "song_singledownlist": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/member/song/singledownlist",
   "crypto": "default",
@@ -3082,7 +3082,7 @@
   "status": "custom"
  },
  "thinktank_audit_resource_detail": {
-  "tier": "public",
+  "tier": "personal",
   "status": "ready",
   "uri": "/api/thinktank/audit/resource/detail",
   "crypto": "eapi",
@@ -3703,7 +3703,7 @@
   }
  },
  "vip_growthpoint_get": {
-  "tier": "personal",
+  "tier": "write",
   "status": "ready",
   "uri": "/api/vipnewcenter/app/level/task/reward/get",
   "crypto": "weapi",
@@ -3712,7 +3712,7 @@
   }
  },
  "vip_growthpoint_getall": {
-  "tier": "personal",
+  "tier": "write",
   "status": "ready",
   "uri": "/api/vipnewcenter/app/level/task/reward/getall",
   "crypto": "xeapi",

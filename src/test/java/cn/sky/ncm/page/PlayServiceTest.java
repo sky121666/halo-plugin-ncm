@@ -20,7 +20,7 @@ import cn.sky.ncm.bootstrap.NcmBootstrap;
 import cn.sky.ncm.client.NcmResponse;
 import cn.sky.ncm.security.SecretBox;
 import cn.sky.ncm.security.SecretStore;
-import cn.sky.ncm.setting.BasicSetting;
+import cn.sky.ncm.setting.AdvancedSetting;
 import cn.sky.ncm.setting.SettingService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -147,7 +147,7 @@ class PlayServiceTest {
         var bootstrap = mock(NcmBootstrap.class);
         when(bootstrap.ready()).thenReturn(Mono.empty());
         var settings = mock(SettingService.class);
-        when(settings.basic()).thenReturn(Mono.just(BasicSetting.DEFAULT));
+        when(settings.advanced()).thenReturn(Mono.just(AdvancedSetting.DEFAULT));
         var client = mock(ReactiveExtensionClient.class);
         var box = mock(SecretBox.class);
         var accounts = new AccountService(client, box, new SecretStore(client, box));

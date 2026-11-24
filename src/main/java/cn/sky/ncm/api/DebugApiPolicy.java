@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-/** 普通调试只调用经过筛选的公开只读接口。 */
+/** 调试使用公开只读接口，并以 JSON 显示脱敏结果。 */
 public final class DebugApiPolicy {
 
     private static final Pattern CREDENTIAL_KEY = Pattern.compile(
@@ -20,8 +20,7 @@ public final class DebugApiPolicy {
     }
 
     public static boolean readable(ApiDef api) {
-        return api != null && api.executable() && "public".equals(api.tier())
-            && OpenApis.COMMON.contains(api.name()) && !api.name().endsWith("_302");
+        return api != null && api.executable() && "public".equals(api.tier()) && !api.name().endsWith("_302");
     }
 
     public static JsonNode safeBody(JsonNode body) {

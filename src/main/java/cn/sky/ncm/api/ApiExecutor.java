@@ -47,7 +47,12 @@ public class ApiExecutor {
             for (String[] p : def.pre()) {
                 q.put(p[0], ExprEval.eval(p[1], q));
             }
-            String uri = ExprEval.template(def.uri(), q);
+            String uri;
+            try {
+                uri = ExprEval.apiPath(def.uri(), q);
+            } catch (IllegalArgumentException e) {
+                return Mono.just(NcmResponse.error(400, "接口路径参数无效"));
+            }
             Map<String, Object> data = new LinkedHashMap<>();
             for (var e : def.fields().entrySet()) {
                 Object v = ExprEval.eval(e.getValue(), q);

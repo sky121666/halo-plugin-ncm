@@ -5,7 +5,6 @@ import cn.sky.ncm.bootstrap.NcmBootstrap;
 import cn.sky.ncm.device.NcmDevice;
 import cn.sky.ncm.featured.FeaturedService;
 import cn.sky.ncm.featured.NcmFeaturedPlaylist;
-import cn.sky.ncm.setting.ApiAccessSettingsService;
 import cn.sky.ncm.setting.ClientConfigService;
 import cn.sky.ncm.setting.FrontstageSettingsService;
 import cn.sky.ncm.setting.NcmClientConfig;
@@ -21,20 +20,18 @@ public class NcmPlugin extends BasePlugin {
 
     private final SchemeManager schemeManager;
     private final FrontstageSettingsService frontstageSettings;
-    private final ApiAccessSettingsService apiAccessSettings;
     private final NcmBootstrap bootstrap;
     private final FeaturedService featuredPlaylists;
     private final ClientConfigService preferences;
     private final ToolSettingsService toolSettings;
 
     public NcmPlugin(PluginContext pluginContext, SchemeManager schemeManager,
-                     FrontstageSettingsService frontstageSettings, ApiAccessSettingsService apiAccessSettings,
+                     FrontstageSettingsService frontstageSettings,
                      NcmBootstrap bootstrap, FeaturedService featuredPlaylists, ClientConfigService preferences,
                      ToolSettingsService toolSettings) {
         super(pluginContext);
         this.schemeManager = schemeManager;
         this.frontstageSettings = frontstageSettings;
-        this.apiAccessSettings = apiAccessSettings;
         this.bootstrap = bootstrap;
         this.featuredPlaylists = featuredPlaylists;
         this.preferences = preferences;
@@ -43,7 +40,7 @@ public class NcmPlugin extends BasePlugin {
 
     @Override
     public void start() {
-        apiAccessSettings.initialize().then(frontstageSettings.initialize()).then(toolSettings.initialize())
+        frontstageSettings.initialize().then(toolSettings.initialize())
             .block(Duration.ofSeconds(15));
         schemeManager.register(NcmAccount.class);
         schemeManager.register(NcmDevice.class);

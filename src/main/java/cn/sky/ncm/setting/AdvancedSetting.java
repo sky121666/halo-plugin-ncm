@@ -16,9 +16,11 @@ import java.util.List;
  */
 public record AdvancedSetting(String proxy, Boolean trustProxyHeaders, Integer rateLimitPublic, Integer rateLimitUser,
                               Integer maxUploadMb, String trustedProxies, Integer proxyHops, String proxySecret,
-                              Integer musicSearchPerMinute, Integer musicSuggestPerMinute, Integer siteContentCacheSeconds) {
+                              Integer musicSearchPerMinute, Integer musicSuggestPerMinute,
+                              Integer siteContentCacheSeconds, Integer apiCacheSeconds, String realIp, Boolean randomCnIp) {
 
-    public static final AdvancedSetting DEFAULT = new AdvancedSetting("", true, 120, 120, 100, "", 1, "", null, null, null);
+    public static final AdvancedSetting DEFAULT =
+        new AdvancedSetting("", true, 120, 120, 100, "", 1, "", null, null, null, 300, "", false);
 
     public boolean trustHeaders() {
         return trustProxyHeaders == null || trustProxyHeaders;
@@ -45,6 +47,14 @@ public record AdvancedSetting(String proxy, Boolean trustProxyHeaders, Integer r
 
     public int userLimit() {
         return rateLimitUser == null ? 120 : rateLimitUser;
+    }
+
+    public int apiCacheTtl() {
+        return apiCacheSeconds == null ? DEFAULT.apiCacheSeconds : Math.max(0, apiCacheSeconds);
+    }
+
+    public boolean useRandomCnIp() {
+        return Boolean.TRUE.equals(randomCnIp);
     }
 
     public int maxUploadBytes() {

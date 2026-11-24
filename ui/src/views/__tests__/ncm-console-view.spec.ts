@@ -148,12 +148,12 @@ describe('网抑云工具入口', () => {
     },
     {
       permission: 'system:plugins:manage',
-      destinations: ['music-page', 'tool-settings', 'ncm-maintenance', 'basic', 'advanced'],
+      destinations: ['music-page', 'tool-settings', 'ncm-maintenance', 'advanced'],
       tools: true,
     },
     {
       permission: 'plugin:ncm:debug',
-      destinations: ['basic:debug'],
+      destinations: ['basic'],
       tools: false,
     },
   ])('管理入口按 $permission 显示对应链接', ({ permission, destinations, tools }) => {
@@ -169,7 +169,7 @@ describe('网抑云工具入口', () => {
     view.unmount()
   })
 
-  it('管理者同时拥有接口调试权限时只显示一个接口管理入口', () => {
+  it('管理者同时拥有接口调试权限时直接显示接口调试', () => {
     permissions.add('system:plugins:manage')
     permissions.add('plugin:ncm:debug')
     const view = mount(NcmPluginEntryTab)
@@ -177,7 +177,7 @@ describe('网抑云工具入口', () => {
       .filter((link) => (link.props('to') as { query: { tab: string } }).query.tab === 'basic')
 
     expect(apiLinks).toHaveLength(1)
-    expect(apiLinks[0]?.text()).toContain('接口管理')
+    expect(apiLinks[0]?.text()).toContain('接口调试')
     view.unmount()
   })
 

@@ -2,7 +2,7 @@ import { definePlugin, utils, type PluginTab } from '@halo-dev/ui-shared'
 import { defineAsyncComponent, markRaw } from 'vue'
 import RiMusic2Line from '~icons/ri/music-2-line'
 import {
-  apiManagementTabId,
+  apiDebugTabId,
   legacySiteAccountTabId,
   maintenanceTabId,
   musicAiSettingsTabId,
@@ -18,8 +18,8 @@ const pluginEntryTab = markRaw(defineAsyncComponent(() => import('./views/NcmPlu
 const legacyAiSettingsTab = markRaw(
   defineAsyncComponent(() => import('./views/NcmLegacyAiSettingsTab.vue')),
 )
-const apiManagementTab = markRaw(
-  defineAsyncComponent(() => import('./views/NcmApiManagementTab.vue')),
+const apiDebugTab = markRaw(
+  defineAsyncComponent(() => import('./views/NcmApiDebugTab.vue')),
 )
 
 export default definePlugin({
@@ -87,10 +87,10 @@ export default definePlugin({
           permissions: [legacyDebugRedirect ? 'plugin:ncm:debug' : 'system:plugins:manage'],
         },
         {
-          id: apiManagementTabId,
-          label: '接口管理',
-          component: apiManagementTab,
-          permissions: ['system:plugins:manage', 'plugin:ncm:debug'],
+          id: apiDebugTabId,
+          label: '接口调试',
+          component: apiDebugTab,
+          permissions: ['plugin:ncm:debug'],
         },
       ]
       if (query.get('tab') === legacySiteAccountTabId) {

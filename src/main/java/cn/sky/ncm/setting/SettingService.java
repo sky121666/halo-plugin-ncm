@@ -13,21 +13,15 @@ public class SettingService {
 
     private final ReactiveSettingFetcher fetcher;
     private final FrontstageSettingsService frontstage;
-    private final ApiAccessSettingsService access;
     private final ClientConfigService preferences;
     private volatile Mono<AdvancedSetting> advanced;
     private volatile long advancedAt;
 
     public SettingService(ReactiveSettingFetcher fetcher, FrontstageSettingsService frontstage,
-                          ApiAccessSettingsService access, ClientConfigService preferences) {
+                          ClientConfigService preferences) {
         this.fetcher = fetcher;
         this.frontstage = frontstage;
-        this.access = access;
         this.preferences = preferences;
-    }
-
-    public Mono<BasicSetting> basic() {
-        return access.current().onErrorReturn(BasicSetting.CLOSED);
     }
 
     public Mono<PlayerSetting> player() {
