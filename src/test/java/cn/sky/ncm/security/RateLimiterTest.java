@@ -19,6 +19,18 @@ class RateLimiterTest {
     }
 
     @Test
+    void aFullWindowPreservesExistingQuotas() {
+        var limiter = new RateLimiter();
+        long now = 1_000_000;
+        for (int i = 0; i < RateLimiter.MAX_KEYS; i++) {
+            assertTrue(limiter.tryAcquire("fixture:" + i, 1, now));
+        }
+        assertFalse(limiter.tryAcquire("fixture:new", 1, now));
+        assertFalse(limiter.tryAcquire("fixture:0", 1, now));
+        assertTrue(limiter.tryAcquire("fixture:new", 1, now + RateLimiter.WINDOW_MS));
+    }
+
+    @Test
     void zeroMeansUnlimited() {
         var l = new RateLimiter();
         for (int i = 0; i < 1000; i++) {

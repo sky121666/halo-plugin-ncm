@@ -101,11 +101,6 @@ public class NcmClient {
         }
         final String domain = notEmpty(options.domain()) ? options.domain() : null;
 
-        String ip = notEmpty(options.realIp()) ? options.realIp() : (options.randomCnIp() ? randomChineseIp() : null);
-        if (ip != null) {
-            headers.put("X-Real-IP", ip);
-            headers.put("X-Forwarded-For", ip);
-        }
         String csrf = cookie.getOrDefault("__csrf", "");
         body.put("e_r", false);
 
@@ -375,9 +370,7 @@ public class NcmClient {
         return HEX.formatHex(b);
     }
 
-    static String randomChineseIp() {
-        return "116." + (25 + RANDOM.nextInt(70)) + "." + (1 + RANDOM.nextInt(255)) + "." + (1 + RANDOM.nextInt(255));
-    }
+
 
     static boolean notEmpty(String s) {
         return s != null && !s.isEmpty();

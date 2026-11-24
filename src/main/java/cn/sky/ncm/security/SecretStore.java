@@ -55,12 +55,12 @@ public class SecretStore {
      *
      * @return 发出 {@link SecretBox.SecretException} 表示密钥不对（加密密钥已更换）
      */
-    public Mono<Map<String, String>> read(String name) {
-        return encryptedValues(name).map(raw -> {
+    public Mono<Map<String, String>> read(String name, String purpose) {
+        return encryptedValues(name, purpose).map(raw -> {
             Map<String, String> out = new LinkedHashMap<>();
             raw.forEach((k, v) -> {
                 if (v != null && !v.isEmpty()) {
-                    out.put(k, box.decrypt(v));
+                    out.put(k, decrypt(v));
                 }
             });
             return out;
@@ -68,11 +68,11 @@ public class SecretStore {
     }
 
     /** 解密值与版本来自同一次读取。随机 IV 使同一凭据重新保存时也得到新版本。 */
-    public Mono<VersionedValue> readVersionedValue(String name, String key) {
-        return encryptedValues(name)
+    public Mono<VersionedValue> readVersionedValue(String name, String purpose, String key) {
+        return encryptedValues(name, purpose)
             .mapNotNull(values -> values.get(key))
             .filter(value -> !value.isEmpty())
-            .map(value -> new VersionedValue(box.decrypt(value), HexFormat.of().formatHex(SecretBox.sha256(value))));
+            .map(value -> new VersionedValue(decrypt(value), HexFormat.of().formatHex(SecretBox.sha256(value))));
     }
 
     public record VersionedValue(String value, String revision) {
@@ -82,9 +82,20 @@ public class SecretStore {
         }
     }
 
-    private Mono<Map<String, String>> encryptedValues(String name) {
+    private String decrypt(String value) {
+        if (!SecretBox.isEncrypted(value)) {
+            throw new SecretBox.SecretException("Secret 需要使用插件的加密格式", null);
+        }
+        return box.decrypt(value);
+    }
+
+    private static boolean ownedFor(Secret secret, String purpose) {
+        return owned(secret) && purpose.equals(secret.getMetadata().getLabels().get(LABEL_PURPOSE));
+    }
+
+    private Mono<Map<String, String>> encryptedValues(String name, String purpose) {
         return client.fetch(Secret.class, name)
-            .filter(SecretStore::owned)
+            .filter(secret -> ownedFor(secret, purpose))
             .map(s -> {
                 Map<String, String> raw = new LinkedHashMap<>();
                 if (s.getData() != null) {
@@ -107,7 +118,7 @@ public class SecretStore {
         });
         return Mono.defer(() -> client.fetch(Secret.class, name)
                 .flatMap(existing -> {
-                    if (!owned(existing)) {
+                    if (!ownedFor(existing, purpose)) {
                         return Mono.error(new IllegalStateException(
                             "Secret " + name + " 已由其他资源使用，网抑云无法覆盖"));
                     }
@@ -134,9 +145,9 @@ public class SecretStore {
             .then();
     }
 
-    public Mono<Void> delete(String name) {
+    public Mono<Void> delete(String name, String purpose) {
         return client.fetch(Secret.class, name)
-            .filter(SecretStore::owned)
+            .filter(secret -> ownedFor(secret, purpose))
             .flatMap(client::delete)
             .then();
     }

@@ -35,7 +35,7 @@ export default definePlugin({
         meta: {
           title: pluginDisplayName,
           searchable: true,
-          permissions: ['plugin:ncm:manage', 'system:plugins:manage'],
+          permissions: ['plugin:ncm:manage', 'plugin:ncm:account', 'system:plugins:manage'],
           menu: {
             name: pluginDisplayName,
             group: 'tool',
@@ -78,7 +78,7 @@ export default definePlugin({
           id: pluginEntryTabId,
           label: '管理入口',
           component: pluginEntryTab,
-          permissions: ['plugin:ncm:manage', 'system:plugins:manage', 'plugin:ncm:debug'],
+          permissions: ['plugin:ncm:manage', 'plugin:ncm:account', 'system:plugins:manage', 'plugin:ncm:debug'],
         },
         {
           id: maintenanceTabId,
@@ -98,7 +98,7 @@ export default definePlugin({
           id: legacySiteAccountTabId,
           label: '站长账号',
           component: legacySiteAccountTab,
-          permissions: ['plugin:ncm:manage'],
+          permissions: ['plugin:ncm:account'],
         })
       }
       if (query.get('tab') === musicAiSettingsTabId) {

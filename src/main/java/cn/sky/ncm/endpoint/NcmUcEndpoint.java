@@ -1,5 +1,6 @@
 package cn.sky.ncm.endpoint;
 
+import cn.sky.ncm.security.NcmRequestSecurity;
 import static cn.sky.ncm.endpoint.EndpointSupport.captchaBody;
 import static cn.sky.ncm.endpoint.EndpointSupport.cellphoneBody;
 import static cn.sky.ncm.endpoint.EndpointSupport.jsonBody;
@@ -74,25 +75,22 @@ public class NcmUcEndpoint implements CustomEndpoint {
             .POST("binding/-/qr-confirm", this::confirm, b -> returns(writeHeader(jsonBody(
                 op(b, "ConfirmMyNcmBindingQr", TAG, "确认并保存当前用户的扫码绑定"), NcmQrConfirmRequest.class)),
                 NcmLoginResult.class))
-            .POST("binding/captcha", r -> privateOk(writeUsername(r).then(captchaBody(r)).flatMap(phoneLogin::sendCaptcha),
+            .POST("binding/captcha", r -> privateOk(writeUsername(r).flatMap(u -> captchaBody(r).flatMap(p -> phoneLogin.sendCaptcha(p, u, r))),
                 NcmLoginResult.class), b -> returns(jsonBody(
                 writeHeader(op(b, "SendMyNcmBindingCaptcha", TAG, "发送短信验证码")), NcmCaptchaRequest.class),
                 NcmLoginResult.class))
             .POST("binding/cellphone", this::cellphone, b -> returns(writeHeader(jsonBody(
                 op(b, "BindMyNcmAccountByCellphone", TAG, "用手机号（验证码或密码）登录网易云，并绑定为当前用户的账号"),
                 NcmCellphoneLoginRequest.class)), NcmLoginResult.class))
-            .DELETE("binding", r -> noContent(writeUsername(r).flatMap(u -> accounts.delete(AccountService.userAccountName(u)))),
+            .DELETE("binding", r -> noContent(writeUsername(r).flatMap(u -> accounts.revoke(AccountService.userAccountName(u), u))),
                 b -> returnsNothing(writeHeader(op(b, "DeleteMyNcmBinding", TAG, "解绑当前用户保存的网易云账号"))))
-            .build();
+            .build()
+            .filter(NcmRequestSecurity::privateEndpoint);
     }
 
     Mono<ServerResponse> status(ServerRequest r) {
-        return privateOk(username().flatMap(u -> accounts.find(AccountService.userAccountName(u))
-                .flatMap(accounts::bindingView)
-                .switchIfEmpty(Mono.defer(() -> accounts.siteAccountIfOwnedBy(u)
-                    .flatMap(accounts::bindingView)
-                    .map(view -> view.put("managedInConsole", true)))))
-            .defaultIfEmpty(AccountService.view(null)), NcmAccountView.class);
+        return privateOk(username().flatMap(accounts::binding)
+            .map(AccountService::bindingView).defaultIfEmpty(AccountService.view(null)), NcmAccountView.class);
     }
 
     Mono<ServerResponse> check(ServerRequest r) {
@@ -108,7 +106,7 @@ public class NcmUcEndpoint implements CustomEndpoint {
 
     Mono<ServerResponse> cellphone(ServerRequest r) {
         return privateOk(writeUsername(r).flatMap(u -> cellphoneBody(r)
-            .flatMap(p -> phoneLogin.login(p, AccountService.userAccountName(u), u))), NcmLoginResult.class);
+            .flatMap(p -> phoneLogin.login(p, AccountService.userAccountName(u), u, r))), NcmLoginResult.class);
     }
 
     @Override

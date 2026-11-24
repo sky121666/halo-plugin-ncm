@@ -25,23 +25,28 @@ public class QrLoginService {
 
     static final Duration TTL = Duration.ofMinutes(5);
     private static final Duration UPSTREAM_TIMEOUT = Duration.ofSeconds(15);
+    private static final Duration POLL_INTERVAL = Duration.ofSeconds(2);
     private static final int MAX_ATTEMPTS = 1024;
     private static final RequestOptions ANONYMOUS = new RequestOptions("", Map.of(), null, null, false);
 
-    private record Scope(String accountName, String owner) {
+    private record Scope(String accountName, AccountService.Owner owner) {
     }
 
     private static final class Attempt {
         final String key = UUID.randomUUID().toString();
         final String upstreamKey;
         final Instant expiresAt;
+        final AccountService.BindingChange change;
+        Instant nextPoll = Instant.MIN;
+        ObjectNode lastStatus = status(801, "等待扫码");
         List<String> cookies = List.of();
         Mono<ObjectNode> polling;
         boolean confirming;
 
-        Attempt(String upstreamKey, Instant expiresAt) {
+        Attempt(String upstreamKey, Instant expiresAt, AccountService.BindingChange change) {
             this.upstreamKey = upstreamKey;
             this.expiresAt = expiresAt;
+            this.change = change;
         }
 
         boolean expired(Instant now) {
@@ -67,31 +72,32 @@ public class QrLoginService {
         this.clock = clock;
     }
 
-    public Mono<ObjectNode> createQr(String accountName, String owner) {
-        return Mono.defer(() -> {
-            if (!limiter.tryAcquire("qr:" + owner, 6)) {
+    public Mono<ObjectNode> createQr(String accountName, String username) {
+        return accounts.requireOwner(username).flatMap(owner -> {
+            if (!limiter.tryAcquire("qr:" + owner, 6) || !limiter.tryAcquire("qr:site-total", 90)) {
                 return Mono.error(new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "请稍后再刷新二维码"));
             }
-            return customApis.loginQrKey(ANONYMOUS).timeout(UPSTREAM_TIMEOUT).map(r -> {
-                String upstreamKey = r.body().path("data").path("unikey").asText("");
-                if (upstreamKey.isBlank()) {
-                    throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "网易云暂时无法生成二维码");
-                }
-                String url = customApis.loginQrCreate(Map.of("key", upstreamKey))
-                    .body().path("data").path("qrurl").asText("");
-                if (url.isBlank()) {
-                    throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "网易云暂时无法生成二维码");
-                }
-                Attempt attempt = register(new Scope(accountName, owner), upstreamKey);
-                ObjectNode result = JsonNodeFactory.instance.objectNode();
-                result.put("key", attempt.key);
-                result.put("qrurl", url);
-                return result;
-            });
+            return accounts.begin(accountName, owner).flatMap(change ->
+                customApis.loginQrKey(ANONYMOUS).timeout(UPSTREAM_TIMEOUT).map(r -> {
+                    String upstreamKey = r.body().path("data").path("unikey").asText("");
+                    if (upstreamKey.isBlank()) {
+                        throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "网易云暂时无法生成二维码");
+                    }
+                    String url = customApis.loginQrCreate(Map.of("key", upstreamKey))
+                        .body().path("data").path("qrurl").asText("");
+                    if (url.isBlank()) {
+                        throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "网易云暂时无法生成二维码");
+                    }
+                    Attempt attempt = register(new Scope(accountName, owner), upstreamKey, change);
+                    ObjectNode result = JsonNodeFactory.instance.objectNode();
+                    result.put("key", attempt.key);
+                    result.put("qrurl", url);
+                    return result;
+                }));
         });
     }
 
-    private synchronized Attempt register(Scope scope, String upstreamKey) {
+    private synchronized Attempt register(Scope scope, String upstreamKey, AccountService.BindingChange change) {
         Instant now = clock.instant();
         attempts.entrySet().removeIf(e -> !e.getValue().confirming && e.getValue().expired(now));
         Attempt previous = attempts.get(scope);
@@ -101,13 +107,13 @@ public class QrLoginService {
         if (previous == null && attempts.size() >= MAX_ATTEMPTS) {
             throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "扫码请求过多，请稍后重试");
         }
-        Attempt attempt = new Attempt(upstreamKey, now.plus(TTL));
+        Attempt attempt = new Attempt(upstreamKey, now.plus(TTL), change);
         attempts.put(scope, attempt);
         return attempt;
     }
 
     public Mono<ObjectNode> check(String key, String accountName, String owner) {
-        return Mono.defer(() -> poll(new Scope(accountName, owner), key));
+        return accounts.requireOwner(owner).flatMap(active -> poll(new Scope(accountName, active), key));
     }
 
     private synchronized Mono<ObjectNode> poll(Scope scope, String key) {
@@ -118,13 +124,19 @@ public class QrLoginService {
         if (!attempt.cookies.isEmpty()) {
             return Mono.just(status(803, "已授权，请确认绑定"));
         }
-        if (attempt.polling == null) {
-            attempt.polling = customApis.loginQrCheck(attempt.upstreamKey, ANONYMOUS)
-                .timeout(UPSTREAM_TIMEOUT)
-                .map(response -> checked(scope, attempt, response.body().path("code").asInt(), response.cookies()))
-                .doFinally(signal -> pollingDone(attempt))
-                .cache();
+        if (attempt.polling != null) {
+            return attempt.polling;
         }
+        Instant now = clock.instant();
+        if (now.isBefore(attempt.nextPoll) || !limiter.tryAcquire("qr:poll-total", 180)) {
+            return Mono.just(attempt.lastStatus);
+        }
+        attempt.nextPoll = now.plus(POLL_INTERVAL);
+        attempt.polling = customApis.loginQrCheck(attempt.upstreamKey, ANONYMOUS)
+            .timeout(UPSTREAM_TIMEOUT)
+            .map(response -> checked(scope, attempt, response.body().path("code").asInt(), response.cookies()))
+            .doFinally(signal -> pollingDone(attempt))
+            .cache();
         return attempt.polling;
     }
 
@@ -142,7 +154,8 @@ public class QrLoginService {
             attempt.cookies = List.copyOf(cookies);
             return status(803, "已授权，请确认绑定");
         }
-        return status(code, code == 802 ? "请在网易云音乐 App 内确认" : "等待扫码");
+        attempt.lastStatus = status(code, code == 802 ? "请在网易云音乐 App 内确认" : "等待扫码");
+        return attempt.lastStatus;
     }
 
     private synchronized void pollingDone(Attempt attempt) {
@@ -150,7 +163,7 @@ public class QrLoginService {
     }
 
     public Mono<ObjectNode> confirm(String key, String accountName, String owner) {
-        return Mono.defer(() -> confirm(new Scope(accountName, owner), key));
+        return accounts.requireOwner(owner).flatMap(active -> confirm(new Scope(accountName, active), key));
     }
 
     private synchronized Mono<ObjectNode> confirm(Scope scope, String key) {
@@ -166,13 +179,7 @@ public class QrLoginService {
             return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "绑定正在保存"));
         }
         attempt.confirming = true;
-        return Mono.defer(() -> accounts.save(scope.accountName(), scope.owner(), attempt.cookies))
-            .flatMap(saved -> accounts.cookieOf(scope.accountName())
-                .flatMap(cookie -> customApis.loginStatus(new RequestOptions("", cookie, null, null, false)))
-                .flatMap(profile -> accounts.updateProfile(scope.accountName(), profile.body()))
-                .timeout(UPSTREAM_TIMEOUT)
-                .onErrorResume(e -> Mono.empty())
-                .defaultIfEmpty(saved))
+        return Mono.defer(() -> accounts.save(attempt.change, attempt.cookies, customApis::loginStatus))
             .map(saved -> {
                 ObjectNode result = status(200, "绑定成功");
                 result.set("account", AccountService.view(saved));

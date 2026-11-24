@@ -85,18 +85,11 @@ public class MeService {
 
     /** 当前用户的网易云身份；没有可用的账号时 403。 */
     public Mono<MeIdentity> identity(String username) {
-        String name = AccountService.userAccountName(username);
-        return accounts.find(name)
-            .flatMap(a -> accounts.cookieOf(name)
-                .filter(c -> !c.isEmpty())
-                .map(c -> new MeIdentity(username, c, uidOf(a), false))
-                .switchIfEmpty(Mono.error(() -> forbidden(UNREADABLE))))
-            .switchIfEmpty(Mono.defer(() -> accounts.siteAccountIfOwnedBy(username)
-                .flatMap(a -> accounts.siteCookieIfOwnedBy(username)
-                    .filter(c -> !c.isEmpty())
-                    .map(c -> new MeIdentity(username, c, uidOf(a), true))
-                    .switchIfEmpty(Mono.error(() -> forbidden(UNREADABLE))))))
-            .switchIfEmpty(Mono.error(() -> forbidden(UNBOUND)));
+        return accounts.binding(username)
+            .switchIfEmpty(Mono.error(() -> forbidden(UNBOUND)))
+            .flatMap(binding -> Mono.justOrEmpty(binding.credentials())
+                .map(credentials -> new MeIdentity(username, credentials.cookie(), uidOf(binding.account()), binding.site()))
+                .switchIfEmpty(Mono.error(() -> forbidden(UNREADABLE))));
     }
 
     static String uidOf(NcmAccount a) {

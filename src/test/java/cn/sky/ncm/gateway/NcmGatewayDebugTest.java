@@ -58,6 +58,7 @@ class NcmGatewayDebugTest {
         when(registry.find("album_list")).thenReturn(Optional.of(definition("album_list", "public")));
         when(settings.advanced()).thenReturn(Mono.just(AdvancedSetting.DEFAULT));
         when(limiter.tryAcquire(startsWith("ip:"), eq(120))).thenReturn(true, false);
+        when(limiter.tryAcquire("ncm:public-total", 600)).thenReturn(true);
         when(bootstrap.ready()).thenReturn(Mono.empty());
         when(resolver.resolve("public")).thenReturn(Mono.just(Identity.anonymous()));
         when(executor.execute(any(ApiDef.class), anyMap(), any(RequestOptions.class)))

@@ -1,5 +1,6 @@
 package cn.sky.ncm.page;
 
+import cn.sky.ncm.security.NcmRequestSecurity;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
@@ -66,6 +67,7 @@ public class PlayerRouter {
     }
 
     Mono<ServerResponse> play(ServerRequest r) {
+        NcmRequestSecurity.requirePrivateOrigin(r);
         String id = r.pathVariable("id");
         String level = r.queryParam("level").orElse(null);
         boolean asJson = "json".equals(r.queryParam("format").orElse(""));

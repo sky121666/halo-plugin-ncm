@@ -33,7 +33,7 @@ class NcmFinderImplTest {
         StepVerifier.create(finder.siteWeekRank()).verifyComplete();
         StepVerifier.create(finder.siteProfile()).verifyComplete();
         verify(source, never()).call(anyString(), anyMap());
-        verify(accounts, never()).find(anyString());
+        verify(accounts, never()).siteAccount();
     }
 
     @Test

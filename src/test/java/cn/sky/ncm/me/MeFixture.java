@@ -19,12 +19,13 @@ import cn.sky.ncm.page.PlayService;
 import cn.sky.ncm.security.SecretBox;
 import cn.sky.ncm.security.SecretStore;
 import cn.sky.ncm.setting.AdvancedSetting;
-import cn.sky.ncm.setting.AdvancedSetting;
 import cn.sky.ncm.setting.SettingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
 import reactor.core.publisher.Mono;
+import java.time.Instant;
+import run.halo.app.core.extension.User;
 import run.halo.app.extension.Metadata;
 import run.halo.app.extension.ReactiveExtensionClient;
 
@@ -43,9 +44,19 @@ public class MeFixture {
     public final PlayService plays = mock(PlayService.class);
     public final MeService service = new MeService(registry, executor, accounts, settings, likeCache, plays);
 
+    public static User testUser(String name) {
+        var user = new User();
+        var metadata = new Metadata();
+        metadata.setName(name);
+        metadata.setCreationTimestamp(Instant.parse("2026-11-01T00:00:00Z"));
+        user.setMetadata(metadata);
+        return user;
+    }
+
     public MeFixture() {
         when(settings.advanced()).thenReturn(Mono.just(AdvancedSetting.DEFAULT));
-        when(settings.advanced()).thenReturn(Mono.just(AdvancedSetting.DEFAULT));
+        when(client.fetch(org.mockito.ArgumentMatchers.eq(User.class), any())).thenAnswer(
+            request -> Mono.just(testUser(request.getArgument(1))));
         // 没有特别说明的账号都不存在
         when(client.fetch(org.mockito.ArgumentMatchers.eq(NcmAccount.class), any())).thenReturn(Mono.empty());
     }
@@ -64,6 +75,7 @@ public class MeFixture {
         var account = new NcmAccount();
         var metadata = new Metadata();
         metadata.setName(name);
+        metadata.setCreationTimestamp(Instant.parse("2026-11-02T00:00:00Z"));
         account.setMetadata(metadata);
         var spec = new NcmAccount.Spec();
         spec.setOwner(owner);
@@ -72,9 +84,7 @@ public class MeFixture {
         status.setUserId(ncmUid);
         account.setStatus(status);
         when(client.fetch(NcmAccount.class, name)).thenReturn(Mono.just(account));
-        when(secrets.read(AccountService.secretNameOf(name)))
-            .thenReturn(Mono.just(Map.of("cookie", "MUSIC_U=fixture-" + name)));
-        when(secrets.readVersionedValue(AccountService.secretNameOf(name), "cookie"))
+        when(secrets.readVersionedValue(AccountService.secretNameOf(name), "account", "cookie"))
             .thenReturn(Mono.just(new SecretStore.VersionedValue("MUSIC_U=fixture-" + name, "revision-" + name)));
     }
 

@@ -29,7 +29,7 @@ const saving = ref(false)
 const saveError = ref('')
 const conflict = ref(false)
 const bound = ref<boolean>()
-const canManageAccounts = computed(() => utils.permission.has(['plugin:ncm:manage']))
+const canManageAccounts = computed(() => utils.permission.has(['plugin:ncm:account']))
 
 function applySettings(data: NcmFrontstageConfig) {
   const metadata = data.settings.metadata

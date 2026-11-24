@@ -16,6 +16,7 @@ import cn.sky.ncm.finder.vo.PlaylistSummaryVo;
 import cn.sky.ncm.finder.vo.PlaylistVo;
 import cn.sky.ncm.finder.vo.SongVo;
 import cn.sky.ncm.security.RateLimiter;
+import cn.sky.ncm.setting.AdvancedSetting;
 import cn.sky.ncm.setting.PageSetting;
 import cn.sky.ncm.setting.NcmMusicPageMetadata;
 import cn.sky.ncm.setting.PlayerSetting;
@@ -49,12 +50,13 @@ class FoliaPageTest {
 
     @BeforeEach
     void setup() {
+        when(settings.advanced()).thenReturn(Mono.just(AdvancedSetting.DEFAULT));
         when(settings.page()).thenReturn(Mono.just(PageSetting.DEFAULT));
         when(settings.player()).thenReturn(Mono.just(PlayerSetting.DEFAULT));
         when(finder.strict()).thenReturn(finder);
         when(client.fetch(ConfigMap.class, SystemSetting.SYSTEM_CONFIG)).thenReturn(Mono.empty());
         var context = mock(PluginContext.class);
-        var router = new MusicPageRouter(settings, finder, mock(RateLimiter.class), context, featured,
+        var router = new MusicPageRouter(settings, finder, new RateLimiter(), context, featured,
             new FoliaPage(externalUrl, client));
         web = WebTestClient.bindToRouterFunction(router.ncmMusicPageRouter()).build();
     }

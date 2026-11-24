@@ -92,7 +92,7 @@ public class ProxySettings {
         }
         ProxySpec spec = NcmHttp.parse(selected.address());
         if (spec == null) {
-            return Mono.error(invalid("请填写不带用户名和密码的代理地址"));
+            return Mono.error(invalid("请填写不含用户名和密码的 HTTP 或 SOCKS 代理地址"));
         }
         if (selected.secret().isEmpty()) {
             return Mono.just(Optional.of(spec));
@@ -100,14 +100,14 @@ public class ProxySettings {
         return client.fetch(Secret.class, selected.secret())
             .switchIfEmpty(Mono.error(invalid("找不到出站代理密钥")))
             .flatMap(secret -> SecretStore.owned(secret)
-                ? secrets.read(selected.secret())
+                ? secrets.read(selected.secret(), PURPOSE)
                 : Mono.fromSupplier(() -> data(secret)))
             .defaultIfEmpty(Map.of())
             .map(values -> {
                 String username = values.get("username");
                 String password = values.get("password");
-                if (username == null || username.isBlank() || password == null || password.isEmpty()) {
-                    throw invalid("出站代理密钥需要 username 和 password");
+                if (values.size() != 2 || username == null || username.isBlank() || password == null || password.isEmpty()) {
+                    throw invalid("出站代理请使用仅含 username 和 password 的专用 Secret");
                 }
                 return Optional.of(spec.authenticate(username, password));
             });

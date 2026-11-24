@@ -1,5 +1,6 @@
 package cn.sky.ncm.endpoint;
 
+import cn.sky.ncm.security.NcmRequestSecurity;
 import static cn.sky.ncm.endpoint.EndpointSupport.jsonBody;
 import static cn.sky.ncm.endpoint.EndpointSupport.op;
 import static cn.sky.ncm.endpoint.EndpointSupport.privateOk;
@@ -39,7 +40,8 @@ public class NcmToolSettingsEndpoint implements CustomEndpoint {
                     .flatMap(service::save), NcmToolConfig.class),
                 b -> returns(writeHeader(jsonBody(op(b, "UpdateNcmToolSettings", TAG,
                     "保存网抑云工具设置，版本冲突时返回 409"), NcmToolConfig.class)), NcmToolConfig.class))
-            .build();
+            .build()
+            .filter(NcmRequestSecurity::privateEndpoint);
     }
 
     @Override

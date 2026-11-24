@@ -1,5 +1,6 @@
 package cn.sky.ncm.endpoint;
 
+import cn.sky.ncm.security.NcmRequestSecurity;
 import static cn.sky.ncm.endpoint.EndpointSupport.jsonBody;
 import static cn.sky.ncm.endpoint.EndpointSupport.op;
 import static cn.sky.ncm.endpoint.EndpointSupport.privateOk;
@@ -41,7 +42,8 @@ public class NcmFrontstageSettingsEndpoint implements CustomEndpoint {
                 builder -> returns(writeHeader(jsonBody(op(builder, "UpdateNcmFrontstageSettings", TAG,
                     "保存音乐页设置，旧播放模式和音量字段在写入时忽略。版本冲突时返回 409"),
                     NcmFrontstageConfig.class)), NcmFrontstageConfig.class))
-            .build();
+            .build()
+            .filter(NcmRequestSecurity::privateEndpoint);
     }
 
     @Override

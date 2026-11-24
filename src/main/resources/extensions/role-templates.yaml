@@ -38,7 +38,7 @@ rules:
     verbs: [ "create" ]
   - apiGroups: [ "uc.api.ncm.halo.run" ]
     resources: [ "binding" ]
-    verbs: [ "list", "get", "deletecollection" ]
+    verbs: [ "list", "get", "delete" ]
   - nonResourceURLs:
       - "/apis/uc.api.ncm.halo.run/v1alpha1/binding/qr-key"
       - "/apis/uc.api.ncm.halo.run/v1alpha1/binding/captcha"
@@ -80,12 +80,38 @@ metadata:
     halo.run/role-template: "true"
   annotations:
     rbac.authorization.halo.run/module: "网抑云"
-    rbac.authorization.halo.run/display-name: "网抑云管理"
+    rbac.authorization.halo.run/display-name: "网抑云精选歌单"
     rbac.authorization.halo.run/ui-permissions: '["plugin:ncm:manage"]'
 rules:
   - apiGroups: [ "console.api.ncm.halo.run" ]
-    resources: [ "site-account", "featured-playlists" ]
-    verbs: [ "list" ]
+    resources: [ "featured-playlists" ]
+    verbs: [ "list", "create", "update", "delete" ]
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "featured-playlists/resolve", "featured-playlists/reorder" ]
+    resourceNames: [ "-" ]
+    verbs: [ "create" ]
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "featured-playlists/preview" ]
+    resourceNames: [ "-" ]
+    verbs: [ "get" ]
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "featured-playlists/publish", "featured-playlists/unpublish", "featured-playlists/check" ]
+    verbs: [ "create" ]
+---
+apiVersion: v1alpha1
+kind: Role
+metadata:
+  name: plugin-ncm-role-site-account
+  labels:
+    halo.run/role-template: "true"
+  annotations:
+    rbac.authorization.halo.run/module: "网抑云"
+    rbac.authorization.halo.run/display-name: "网抑云账号与游客"
+    rbac.authorization.halo.run/ui-permissions: '["plugin:ncm:account"]'
+rules:
+  - apiGroups: [ "console.api.ncm.halo.run" ]
+    resources: [ "site-account" ]
+    verbs: [ "list", "delete" ]
   - apiGroups: [ "console.api.ncm.halo.run" ]
     resources: [ "guest-status" ]
     resourceNames: [ "-" ]
@@ -95,21 +121,8 @@ rules:
     resourceNames: [ "qr-check" ]
     verbs: [ "get" ]
   - apiGroups: [ "console.api.ncm.halo.run" ]
-    resources: [ "site-account" ]
-    verbs: [ "deletecollection" ]
-  - apiGroups: [ "console.api.ncm.halo.run" ]
-    resources: [ "site-account/qr-confirm", "featured-playlists/resolve", "featured-playlists/reorder" ]
+    resources: [ "site-account/qr-confirm" ]
     resourceNames: [ "-" ]
-    verbs: [ "create" ]
-  - apiGroups: [ "console.api.ncm.halo.run" ]
-    resources: [ "featured-playlists/preview" ]
-    resourceNames: [ "-" ]
-    verbs: [ "get" ]
-  - apiGroups: [ "console.api.ncm.halo.run" ]
-    resources: [ "featured-playlists" ]
-    verbs: [ "create", "update", "delete" ]
-  - apiGroups: [ "console.api.ncm.halo.run" ]
-    resources: [ "featured-playlists/publish", "featured-playlists/unpublish", "featured-playlists/check" ]
     verbs: [ "create" ]
   - nonResourceURLs:
       - "/apis/console.api.ncm.halo.run/v1alpha1/site-account/qr-key"

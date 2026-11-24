@@ -1,5 +1,6 @@
 package cn.sky.ncm.endpoint;
 
+import cn.sky.ncm.security.NcmRequestSecurity;
 import static cn.sky.ncm.endpoint.EndpointSupport.jsonBody;
 import static cn.sky.ncm.endpoint.EndpointSupport.op;
 import static cn.sky.ncm.endpoint.EndpointSupport.returns;
@@ -186,7 +187,8 @@ public class NcmUcMeEndpoint implements CustomEndpoint {
             .DELETE(MINE + "subscriptions/{playlistId}", r -> subscribe(r, false), b -> returns(writeHeader(pathParam(
                 op(b, "UnsubscribeMyNcmPlaylist", TAG, "取消收藏歌单"), "playlistId", "歌单 ID")),
                 NcmMeSubscriptionResult.class))
-            .build();
+            .build()
+            .filter(NcmRequestSecurity::privateEndpoint);
     }
 
     // ---------- 各接口 ----------
@@ -415,9 +417,7 @@ public class NcmUcMeEndpoint implements CustomEndpoint {
     }
 
     static void guard(ServerRequest r) {
-        if (!"1".equals(r.headers().firstHeader(REQUEST_HEADER))) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "缺少请求头 X-NCM-Request: 1");
-        }
+        NcmRequestSecurity.requireWrite(r);
     }
 
     /** 用插件自己的 Jackson 2 解析请求体（Halo 2.23+ 默认的编解码器是 Jackson 3）。 */

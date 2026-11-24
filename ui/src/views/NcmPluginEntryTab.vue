@@ -36,7 +36,7 @@ const groups = computed(() => [
         label: '账号与游客',
         description: '管理站长账号，查看游客会话。',
         route: accountsRoute,
-        permission: 'plugin:ncm:manage',
+        permission: 'plugin:ncm:account',
       },
       {
         label: '工具设置',

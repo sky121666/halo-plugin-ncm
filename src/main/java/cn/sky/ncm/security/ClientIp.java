@@ -13,7 +13,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
  * <p>
  * 只有直接连到 Halo 的地址是可信代理时，才看 X-Forwarded-For / X-Real-IP，否则任何人都能在请求头里填一个假 IP 绕过限流：
  * <ul>
- *   <li>可信代理：设置「高级 → 可信代理地址」里的 IP / 网段；没填时为本机、内网和链路本地地址（同机或同一 Docker 网络里的 Nginx 等）</li>
+ *   <li>可信代理：设置「高级 → 可信代理地址」里的 IP / 网段；没填时只信任本机环回地址</li>
  *   <li>X-Forwarded-For：从<b>右往左</b>数第 N 个（N 为「代理层数」，默认 1）。左边的值是客户端自己能填的，右边的是代理追加的</li>
  *   <li>没有 X-Forwarded-For 时用 X-Real-IP</li>
  *   <li>请求头里的值必须是 IP 字面量，否则忽略（不做 DNS 解析）</li>
@@ -102,19 +102,14 @@ public final class ClientIp {
         }
     }
 
-    /** 直接连接的地址是否可信代理。configured 为空时：本机、内网、链路本地、IPv6 唯一本地地址。 */
+    /** 直接连接的地址是否可信代理。configured 为空时只信任环回地址。 */
     static boolean trustedProxy(String peer, List<String> configured) {
         InetAddress a = parse(peer);
         if (a == null) {
             return false;
         }
         if (configured.isEmpty()) {
-            if (a.isLoopbackAddress() || a.isSiteLocalAddress() || a.isLinkLocalAddress()) {
-                return true;
-            }
-            byte[] b = a.getAddress();
-            // fc00::/7
-            return b.length == 16 && (b[0] & 0xfe) == 0xfc;
+            return a.isLoopbackAddress();
         }
         for (String c : configured) {
             if (inCidr(a, c)) {

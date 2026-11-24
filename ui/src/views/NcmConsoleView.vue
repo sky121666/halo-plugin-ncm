@@ -24,12 +24,13 @@ const route = useRoute()
 const router = useRouter()
 const canViewPlugin = computed(() => utils.permission.has(['system:plugins:view']))
 const canManageFeatured = computed(() => utils.permission.has(['plugin:ncm:manage']))
+const canManageAccounts = computed(() => utils.permission.has(['plugin:ncm:account']))
 const canEditSettings = computed(() => utils.permission.has(['system:plugins:manage']))
 const canDebug = computed(() => utils.permission.has(['plugin:ncm:debug']))
 const tabs = computed(() => [
   ...(canEditSettings.value ? [{ id: musicPageTabId, label: '音乐首页' }] : []),
   ...(canManageFeatured.value ? [{ id: featuredTabId, label: '精选歌单' }] : []),
-  ...(canManageFeatured.value ? [{ id: accountsTabId, label: '账号与游客' }] : []),
+  ...(canManageAccounts.value ? [{ id: accountsTabId, label: '账号与游客' }] : []),
   ...(canEditSettings.value ? [{ id: toolSettingsTabId, label: '工具设置' }] : []),
 ])
 const activeTab = computed(

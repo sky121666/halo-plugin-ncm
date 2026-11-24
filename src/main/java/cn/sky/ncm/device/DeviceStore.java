@@ -60,7 +60,7 @@ public class DeviceStore {
 
     Mono<Void> doLoad() {
         return client.fetch(NcmDevice.class, NAME)
-            .flatMap(d -> secrets.read(SECRET_NAME)
+            .flatMap(d -> secrets.read(SECRET_NAME, PURPOSE)
                 .onErrorResume(SecretBox.SecretException.class, e -> {
                     lastError = "设备 Secret 无法解密（加密密钥已更换），已重新获取游客身份";
                     return Mono.just(Map.of());

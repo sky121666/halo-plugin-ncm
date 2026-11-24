@@ -1,5 +1,6 @@
 package cn.sky.ncm.endpoint;
 
+import cn.sky.ncm.security.NcmRequestSecurity;
 import static cn.sky.ncm.endpoint.EndpointSupport.jsonBody;
 import static cn.sky.ncm.endpoint.EndpointSupport.op;
 import static cn.sky.ncm.endpoint.EndpointSupport.returns;
@@ -109,7 +110,8 @@ public class NcmFeaturedEndpoint implements CustomEndpoint {
             .POST(BASE + "/{name}/check", r -> guarded(r, () -> item(service.check(name(r)))),
                 b -> returns(nameParam(op(b, "CheckNcmFeaturedPlaylist", TAG,
                     "立即重新核对：能否公开、两种视角的可播放预估")), NcmFeaturedItem.class))
-            .build();
+            .build()
+            .filter(NcmRequestSecurity::privateEndpoint);
     }
 
     @Override
@@ -201,16 +203,13 @@ public class NcmFeaturedEndpoint implements CustomEndpoint {
 
     /** 写操作（GET / HEAD 以外）先检查请求头 X-NCM-Request 等于 1，缺失或不对时返回 403。 */
     static Mono<ServerResponse> guarded(ServerRequest r, Supplier<Mono<ServerResponse>> handler) {
-        HttpMethod m = r.method();
-        if (HttpMethod.GET.equals(m) || HttpMethod.HEAD.equals(m)) {
-            return Mono.defer(handler);
-        }
-        String h = r.headers().firstHeader(REQUEST_HEADER);
-        if (!"1".equals(h == null ? null : h.trim())) {
-            return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN,
-                "缺少请求头 " + REQUEST_HEADER + ": 1（防止跨站请求伪造）"));
-        }
-        return Mono.defer(handler);
+        return Mono.defer(() -> {
+            HttpMethod method = r.method();
+            if (!HttpMethod.GET.equals(method) && !HttpMethod.HEAD.equals(method)) {
+                NcmRequestSecurity.requireWrite(r);
+            }
+            return handler.get();
+        });
     }
 
     static String name(ServerRequest r) {

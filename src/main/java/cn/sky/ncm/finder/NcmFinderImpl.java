@@ -365,7 +365,7 @@ public class NcmFinderImpl implements NcmFinder {
 
     /** 站长账号的网易云 UID；没绑定时为空。 */
     Mono<String> siteUid() {
-        return accounts.find(AccountService.SITE)
+        return accounts.siteAccount()
             .filter(a -> a.getStatus() != null && a.getStatus().getUserId() != null && a.getStatus().getUserId() > 0)
             .map(a -> String.valueOf(a.getStatus().getUserId()));
     }

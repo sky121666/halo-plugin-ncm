@@ -83,7 +83,10 @@ public class MusicPageRouter {
             .andRoute(GET("/music/artist/" + ID_PATTERN), this::artist)
             .andRoute(GET("/music/artist/" + ID_PATTERN + "/{section:profile|songs|albums}"), this::artistSection)
             .andRoute(GET("/music/songs"), this::songs)
-            .andRoute(GET("/music/song/" + ID_PATTERN), this::song);
+            .andRoute(GET("/music/song/" + ID_PATTERN), this::song)
+            .filter((request, next) -> settings.advanced().flatMap(advanced ->
+                NcmGateway.allowPublic(request, advanced, limiter) ? next.handle(request)
+                    : json(HttpStatus.TOO_MANY_REQUESTS, Map.of("error", "rate-limited"), NO_STORE)));
     }
 
     // ---------- 页面 ----------

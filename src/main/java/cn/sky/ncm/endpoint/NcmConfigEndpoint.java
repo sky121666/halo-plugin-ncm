@@ -1,5 +1,6 @@
 package cn.sky.ncm.endpoint;
 
+import cn.sky.ncm.security.NcmRequestSecurity;
 import static cn.sky.ncm.endpoint.EndpointSupport.REQUEST_HEADER;
 import static cn.sky.ncm.endpoint.EndpointSupport.jsonBody;
 import static cn.sky.ncm.endpoint.EndpointSupport.op;
@@ -19,14 +20,12 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.springdoc.webflux.core.fn.SpringdocRouteBuilder;
 import org.springframework.core.io.buffer.DataBufferLimitException;
 import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -100,6 +99,7 @@ public class NcmConfigEndpoint implements CustomEndpoint {
     }
 
     private Mono<ServerResponse> mine(ServerRequest request) {
+        NcmRequestSecurity.requirePrivateOrigin(request);
         return privateOk(authentication().flatMap(auth -> preferences.personal(request.pathVariable(CLIENT_ID),
             auth.getName()).flatMap(saved -> canViewDiagnostics(auth).map(debug ->
                 new Mine(saved.profileKey(), saved.snapshot(), canPublish(auth), debug)))), Mine.class);
@@ -149,9 +149,7 @@ public class NcmConfigEndpoint implements CustomEndpoint {
     }
 
     private <T extends VersionedInput> Mono<T> readWrite(ServerRequest request, String username, Class<T> type) {
-        if (!"1".equals(request.headers().firstHeader(REQUEST_HEADER)) || !sameOrigin(request)) {
-            return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "请从本站页面保存设置"));
-        }
+        NcmRequestSecurity.requireBrowserWrite(request);
         if (request.headers().contentType().filter(MediaType.APPLICATION_JSON::isCompatibleWith).isEmpty()) {
             return Mono.error(new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "请提交 JSON 配置"));
         }
@@ -187,27 +185,6 @@ public class NcmConfigEndpoint implements CustomEndpoint {
         } catch (java.io.IOException error) {
             throw new IllegalStateException("无法读取配置 JSON", error);
         }
-    }
-
-    private static boolean sameOrigin(ServerRequest request) {
-        var origins = request.headers().header(HttpHeaders.ORIGIN);
-        if (origins.size() != 1) {
-            return false;
-        }
-        try {
-            URI origin = URI.create(origins.getFirst());
-            URI target = request.uri();
-            return origin.getHost() != null && origin.getHost().equalsIgnoreCase(target.getHost())
-                && target.getScheme().equalsIgnoreCase(origin.getScheme()) && port(origin) == port(target)
-                && origin.getRawUserInfo() == null && origin.getRawPath().isEmpty()
-                && origin.getRawQuery() == null && origin.getRawFragment() == null;
-        } catch (IllegalArgumentException error) {
-            return false;
-        }
-    }
-
-    private static int port(URI uri) {
-        return uri.getPort() != -1 ? uri.getPort() : "https".equalsIgnoreCase(uri.getScheme()) ? 443 : 80;
     }
 
     @Override

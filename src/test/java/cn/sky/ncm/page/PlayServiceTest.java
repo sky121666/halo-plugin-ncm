@@ -33,6 +33,8 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
+import java.time.Instant;
+import run.halo.app.core.extension.User;
 import run.halo.app.extension.Metadata;
 import run.halo.app.extension.ReactiveExtensionClient;
 import run.halo.app.extension.Secret;
@@ -135,8 +137,7 @@ class PlayServiceTest {
         assertTrue(visitor.identity().cookie().isEmpty());
         verifyNoInteractions(accounts);
 
-        when(accounts.credentialsOf("user-qa")).thenReturn(Mono.empty());
-        when(accounts.siteCredentialsIfOwnedBy("qa")).thenReturn(Mono.empty());
+        when(accounts.binding("qa")).thenReturn(Mono.empty());
         var principal = ReactiveSecurityContextHolder.withAuthentication(
             new TestingAuthenticationToken("qa", null, "authenticated"));
         assertEquals(visitor, service.who().contextWrite(principal).block(timeout));
@@ -154,13 +155,18 @@ class PlayServiceTest {
         var account = new NcmAccount();
         var metadata = new Metadata();
         metadata.setName("user-qa");
+        metadata.setCreationTimestamp(Instant.parse("2026-11-02T00:00:00Z"));
         account.setMetadata(metadata);
+        var spec = new NcmAccount.Spec();
+        spec.setOwner("qa");
+        account.setSpec(spec);
+        when(client.fetch(User.class, "qa")).thenReturn(Mono.just(cn.sky.ncm.me.MeFixture.testUser("qa")));
         when(client.fetch(NcmAccount.class, "user-qa")).thenReturn(Mono.just(account));
         var credential = new AtomicReference<>(secret("first-version"));
         when(client.fetch(Secret.class, "ncm-account-user-qa")).thenAnswer(
             invocation -> Mono.just(credential.get()));
-        when(box.decrypt("first-version")).thenReturn("MUSIC_U=first");
-        when(box.decrypt("second-version")).thenReturn("MUSIC_U=second");
+        when(box.decrypt("enc:v1:first-version")).thenReturn("MUSIC_U=first");
+        when(box.decrypt("enc:v1:second-version")).thenReturn("MUSIC_U=second");
         var first = new SongUrl(ok(json("{'code':200}")), "https://m701.music.126.net/first.mp3",
             json("{'code':200,'url':'https://m701.music.126.net/first.mp3'}"));
         var second = new SongUrl(ok(json("{'code':200}")), "https://m701.music.126.net/second.mp3",
@@ -194,9 +200,10 @@ class PlayServiceTest {
         var secret = new Secret();
         var metadata = new Metadata();
         metadata.setName("ncm-account-user-qa");
-        metadata.setLabels(Map.of(SecretStore.LABEL_PLUGIN, SecretStore.PLUGIN_NAME));
+        metadata.setLabels(Map.of(SecretStore.LABEL_PLUGIN, SecretStore.PLUGIN_NAME,
+            SecretStore.LABEL_PURPOSE, "account"));
         secret.setMetadata(metadata);
-        secret.setStringData(Map.of("cookie", version));
+        secret.setStringData(Map.of("cookie", "enc:v1:" + version));
         return secret;
     }
 

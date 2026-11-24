@@ -16,7 +16,7 @@ spec:
           name: proxy
           label: 代理地址
           placeholder: http://proxy:7890
-          help: 填写 Halo 服务端可访问的地址。代理地址和认证密钥都留空时直连。
+          help: 支持 HTTP 和 SOCKS 代理。地址和认证密钥都留空时直连。私网或认证代理须在部署环境允许。
           validation: matches:/^[^@]*$/
           validation-messages:
             matches: 请从地址中移除用户名和密码
@@ -24,21 +24,13 @@ spec:
         - $formkit: secret
           name: proxySecret
           label: 代理认证密钥
-          help: 代理要求认证时选择 Secret。改为直连时清空此项。
+          help: 使用仅含 username 和 password 的专用 Secret。改为直连时清空此项。
           descriptionPreset: 网易云出站代理
           requiredKeys:
             - key: username
               help: 代理用户名
             - key: password
               help: 代理密码
-        - $formkit: text
-          name: realIp
-          label: 发往网易云的固定 IP 请求头
-          help: 设置出站请求的 X-Real-IP 和 X-Forwarded-For。
-        - $formkit: switch
-          name: randomCnIp
-          label: 出站请求使用随机中国大陆 IP
-          help: 固定 IP 请求头留空时生效。
         - $el: h3
           attrs:
             class: mb-3 mt-6 max-w-lg border-t border-gray-200 pt-4 text-sm font-medium
@@ -51,7 +43,7 @@ spec:
         - $formkit: textarea
           name: trustedProxies
           label: 可信代理 IP 或网段
-          help: 填写与 Halo 直连的反向代理地址。逗号或换行分隔，留空信任本机与内网。
+          help: 填写与 Halo 直连的反向代理地址。逗号或换行分隔，留空仅信任本机环回地址。
           value: ''
         - $formkit: number
           name: proxyHops

@@ -15,7 +15,7 @@ const route = useRoute()
 const router = useRouter()
 const canMaintain = computed(() => utils.permission.has(['system:plugins:manage']))
 const canDebug = computed(() => utils.permission.has(['plugin:ncm:debug']))
-const canManageAccounts = computed(() => utils.permission.has(['plugin:ncm:manage']))
+const canManageAccounts = computed(() => utils.permission.has(['plugin:ncm:account']))
 const legacyLink = computed(
   () =>
     route.name === 'PluginDetail' &&

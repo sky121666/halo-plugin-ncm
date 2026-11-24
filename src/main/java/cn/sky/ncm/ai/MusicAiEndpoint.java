@@ -1,5 +1,6 @@
 package cn.sky.ncm.ai;
 
+import cn.sky.ncm.security.NcmRequestSecurity;
 import static org.springdoc.core.fn.builders.requestbody.Builder.requestBodyBuilder;
 import static org.springdoc.core.fn.builders.apiresponse.Builder.responseBuilder;
 import static org.springdoc.webflux.core.fn.SpringdocRouteBuilder.route;
@@ -13,12 +14,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import java.net.URI;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBufferLimitException;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.CacheControl;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -79,7 +78,8 @@ public class MusicAiEndpoint implements CustomEndpoint {
                     .description("逐行划分歌词词语，保留原文")
                     .requestBody(requestBodyBuilder().required(true).implementation(SegmentationInput.class))
                     .response(responseBuilder().implementation(Segmentation.class)))
-            .build();
+            .build()
+            .filter(NcmRequestSecurity::privateEndpoint);
     }
 
     private static Mono<ServerResponse> segmentationTruncated() {
@@ -106,35 +106,12 @@ public class MusicAiEndpoint implements CustomEndpoint {
 
     private static Mono<Authentication> writer(ServerRequest request) {
         return authentication().flatMap(user -> {
-            if (!"1".equals(request.headers().firstHeader("X-NCM-Request")) || !sameOrigin(request)) {
-                return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "请从本站音乐页发起请求"));
-            }
+            NcmRequestSecurity.requireBrowserWrite(request);
             if (request.headers().contentType().filter(MediaType.APPLICATION_JSON::isCompatibleWith).isEmpty()) {
                 return Mono.error(new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "请提交 JSON"));
             }
             return Mono.just(user);
         });
-    }
-
-    private static boolean sameOrigin(ServerRequest request) {
-        var origins = request.headers().header(HttpHeaders.ORIGIN);
-        if (origins.size() != 1) {
-            return false;
-        }
-        try {
-            URI origin = URI.create(origins.getFirst());
-            URI target = request.uri();
-            return origin.getHost() != null && origin.getHost().equalsIgnoreCase(target.getHost())
-                && target.getScheme().equalsIgnoreCase(origin.getScheme()) && port(origin) == port(target)
-                && origin.getRawUserInfo() == null && origin.getRawPath().isEmpty()
-                && origin.getRawQuery() == null && origin.getRawFragment() == null;
-        } catch (IllegalArgumentException error) {
-            return false;
-        }
-    }
-
-    private static int port(URI uri) {
-        return uri.getPort() != -1 ? uri.getPort() : "https".equalsIgnoreCase(uri.getScheme()) ? 443 : 80;
     }
 
     private static <T> Mono<T> readBody(ServerRequest request, Class<T> type) {

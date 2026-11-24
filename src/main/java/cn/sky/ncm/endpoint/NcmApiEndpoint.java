@@ -1,5 +1,6 @@
 package cn.sky.ncm.endpoint;
 
+import cn.sky.ncm.security.NcmRequestSecurity;
 import static cn.sky.ncm.endpoint.EndpointSupport.anyBody;
 import static cn.sky.ncm.endpoint.EndpointSupport.apiName;
 import static cn.sky.ncm.endpoint.EndpointSupport.apiNameParam;
@@ -55,13 +56,13 @@ public class NcmApiEndpoint implements CustomEndpoint {
             .GET("public/{name}", r -> invoke(r, PUBLIC), b -> returnsAny(apiNameParam(
                 op(b, "InvokePublicNcmApi", TAG, "调用公开等级的网易云接口（匿名可用）"))))
             .POST("public/{name}", r -> invoke(r, PUBLIC), b -> returnsAny(anyBody(apiNameParam(
-                op(b, "InvokePublicNcmApiByPost", TAG, "以 POST 方式调用公开等级的网易云接口（匿名可用）")))))
-            .GET("personal/{name}", r -> invoke(r, PERSONAL_READ), b -> returnsAny(apiNameParam(
+                op(b, "InvokePublicNcmApiByPost", TAG, "用 POST 调用公开能力，需要相应 Halo 权限")))))
+            .GET("personal/{name}", r -> NcmRequestSecurity.privateEndpoint(r, request -> invoke(request, PERSONAL_READ)), b -> returnsAny(apiNameParam(
                 op(b, "InvokePersonalNcmApi", TAG, "调用本人绑定账号的只读接口"))))
             .POST("personal/{name}", r -> EndpointSupport.writeUsername(r).then(Mono.defer(() -> invoke(r, PERSONAL))),
                 b -> returnsAny(anyBody(apiNameParam(
                 op(b, "InvokePersonalNcmApiByPost", TAG,
-                    "以 POST 方式调用个人或写操作等级的网易云接口；写操作必须带请求头 X-NCM-Request: 1（防跨站请求伪造），"
+                    "调用本人账号的读写能力，需 Halo 授权并通过本站写入校验。"
                         + "上传类接口用 multipart，文件字段为 songFile / imgFile")))))
             .GET("meta/apis", this::listApis, b -> returns(
                 op(b, "ListNcmApis", TAG, "列出全部网易云接口的等级和移植状态"), NcmApiMetaList.class))

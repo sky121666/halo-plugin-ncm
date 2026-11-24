@@ -1,5 +1,6 @@
 package cn.sky.ncm.endpoint;
 
+import cn.sky.ncm.security.NcmRequestSecurity;
 import static cn.sky.ncm.endpoint.EndpointSupport.apiName;
 import static cn.sky.ncm.endpoint.EndpointSupport.apiNameParam;
 import static cn.sky.ncm.endpoint.EndpointSupport.captchaBody;
@@ -96,14 +97,14 @@ public class NcmConsoleEndpoint implements CustomEndpoint {
             .POST("site-account/-/qr-confirm", this::confirm, b -> returns(writeHeader(jsonBody(
                 op(b, "ConfirmNcmSiteAccountQr", TAG_ACCOUNT, "确认并保存站长账号的扫码绑定"), NcmQrConfirmRequest.class)),
                 NcmLoginResult.class))
-            .POST("site-account/captcha", r -> privateOk(writeUsername(r).then(captchaBody(r))
-                    .flatMap(phoneLogin::sendCaptcha), NcmLoginResult.class),
+            .POST("site-account/captcha", r -> privateOk(writeUsername(r).flatMap(u -> captchaBody(r)
+                    .flatMap(p -> phoneLogin.sendCaptcha(p, u, r))), NcmLoginResult.class),
                 b -> returns(writeHeader(jsonBody(op(b, "SendNcmSiteAccountCaptcha", TAG_ACCOUNT, "发送短信验证码"),
                     NcmCaptchaRequest.class)), NcmLoginResult.class))
             .POST("site-account/cellphone", this::cellphone, b -> returns(writeHeader(jsonBody(
                 op(b, "BindNcmSiteAccountByCellphone", TAG_ACCOUNT, "用手机号（验证码或密码）登录网易云，并保存为站长账号"),
                 NcmCellphoneLoginRequest.class)), NcmLoginResult.class))
-            .DELETE("site-account", r -> noContent(writeUsername(r).then(Mono.defer(() -> accounts.delete(AccountService.SITE)))),
+            .DELETE("site-account", r -> noContent(writeUsername(r).flatMap(u -> accounts.revoke(AccountService.SITE, u))),
                 b -> returnsNothing(writeHeader(op(b, "DeleteNcmSiteAccount", TAG_ACCOUNT, "解绑站长网易云账号"))))
             // ---------- 设备 ----------
             .GET("guest-status/-", this::guestStatus, b -> returns(
@@ -117,7 +118,8 @@ public class NcmConsoleEndpoint implements CustomEndpoint {
             // ---------- 调试 ----------
             .GET("calls/{name}", this::call, b -> returnsAny(apiNameParam(
                 op(b, "DebugCallNcmApi", TAG_DEBUG, "使用游客身份调试常用只读接口"))))
-            .build();
+            .build()
+            .filter(NcmRequestSecurity::privateEndpoint);
     }
 
     Mono<ServerResponse> guestStatus(ServerRequest r) {
@@ -132,9 +134,7 @@ public class NcmConsoleEndpoint implements CustomEndpoint {
     }
 
     Mono<ServerResponse> siteAccount(ServerRequest r) {
-        return privateOk(accounts.find(AccountService.SITE)
-            .flatMap(accounts::bindingView)
-            .defaultIfEmpty(AccountService.view(null)), NcmAccountView.class);
+        return privateOk(accounts.siteBindingView(), NcmAccountView.class);
     }
 
     Mono<ServerResponse> check(ServerRequest r) {
@@ -149,7 +149,7 @@ public class NcmConsoleEndpoint implements CustomEndpoint {
 
     Mono<ServerResponse> cellphone(ServerRequest r) {
         return privateOk(writeUsername(r).flatMap(owner -> cellphoneBody(r)
-            .flatMap(p -> phoneLogin.login(p, AccountService.SITE, owner))), NcmLoginResult.class);
+            .flatMap(p -> phoneLogin.login(p, AccountService.SITE, owner, r))), NcmLoginResult.class);
     }
 
     Mono<ServerResponse> call(ServerRequest r) {

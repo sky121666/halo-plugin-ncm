@@ -146,13 +146,19 @@ public class NcmGateway {
 
     /** 公开接口按 IP 限流，个人和写操作按 Halo 用户名限流。 */
     Mono<Boolean> rateLimit(ServerRequest request, ApiDef def, AdvancedSetting adv) {
-        String ip = clientIp(request, adv);
         if ("public".equals(def.tier())) {
-            return Mono.fromSupplier(() -> limiter.tryAcquire("ip:" + ip, adv.publicLimit()));
+            return Mono.fromSupplier(() -> allowPublic(request, adv, limiter));
         }
+        String ip = clientIp(request, adv);
         return IdentityResolver.currentUsername()
             .map(u -> limiter.tryAcquire("user:" + u, adv.userLimit()))
             .switchIfEmpty(Mono.fromSupplier(() -> limiter.tryAcquire("ip:" + ip, adv.publicLimit())));
+    }
+
+    public static boolean allowPublic(ServerRequest request, AdvancedSetting advanced, RateLimiter limiter) {
+        String ip = clientIp(request, advanced);
+        return limiter.tryAcquire("ip:" + ip, advanced.publicLimit())
+            && limiter.tryAcquire("ncm:public-total", 600);
     }
 
     /** 访客 IP：只有请求来自可信代理时才看 X-Forwarded-For（从右往左取）/ X-Real-IP，见 {@link ClientIp}。 */
@@ -242,7 +248,8 @@ public class NcmGateway {
                 .header("Cache-Control", "no-store").build();
         }
         // 自己序列化成字符串：Halo 2.23+（Spring Boot 4）默认用 Jackson 3 编码，不认 Jackson 2 的 JsonNode
-        return ServerResponse.status(r.status()).contentType(MediaType.APPLICATION_JSON)
+        return ServerResponse.status(r.status()).cacheControl(CacheControl.noStore().cachePrivate())
+            .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(NcmClient.toJson(r.body()));
     }
 

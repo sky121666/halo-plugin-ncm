@@ -1,16 +1,20 @@
 package cn.sky.ncm.client;
 
 import cn.sky.ncm.setting.ProxySettings;
+import io.netty.channel.ChannelOption;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunctions;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.ProxyProvider;
 
@@ -34,14 +38,21 @@ public class NcmHttp {
         .build();
 
     private final ProxySettings proxy;
+    private final String trustedProxyAuthorities;
     private final WebClient client;
     private ProxySpec currentProxy;
-    private ExchangeFunction connector;
+    private Mono<ExchangeFunction> connector;
 
+    @Autowired
     public NcmHttp(ProxySettings proxy) {
+        this(proxy, System.getenv("NCM_TRUSTED_OUTBOUND_PROXIES"));
+    }
+
+    NcmHttp(ProxySettings proxy, String trustedProxyAuthorities) {
         this.proxy = proxy;
+        this.trustedProxyAuthorities = trustedProxyAuthorities;
         this.client = WebClient.builder().exchangeStrategies(STRATEGIES)
-            .exchangeFunction(request -> proxy.current().flatMap(value -> select(value).exchange(request)))
+            .exchangeFunction(request -> proxy.current().flatMap(this::select).flatMap(selected -> selected.exchange(request)))
             .build();
     }
 
@@ -53,22 +64,29 @@ public class NcmHttp {
         return proxy.status();
     }
 
-    private synchronized ExchangeFunction select(Optional<ProxySpec> selected) {
+    private synchronized Mono<ExchangeFunction> select(Optional<ProxySpec> selected) {
         ProxySpec spec = selected.orElse(null);
         if (connector == null || !Objects.equals(spec, currentProxy)) {
-            HttpClient http = HttpClient.create().followRedirect(false).responseTimeout(Duration.ofMinutes(5));
-            if (spec != null) {
-                http = http.proxy(builder -> {
-                    var b = builder.type(spec.type()).host(spec.host()).port(spec.port());
-                    if (spec.username() != null) {
-                        b.username(spec.username()).password(user -> spec.password());
-                    }
-                });
-            }
-            connector = ExchangeFunctions.create(new ReactorClientHttpConnector(http), STRATEGIES);
+            connector = spec == null ? Mono.just(connector(null, null))
+                : Mono.defer(() -> NcmEgress.proxyAddress(spec, trustedProxyAuthorities)).map(address -> connector(spec, address))
+                    .cache(Duration.ofMinutes(1));
             currentProxy = spec;
         }
         return connector;
+    }
+
+    private static ExchangeFunction connector(ProxySpec spec, InetSocketAddress address) {
+        HttpClient http = HttpClient.create().followRedirect(false)
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 8000).responseTimeout(Duration.ofMinutes(5));
+        if (spec != null) {
+            http = http.proxy(builder -> {
+                var proxy = builder.type(spec.type()).address(address).connectTimeoutMillis(8000);
+                if (spec.username() != null) {
+                    proxy.username(spec.username()).password(user -> spec.password());
+                }
+            });
+        }
+        return ExchangeFunctions.create(new ReactorClientHttpConnector(http), STRATEGIES);
     }
 
     /** 只解析地址。认证信息由 Halo Secret 单独提供。 */
@@ -77,7 +95,7 @@ public class NcmHttp {
             URI uri = URI.create(value.trim());
             String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(java.util.Locale.ROOT);
             ProxyProvider.Proxy type = switch (scheme) {
-                case "http", "https" -> ProxyProvider.Proxy.HTTP;
+                case "http" -> ProxyProvider.Proxy.HTTP;
                 case "socks", "socks5", "socks5h" -> ProxyProvider.Proxy.SOCKS5;
                 case "socks4" -> ProxyProvider.Proxy.SOCKS4;
                 default -> null;

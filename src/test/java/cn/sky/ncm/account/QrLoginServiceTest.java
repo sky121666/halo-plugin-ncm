@@ -8,7 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import cn.sky.ncm.api.CustomApis;
@@ -19,6 +19,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,10 @@ class QrLoginServiceTest {
     private final AtomicReference<Instant> now = new AtomicReference<>(Instant.parse("2026-11-21T00:00:00Z"));
     private final QrLoginService service = new QrLoginService(upstream, accounts, new RateLimiter(), clock);
 
+    private final AccountService.Owner alice = new AccountService.Owner("alice", Instant.EPOCH);
+    private final AccountService.BindingChange change =
+        new AccountService.BindingChange("user-alice", alice, Optional.empty());
+
     @BeforeEach
     void setup() throws Exception {
         when(clock.instant()).thenAnswer(invocation -> now.get());
@@ -48,7 +53,9 @@ class QrLoginServiceTest {
             "{\"data\":{\"qrurl\":\"https://music.163.com/login?codekey=upstream-fixture\"}}", List.of()));
         when(upstream.loginQrCheck(eq("upstream-fixture"), any())).thenReturn(Mono.just(answer(
             "{\"code\":803}", COOKIES)));
-        when(accounts.cookieOf("user-alice")).thenReturn(Mono.empty());
+        when(accounts.requireOwner("alice")).thenReturn(Mono.just(alice));
+        when(accounts.requireOwner("bob")).thenReturn(Mono.just(new AccountService.Owner("bob", Instant.EPOCH)));
+        when(accounts.begin("user-alice", alice)).thenReturn(Mono.just(change));
     }
 
     @Test
@@ -63,12 +70,12 @@ class QrLoginServiceTest {
         assertTrue(status.path("cookie").isMissingNode());
         assertEquals(803, service.check(key, "user-alice", "alice").block(WAIT).path("code").asInt());
         verify(upstream, times(1)).loginQrCheck(eq("upstream-fixture"), any());
-        verifyNoInteractions(accounts);
+        verify(accounts, never()).save(any(), any(), any());
 
-        when(accounts.save("user-alice", "alice", COOKIES)).thenReturn(Mono.just(account()));
+        when(accounts.save(eq(change), eq(COOKIES), any())).thenReturn(Mono.just(account()));
         assertEquals(200, service.confirm(key, "user-alice", "alice").block(WAIT).path("code").asInt());
         rejected(service.confirm(key, "user-alice", "alice"), HttpStatus.GONE);
-        verify(accounts, times(1)).save("user-alice", "alice", COOKIES);
+        verify(accounts, times(1)).save(eq(change), eq(COOKIES), any());
     }
 
     @Test
@@ -80,7 +87,7 @@ class QrLoginServiceTest {
         now.updateAndGet(time -> time.plus(QrLoginService.TTL));
         assertEquals(800, service.check(key, "user-alice", "alice").block(WAIT).path("code").asInt());
         rejected(service.confirm(key, "user-alice", "alice"), HttpStatus.GONE);
-        verifyNoInteractions(accounts);
+        verify(accounts, never()).save(any(), any(), any());
     }
 
     @Test
@@ -88,14 +95,14 @@ class QrLoginServiceTest {
         String key = start("user-alice", "alice");
         service.check(key, "user-alice", "alice").block(WAIT);
         Sinks.One<NcmAccount> pending = Sinks.one();
-        when(accounts.save("user-alice", "alice", COOKIES)).thenReturn(pending.asMono());
+        when(accounts.save(eq(change), eq(COOKIES), any())).thenReturn(pending.asMono());
 
         StepVerifier.create(service.confirm(key, "user-alice", "alice"))
             .then(() -> rejected(service.confirm(key, "user-alice", "alice"), HttpStatus.CONFLICT))
             .then(() -> assertEquals(Sinks.EmitResult.OK, pending.tryEmitValue(account())))
             .assertNext(result -> assertEquals(200, result.path("code").asInt()))
             .verifyComplete();
-        verify(accounts, times(1)).save("user-alice", "alice", COOKIES);
+        verify(accounts, times(1)).save(eq(change), eq(COOKIES), any());
     }
 
     private String start(String account, String user) {

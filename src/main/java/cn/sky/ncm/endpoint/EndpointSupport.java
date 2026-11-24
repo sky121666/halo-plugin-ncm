@@ -1,5 +1,6 @@
 package cn.sky.ncm.endpoint;
 
+import cn.sky.ncm.security.NcmRequestSecurity;
 import static org.springdoc.core.fn.builders.apiresponse.Builder.responseBuilder;
 import static org.springdoc.core.fn.builders.content.Builder.contentBuilder;
 import static org.springdoc.core.fn.builders.parameter.Builder.parameterBuilder;
@@ -94,9 +95,7 @@ final class EndpointSupport {
 
     static Mono<String> writeUsername(ServerRequest r) {
         return Mono.defer(() -> {
-            if (!"1".equals(r.headers().firstHeader(REQUEST_HEADER))) {
-                return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "请求来源无效，请重新打开页面"));
-            }
+            NcmRequestSecurity.requireWrite(r);
             return username();
         });
     }

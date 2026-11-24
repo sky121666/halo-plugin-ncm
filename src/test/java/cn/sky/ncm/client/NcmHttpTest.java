@@ -51,7 +51,7 @@ class NcmHttpTest {
             var endpoint = NcmHttp.parse("http://127.0.0.1:" + proxy.getLocalPort());
             when(settings.current()).thenReturn(Mono.just(Optional.of(endpoint.authenticate("fixture", "example"))));
 
-            String response = new NcmHttp(settings).current().get().uri("http://ncm-fixture.invalid/")
+            String response = new NcmHttp(settings, endpoint.host() + ":" + endpoint.port()).current().get().uri("http://ncm-fixture.invalid/")
                 .retrieve().bodyToMono(String.class).block(Duration.ofSeconds(5));
 
             assertEquals("ok", response);

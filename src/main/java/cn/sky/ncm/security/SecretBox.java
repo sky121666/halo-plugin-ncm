@@ -3,6 +3,7 @@ package cn.sky.ncm.security;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
+import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -11,6 +12,7 @@ import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -145,17 +147,19 @@ public class SecretBox {
         Files.createDirectories(file.getParent());
         byte[] k = new byte[32];
         RANDOM.nextBytes(k);
-        Files.writeString(file, Base64.getEncoder().encodeToString(k), StandardOpenOption.CREATE_NEW);
-        try {
-            Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-------"));
-        } catch (UnsupportedOperationException | IOException ignored) {
-            // Windows 等不支持 POSIX 权限
+        String encoded = Base64.getEncoder().encodeToString(k);
+        try (var channel = Files.newByteChannel(file, Set.of(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE),
+                PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+             var writer = Channels.newWriter(channel, UTF_8)) {
+            writer.write(encoded);
+        } catch (UnsupportedOperationException ignored) {
+            Files.writeString(file, encoded, StandardOpenOption.CREATE_NEW);
         }
         log.info("[ncm] 已生成 Cookie 加密密钥: {}（请和数据库一起备份，丢失后需要重新绑定账号）", file);
         return k;
     }
 
-    static byte[] sha256(String s) {
+    public static byte[] sha256(String s) {
         try {
             return MessageDigest.getInstance("SHA-256").digest(s.getBytes(UTF_8));
         } catch (GeneralSecurityException e) {

@@ -51,7 +51,7 @@ describe('网抑云工具入口', () => {
   it('允许任一管理权限进入工具页', () => {
     const entry = plugin.routes?.[0]
     const route = entry && 'route' in entry ? entry.route : entry
-    expect(route?.meta?.permissions).toEqual(['plugin:ncm:manage', 'system:plugins:manage'])
+    expect(route?.meta?.permissions).toEqual(['plugin:ncm:manage', 'plugin:ncm:account', 'system:plugins:manage'])
   })
 
   it('仅有调试权限时旧调试链接使用临时调试入口', async () => {
@@ -120,7 +120,7 @@ describe('网抑云工具入口', () => {
     const view = mount(NcmConsoleView)
 
     const navigation = view.get('nav[aria-label="网抑云管理分区"]')
-    expect(navigation.findAll('button').map((button) => button.text())).toEqual(['精选歌单', '账号与游客'])
+    expect(navigation.findAll('button').map((button) => button.text())).toEqual(['精选歌单'])
     expect(view.find('[data-panel="featured"]').exists()).toBe(true)
     expect(view.find('[data-panel="settings"]').exists()).toBe(false)
     expect(view.findAllComponents(VButton).some((button) => button.text() === '插件详情')).toBe(false)
@@ -143,7 +143,12 @@ describe('网抑云工具入口', () => {
   it.each([
     {
       permission: 'plugin:ncm:manage',
-      destinations: ['featured', 'account'],
+      destinations: ['featured'],
+      tools: true,
+    },
+    {
+      permission: 'plugin:ncm:account',
+      destinations: ['account'],
       tools: true,
     },
     {

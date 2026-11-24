@@ -138,10 +138,9 @@ public class PlayService {
     Mono<Who> who() {
         var guest = new Who(Identity.anonymous(), "guest", "guest");
         return IdentityResolver.currentUsername()
-            .flatMap(u -> accounts.credentialsOf(AccountService.userAccountName(u))
-                .map(credentials -> Who.bound("user", "user:" + u, "user", credentials))
-                .switchIfEmpty(Mono.defer(() -> accounts.siteCredentialsIfOwnedBy(u)
-                    .map(credentials -> Who.bound("site", "site-owner:" + u, "user", credentials)))))
+            .flatMap(username -> accounts.binding(username)
+                .flatMap(binding -> Mono.justOrEmpty(binding.credentials()).map(credentials ->
+                    Who.bound("user", (binding.site() ? "site-owner:" : "user:") + username, "user", credentials))))
             .onErrorResume(e -> {
                 log.warn("[ncm] 读取访客的网易云绑定失败，改用游客身份: {}", e.toString());
                 return Mono.empty();

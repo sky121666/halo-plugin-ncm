@@ -2,6 +2,7 @@ package cn.sky.ncm.account;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import run.halo.app.extension.AbstractExtension;
 import run.halo.app.extension.GVK;
 
@@ -11,7 +12,7 @@ import run.halo.app.extension.GVK;
  *   <li>name = "site"：站长账号（后台绑定）</li>
  *   <li>name = "user-{用户名}"：Halo 注册用户自己的账号（个人中心绑定）</li>
  * </ul>
- * 网易云 Cookie 存在 Halo Secret「ncm-account-{name}」里，这里只记 Secret 的名字。
+ * 网易云 Cookie 存在带版本的 Halo Secret 里，绑定记录保存引用。
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -28,6 +29,10 @@ public class NcmAccount extends AbstractExtension {
         /** Halo 用户名；站长账号为绑定它的管理员用户名（旧数据可能是 "__site__"）。 */
         private String owner;
 
+        private String ownerCreatedAt;
+
+        private boolean revoked;
+
         /** 保存 Cookie 的 Halo Secret 名称。 */
         private String secretName;
 
@@ -38,6 +43,7 @@ public class NcmAccount extends AbstractExtension {
          * @deprecated 改用 {@link #secretName}
          */
         @Deprecated
+        @ToString.Exclude
         private String cookie;
     }
 

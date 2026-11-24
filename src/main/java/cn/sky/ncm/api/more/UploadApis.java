@@ -8,6 +8,7 @@ import cn.sky.ncm.api.ApiGroup;
 import cn.sky.ncm.api.UploadFile;
 import cn.sky.ncm.client.Js;
 import cn.sky.ncm.client.NcmClient;
+import cn.sky.ncm.client.NcmEgress;
 import cn.sky.ncm.client.NcmHttp;
 import cn.sky.ncm.client.NcmResponse;
 import cn.sky.ncm.client.RequestOptions;
@@ -117,7 +118,7 @@ public class UploadApis implements ApiGroup {
         return client.request("/api/nos/token/alloc", data, opt.withCrypto("weapi")).flatMap(res -> {
             JsonNode result = res.bodyObject().path("result");
             if (!res.ok() || result.path("objectKey").asText("").isEmpty()) {
-                return Mono.error(new UploadError(fail(500, "获取上传token失败", res.body())));
+                return Mono.error(new UploadError(NcmResponse.error(502, "无法获得上传授权")));
             }
             String objectKey = result.path("objectKey").asText();
             return web().post()
@@ -197,7 +198,7 @@ public class UploadApis implements ApiGroup {
             .retrieve().toBodilessEntity()
             .timeout(Duration.ofMinutes(5))
             .onErrorMap(e -> !(e instanceof UploadError),
-                e -> new UploadError(NcmResponse.error(500, "文件上传失败: " + e.getMessage())))
+                e -> new UploadError(NcmResponse.error(502, "文件上传失败")))
             .then()));
     }
 
@@ -209,7 +210,7 @@ public class UploadApis implements ApiGroup {
             "bucket", CLOUD_BUCKET, "ext", ext, "filename", filename, "local", false, "nos_product", 3L,
             "type", "audio", "md5", md5), opt.withCrypto("weapi")).flatMap(res -> {
                 JsonNode r = res.bodyObject().path("result");
-                if (!res.ok() || r.path("objectKey").asText("").isEmpty()) {
+                if (!res.ok() || r.path("objectKey").asText("").isEmpty() || r.path("token").asText("").isBlank()) {
                     return Mono.error(new UploadError(fail(500, "获取上传token失败", res.body())));
                 }
                 return Mono.just(new NosToken(r.path("token").asText(), r.path("objectKey").asText(),
@@ -231,9 +232,7 @@ public class UploadApis implements ApiGroup {
                     n = JSON.textNode(text);
                 }
                 String server = n.path("upload").path(0).asText("");
-                return server.isEmpty()
-                    ? Mono.error(new UploadError(fail(500, "获取上传服务器地址无效", n)))
-                    : Mono.just(server);
+                return NcmEgress.cloudUploadOrigin(server).map(URI::toString);
             });
     }
 
@@ -408,7 +407,7 @@ public class UploadApis implements ApiGroup {
                     })
                     .timeout(Duration.ofMinutes(10))
                     .onErrorMap(e -> !(e instanceof UploadError),
-                        e -> new UploadError(NcmResponse.error(500, "文件上传失败: " + e.getMessage())))
+                        e -> new UploadError(NcmResponse.error(502, "文件上传失败")))
                     .then(Mono.defer(() -> {
                         String voiceData = Js.json(List.of(map(
                             "name", filename,

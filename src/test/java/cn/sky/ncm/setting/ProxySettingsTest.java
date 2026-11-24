@@ -79,7 +79,7 @@ class ProxySettingsTest {
         metadata.setLabels(Map.of(SecretStore.LABEL_PLUGIN, SecretStore.PLUGIN_NAME));
         secret.setMetadata(metadata);
         when(client.fetch(eq(Secret.class), anyString())).thenReturn(Mono.just(secret));
-        when(secrets.read(anyString())).thenReturn(Mono.just(Map.of("username", "reader", "password", "fixture-pass")));
+        when(secrets.read(anyString(), org.mockito.ArgumentMatchers.eq("proxy-credentials"))).thenReturn(Mono.just(Map.of("username", "reader", "password", "fixture-pass")));
 
         var configuration = service.current().block(WAIT).orElseThrow();
         assertEquals("fixture-pass", configuration.password());
