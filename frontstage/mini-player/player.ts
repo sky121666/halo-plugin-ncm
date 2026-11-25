@@ -1,6 +1,3 @@
-import type {
-    MiniPlayback, PlaybackPosition, PlaybackSession, PlaybackTrack, PlaybackView,
-} from './playbackSession.js';
 import type { Bounds, Layout, Point, Positions } from './placement.js';
 
 const version = new URL(import.meta.url).search;
@@ -10,335 +7,33 @@ function versionedAsset(name: string) {
     return url.href;
 }
 
-const [{observeLens}, session, {acceptsSwup, SwupFolia}, placement, {PositionPreferences}, appearance] = await Promise.all([
+const [{observeLens}, session, {FoliaPlayer}, placement, {PositionPreferences}, appearance] = await Promise.all([
     import(versionedAsset('./lens.js')) as Promise<typeof import('./lens.js')>,
     import(versionedAsset('./playbackSession.js')) as Promise<typeof import('./playbackSession.js')>,
-    import(versionedAsset('./swupFolia.js')) as Promise<typeof import('./swupFolia.js')>,
+    import(versionedAsset('./foliaPlayer.js')) as Promise<typeof import('./foliaPlayer.js')>,
     import(versionedAsset('./placement.js')) as Promise<typeof import('./placement.js')>,
     import(versionedAsset('./positionPreferences.js')) as Promise<typeof import('./positionPreferences.js')>,
     import(versionedAsset('./appearance.js')) as Promise<typeof import('./appearance.js')>,
 ]);
-const {canResumePlayback, isNewerPlaybackSession, isPlaybackId, playbackOwnership,
-    musicLyricsPath, readPlaybackSession, readResumablePlaybackSession, rememberPlayback, resumeTimeForMedia} = session;
-
-type Phase = PlaybackView['phase'];
-type Session = { version: 1; playlist: string; id: string; position: number; duration: number };
-type PlayAddress = { url?: string; status?: string; trial?: {start: number; end: number}; message?: string };
-type Song = { id?: string; name?: string; artistNames?: string; coverUrl?: string; durationMs?: number };
+const {isPlaybackId, musicLyricsPath} = session;
 
 const entry = document.querySelector<HTMLScriptElement>('script[data-ncm-mini-player]');
 const playlist = entry?.dataset.ncmMiniPlayer;
-const sessionKey = 'ncm-mini-player:v1';
-const placeholder: PlaybackTrack = {id: '', title: '网抑云', artist: ''};
 const tag = 'ncm-mini-player';
 const css = versionedAsset('./player.css');
 const systemAppearance = window.matchMedia('(prefers-color-scheme: dark)');
+const contactDisplayTag = 'halo-contact-form-auto-display';
+const contactControlTag = 'halo-contact-form-floating';
+const contactTrigger = 'button.trigger';
 let hasSeenDarkClass = false;
-
-function readLegacySession(playlistId: string): Session | null {
-    try {
-        const saved = JSON.parse(sessionStorage.getItem(sessionKey) ?? 'null') as Session | null;
-        if (saved?.version === 1 && saved.playlist === playlistId && Number.isFinite(saved.duration)
-            && Number.isFinite(saved.position) && saved.position >= 0 && saved.duration >= 0) return saved;
-    } catch {
-        // Storage is optional. A blocked storage API leaves the current page playable.
-    }
-    return null;
-}
 
 const clock = (seconds: number) => {
     const s = Math.max(0, Math.floor(seconds));
     return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 };
 
-class Playback implements MiniPlayback {
-    readonly views = new Set<() => void>();
-    private tracks: PlaybackTrack[] = [];
-    private queue?: Promise<void>;
-    queueLoading = false;
-    index = 0;
-    position = 0;
-    duration = 0;
-    phase: Phase = 'idle';
-    note = '';
-    trialSeconds = 0;
-    private audio?: HTMLAudioElement;
-    private sourceId: string | null = null;
-    private request?: AbortController;
-    private departing = false;
-    private ownsPlayback = false;
-    private lastSavedAt = 0;
-    private previewOnly = false;
-    private readonly ownership = playbackOwnership(() => {
-        this.ownsPlayback = false;
-        this.request?.abort();
-        this.audio?.pause();
-        if (this.phase === 'loading') {
-            this.phase = 'paused';
-            this.note = '';
-            this.update();
-        }
-    });
-
-    constructor(private readonly playlistId: string, private readonly resumeOn: boolean) {
-        window.addEventListener('pagehide', () => {
-            this.save();
-            this.departing = true;
-            this.request?.abort();
-            this.audio?.pause();
-        });
-        window.addEventListener('pageshow', event => {
-            this.departing = false;
-            if (!event.persisted || !this.size) return;
-            const saved = readPlaybackSession();
-            if (saved && 'closed' in saved && isNewerPlaybackSession(saved, this.lastSavedAt)) {
-                this.reset([], 0, 0, 0);
-            } else if (saved && !('closed' in saved) && saved.at >= this.lastSavedAt) {
-                this.restore(saved);
-            } else if (this.phase === 'playing') {
-                this.phase = 'paused';
-                this.update();
-            }
-        });
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && !this.departing) this.save();
-        });
-    }
-
-    get track() { return this.tracks[this.index] ?? placeholder; }
-    get size() { return this.tracks.length; }
-    get started() { return this.audio !== undefined; }
-
-    useAsPreview() { this.previewOnly = true; }
-    view(): PlaybackView {
-        const {track, size, index, position, duration, phase, note, queueLoading} = this;
-        return {track, size, index, position, duration, phase, trial: this.trialSeconds > 0, note, queueLoading};
-    }
-    selection(): PlaybackPosition {
-        return {queue: this.tracks, index: this.index, time: this.position,
-            duration: this.duration, playing: this.phase === 'playing' && !this.audio?.ended};
-    }
-
-    handoff() {
-        if (this.track.id) this.lastSavedAt = rememberPlayback(this.selection());
-    }
-
-    loadQueue() {
-        if (this.size || this.queue) return;
-        const saved = readPlaybackSession();
-        if (saved && !('closed' in saved)) {
-            this.restore(saved);
-            return;
-        }
-        this.queueLoading = true;
-        this.note = '正在加载歌单…';
-        this.update();
-        this.queue = (async () => {
-            const response = await fetch('/music/playlist/' + this.playlistId + '?format=json&limit=100', {
-                signal: AbortSignal.timeout(12000),
-            });
-            if (!response.ok) throw new Error('playlist-unavailable');
-            const result: {playlist?: {tracks?: Song[]}} = await response.json();
-            if (!Array.isArray(result.playlist?.tracks)) throw new Error('playlist-unavailable');
-            const tracks = result.playlist.tracks.flatMap(song =>
-                isPlaybackId(song?.id)
-                    ? [{id: song.id, title: song.name || '未知歌曲', artist: song.artistNames || '',
-                        cover: song.coverUrl?.startsWith('https://') ? song.coverUrl : undefined, durationMs: song.durationMs}]
-                    : []);
-            if (!tracks.length) throw new Error('playlist-empty');
-            const legacy = saved ? null : readLegacySession(this.playlistId);
-            const index = legacy ? tracks.findIndex(track => track.id === legacy.id) : -1;
-            this.reset(tracks, Math.max(0, index), index >= 0 ? legacy?.position ?? 0 : 0,
-                index >= 0 ? legacy?.duration ?? 0 : 0);
-        })().catch(error => {
-            this.phase = 'error';
-            this.note = error instanceof Error && error.message === 'playlist-empty'
-                ? '歌单暂无曲目' : '歌单暂不可用，点击重试';
-        }).finally(() => {
-            this.queue = undefined;
-            this.queueLoading = false;
-            this.update();
-        });
-    }
-
-    restore(saved: PlaybackSession) {
-        this.lastSavedAt = saved.at;
-        this.reset(saved.queue, saved.index, saved.time, saved.duration);
-        if (!this.previewOnly && this.resumeOn && canResumePlayback(saved)) void this.play();
-    }
-
-    private reset(tracks: PlaybackTrack[], index: number, position: number, duration: number) {
-        this.tracks = tracks;
-        this.index = index;
-        this.position = position;
-        this.phase = this.position > 0 ? 'paused' : 'idle';
-        this.duration = duration;
-        this.trialSeconds = 0;
-        this.note = '';
-        if (this.audio?.hasAttribute('src')) {
-            this.sourceId = null;
-            this.audio.removeAttribute('src');
-            this.audio.load();
-        }
-        this.update();
-    }
-
-    update() { this.views.forEach(view => view()); }
-
-    private save(playing = this.phase === 'playing' && !this.audio?.ended) {
-        if (this.previewOnly || !this.ownsPlayback || this.departing || !this.track.id) return;
-        this.lastSavedAt = rememberPlayback({...this.selection(), playing});
-    }
-
-    private getAudio() {
-        if (this.audio) return this.audio;
-        const audio = new Audio();
-        audio.preload = 'none';
-        this.audio = audio;
-        audio.addEventListener('loadedmetadata', () => this.updatePosition());
-        audio.addEventListener('timeupdate', () => this.updatePosition());
-        audio.addEventListener('playing', () => {
-            if (this.departing || !this.sourceId) return;
-            this.ownsPlayback = true;
-            this.ownership.claim();
-            this.phase = 'playing';
-            this.note = this.trialSeconds > 0 ? '试听 · ' + clock(this.trialSeconds) : '';
-            this.save();
-            this.update();
-        });
-        audio.addEventListener('pause', () => {
-            if (this.departing || this.phase === 'loading' || !this.sourceId) return;
-            if (this.phase !== 'error') this.phase = 'paused';
-            this.save();
-            this.update();
-        });
-        audio.addEventListener('ended', () => {
-            if (this.trialSeconds > 0) {
-                this.phase = 'paused';
-                this.note = '试听结束';
-                this.save();
-                this.update();
-                return;
-            }
-            if (this.phase === 'playing' || this.phase === 'paused') this.step(1, true);
-        });
-        audio.addEventListener('error', () => {
-            if (!this.sourceId || this.phase === 'loading') return;
-            this.sourceId = null;
-            this.phase = 'error';
-            this.note = '音频加载失败，点击重试';
-            this.update();
-        });
-        return audio;
-    }
-
-    private updatePosition() {
-        const audio = this.audio;
-        if (!audio || !this.sourceId || this.departing) return;
-        this.duration = Number.isFinite(audio.duration) ? audio.duration : 0;
-        if (this.trialSeconds > 0) {
-            this.duration = this.duration ? Math.min(this.duration, this.trialSeconds) : this.trialSeconds;
-        }
-        this.position = Math.min(audio.currentTime, this.duration || audio.currentTime);
-        if (this.trialSeconds > 0 && this.position >= this.trialSeconds && !audio.paused) {
-            audio.pause();
-            this.note = '试听结束';
-        }
-        if (Date.now() - this.lastSavedAt >= 2000 && this.phase === 'playing') this.save();
-        this.update();
-    }
-
-    toggle() {
-        if (!this.size) {
-            this.loadQueue();
-        } else if (this.phase === 'playing') {
-            this.audio?.pause();
-        } else if (this.phase === 'loading') {
-            this.request?.abort();
-            this.request = undefined;
-            this.audio?.pause();
-            this.phase = this.position > 0 ? 'paused' : 'idle';
-            this.note = '';
-            this.update();
-        } else {
-            void this.play();
-        }
-    }
-
-    step(direction: number, start = this.phase === 'playing' || this.phase === 'loading') {
-        if (this.size < 2) return;
-        this.request?.abort();
-        this.request = undefined;
-        this.sourceId = null;
-        this.audio?.pause();
-        this.index = (this.index + direction + this.size) % this.size;
-        this.position = 0;
-        this.duration = 0;
-        this.trialSeconds = 0;
-        this.phase = 'idle';
-        this.note = '';
-        this.ownsPlayback = true;
-        this.save(start);
-        this.update();
-        if (start) void this.play();
-    }
-
-    seek(position: number) {
-        if (this.duration === 0) return;
-        this.position = Math.max(0, Math.min(position, this.duration));
-        if (this.sourceId && this.audio) {
-            this.audio.currentTime = this.position;
-            this.updatePosition();
-        } else {
-            this.update();
-        }
-        this.ownsPlayback = true;
-        this.save();
-    }
-
-    private async play() {
-        if (this.previewOnly) return;
-        const track = this.track;
-        const audio = this.getAudio();
-        const request = new AbortController();
-        this.request?.abort();
-        this.request = request;
-        this.phase = 'loading';
-        this.note = '正在取址…';
-        this.update();
-        try {
-            if (this.sourceId !== track.id) {
-                const result = await fetch('/music/play/' + track.id + '?level=standard&format=json', {
-                    signal: AbortSignal.any([request.signal, AbortSignal.timeout(12000)]),
-                    credentials: 'same-origin',
-                });
-                const address: PlayAddress = await result.json();
-                if (request.signal.aborted || this.departing) return;
-                if (!result.ok || address.status !== 'ok' || !address.url?.startsWith('https://')) {
-                    throw new Error(address.message || '曲目暂时无法播放');
-                }
-                this.trialSeconds = address.trial
-                    ? Math.max(0, (address.trial.end - address.trial.start) / 1000) : 0;
-                this.sourceId = track.id;
-                audio.src = address.url;
-                audio.currentTime = resumeTimeForMedia(this.position, this.trialSeconds, this.trialSeconds > 0);
-            }
-            if (audio.ended || (this.trialSeconds > 0 && audio.currentTime >= this.trialSeconds)) audio.currentTime = 0;
-            await audio.play();
-        } catch (error) {
-            if (request.signal.aborted || this.departing) return;
-            const requiresGesture = error instanceof DOMException && error.name === 'NotAllowedError';
-            this.phase = requiresGesture ? 'paused' : 'error';
-            this.note = requiresGesture ? '点击继续播放'
-                : error instanceof Error && !(error instanceof DOMException) ? error.message : '播放失败，点击重试';
-            if (!requiresGesture) this.sourceId = null;
-            this.update();
-        }
-    }
-}
-
 if (isPlaybackId(playlist) && !customElements.get(tag)) {
-    const {bindPositionDrag, buttonPixels, buttonPosition, layoutFor, moveWithKey, placePanel, readPositions} = placement;
+    const {avoidFloatingControls, bindPositionDrag, buttonPixels, buttonPosition, layoutFor, moveWithKey, placePanel, readPositions} = placement;
     const sitePosition = (value?: string) => {
         if (!value) return;
         const [x, y] = value.split(',').map(Number);
@@ -350,35 +45,11 @@ if (isPlaybackId(playlist) && !customElements.get(tag)) {
     });
     const preferences = new PositionPreferences(defaults, () =>
         document.querySelector<MiniPlayer>(tag + '[data-floating]')?.scheduleGeometry());
-    const resumeOn = entry?.dataset.ncmResume === 'true';
-    const local = new Playback(playlist, resumeOn);
-    let playback: MiniPlayback = local;
-    let musicNavigation: InstanceType<typeof SwupFolia> | undefined;
+    const views = new Set<() => void>();
+    const playback = new FoliaPlayer(playlist, session, () => views.forEach(render => render()));
     let mountScheduled = false;
-    let checkedArrival = false;
-    const resumeOnArrival = () => {
-        if (checkedArrival || !resumeOn) return;
-        checkedArrival = true;
-        if (local.started || local.queueLoading) return;
-        const saved = readResumablePlaybackSession();
-        if (!saved) return;
-        local.restore(saved);
-        musicNavigation?.resume(readResumablePlaybackSession);
-    };
-    document.addEventListener('ncm:swup-ready', event => {
-        const swup = (event as CustomEvent<unknown>).detail;
-        if (musicNavigation || local.started || !acceptsSwup(swup)) return;
-        local.useAsPreview();
-        musicNavigation = new SwupFolia(swup, local, () => local.update());
-        playback = musicNavigation;
-        resumeOnArrival();
-    });
+    document.addEventListener('ncm:swup-ready', event => playback.attachSwup((event as CustomEvent<unknown>).detail));
     document.dispatchEvent(new Event('ncm:request-swup'));
-    if (!musicNavigation && resumeOn) {
-        // Give the theme's navigation a chance to register before starting a local audio deck.
-        if (document.readyState === 'complete') resumeOnArrival();
-        else window.addEventListener('load', resumeOnArrival, {once: true});
-    }
     const template = document.createElement('template');
     template.innerHTML = `
         <button class="disc" type="button" aria-label="展开音乐播放器" aria-expanded="false" aria-controls="panel">
@@ -445,6 +116,8 @@ if (isPlaybackId(playlist) && !customElements.get(tag)) {
         private keyboardMoving = false;
         private cancelDrag?: () => void;
         private sleeveSource?: string;
+        private stylesLoaded = false;
+        private initialPlacementReady = false;
 
         constructor() {
             super();
@@ -471,8 +144,8 @@ if (isPlaybackId(playlist) && !customElements.get(tag)) {
             this.positionMenu = this.root.querySelector('.position-menu')!;
             if (typeof this.panel.showPopover === 'function') this.panel.popover = 'manual';
             style.addEventListener('load', () => {
-                this.setAttribute('data-ready', '');
-                this.updateGeometry();
+                this.stylesLoaded = true;
+                this.reveal();
             }, {once: true});
             this.button.addEventListener('click', () => {
                 if (this.keyboardMoving) this.finishMove(true);
@@ -496,8 +169,7 @@ if (isPlaybackId(playlist) && !customElements.get(tag)) {
             this.slider.addEventListener('input', () => playback.seek(this.slider.valueAsNumber));
             this.trackLink.addEventListener('click', event => {
                 if (!this.trackLink.hasAttribute('href') || event.defaultPrevented) return;
-                if (musicNavigation) musicNavigation.openLyrics(event, musicLyricsPath);
-                else local.handoff();
+                playback.openLyrics(event, musicLyricsPath);
             });
             this.button.addEventListener('keydown', this.moveWithKeyboard);
             this.root.addEventListener('keydown', event => {
@@ -522,7 +194,14 @@ if (isPlaybackId(playlist) && !customElements.get(tag)) {
                         this.finishMove(!!point);
                     },
                 }, signal);
-                void preferences.refresh();
+                const contactsReady = this.observeContactControls(signal);
+                window.addEventListener('load', this.scheduleGeometry, {once: true, signal});
+                const positionReady = preferences.refresh(false, AbortSignal.timeout(2500));
+                void Promise.all([positionReady, contactsReady]).then(() => {
+                    if (signal.aborted) return;
+                    this.initialPlacementReady = true;
+                    this.reveal();
+                });
                 window.addEventListener('online', () => void preferences.refresh(true), {signal});
                 window.addEventListener('focus', () => void preferences.refresh(), {signal});
                 window.addEventListener('pageshow', event => {
@@ -571,13 +250,14 @@ if (isPlaybackId(playlist) && !customElements.get(tag)) {
                 this.setOpen(false);
                 this.scheduleGeometry();
             }, {signal});
-            local.views.add(this.render);
+            views.add(this.render);
             this.render();
+            this.reveal();
             this.scheduleGeometry();
         }
 
         disconnectedCallback() {
-            local.views.delete(this.render);
+            views.delete(this.render);
             this.listeners?.abort();
             if (this.keyboardMoving) this.finishMove(false);
             this.setOpen(false);
@@ -629,6 +309,60 @@ if (isPlaybackId(playlist) && !customElements.get(tag)) {
             });
         };
 
+        private reveal() {
+            if (!this.isConnected || !this.stylesLoaded || this.hasAttribute('data-ready')) return;
+            if (this.hasAttribute('data-floating') && !this.initialPlacementReady) return;
+            this.setAttribute('data-ready', '');
+            this.updateGeometry();
+        }
+
+        private observeContactControls(signal: AbortSignal) {
+            const config = (window as Window & {
+                autoContactFrom?: {displayFormConfig?: {displayForm?: string}}[];
+            }).autoContactFrom;
+            const expected = !this.hasAttribute('data-ready') && Array.isArray(config)
+                ? config.filter(item => item?.displayFormConfig?.displayForm === 'aside_button').length : 0;
+            return new Promise<void>(resolve => {
+                // A disabled or unavailable form may never render its trigger.
+                const timeout = expected ? window.setTimeout(resolve, 2000) : undefined;
+                const finish = () => {
+                    window.clearTimeout(timeout);
+                    resolve();
+                };
+                const observe = () => {
+                    observer.disconnect();
+                    observer.observe(document.body, {childList: true});
+                    for (const display of document.querySelectorAll(contactDisplayTag)) {
+                        observer.observe(display, {childList: true});
+                    }
+                    let rendered = 0;
+                    for (const control of document.querySelectorAll(contactControlTag)) {
+                        const root = control.shadowRoot;
+                        if (!root) continue;
+                        observer.observe(root, {childList: true, subtree: true});
+                        if (root.querySelector(contactTrigger)) rendered++;
+                    }
+                    if (rendered >= expected) finish();
+                    this.scheduleGeometry();
+                };
+                const observer = new MutationObserver(observe);
+                signal.addEventListener('abort', () => {
+                    observer.disconnect();
+                    finish();
+                }, {once: true});
+                observe();
+            });
+        }
+
+        private contactControlBounds(): Bounds[] {
+            return Array.from(document.querySelectorAll(contactControlTag)).flatMap(control => {
+                const trigger = control.shadowRoot?.querySelector(contactTrigger);
+                if (!trigger || getComputedStyle(trigger).visibility !== 'visible') return [];
+                const rect = trigger.getBoundingClientRect();
+                return rect.width && rect.height ? [rect] : [];
+            });
+        }
+
         private updateGeometry() {
             if (!this.isConnected || !this.hasAttribute('data-ready') || this.hasAttribute('data-duplicate')) return;
             const bounds = this.visibleBounds();
@@ -639,7 +373,9 @@ if (isPlaybackId(playlist) && !customElements.get(tag)) {
                 const origin = this.buttonOrigin();
                 const size = {width: this.offsetWidth, height: this.offsetHeight};
                 const position = chosen ?? buttonPosition(origin, bounds, size);
-                const point = buttonPixels(position, bounds, size);
+                const preferred = buttonPixels(position, bounds, size);
+                const point = this.positionDraft ? preferred
+                    : avoidFloatingControls(preferred, bounds, size, this.contactControlBounds());
                 if (chosen || Math.abs(point.x - origin.x) > .5 || Math.abs(point.y - origin.y) > .5) {
                     this.style.setProperty('--_ncm-x', point.x + 'px');
                     this.style.setProperty('--_ncm-y', point.y + 'px');
@@ -721,7 +457,6 @@ if (isPlaybackId(playlist) && !customElements.get(tag)) {
                 this.panelObserver.observe(this.panel);
                 this.panelObserver.observe(this);
                 this.releaseLens = observeLens(this.panel);
-                playback.loadQueue();
             } else if (!open && !this.panel.hidden) {
                 if (this.panel.popover && this.panel.matches(':popover-open')) this.panel.hidePopover();
                 this.panel.hidden = true;
@@ -738,7 +473,7 @@ if (isPlaybackId(playlist) && !customElements.get(tag)) {
         }
 
         private render = () => {
-            const {track, position, duration, phase, index, size, queueLoading, note, trial} = playback.view();
+            const {track, position, duration, phase, index, size, note, trial} = playback.view();
             this.dataset.phase = phase;
             this.button.title = phase === 'playing' ? track.title + ' · 正在播放' : '音乐播放器';
             if (this.sleeveSource !== track.cover) {
@@ -763,14 +498,13 @@ if (isPlaybackId(playlist) && !customElements.get(tag)) {
             this.duration.textContent = duration > 0 ? clock(duration) : '—';
             this.slider.max = String(duration || 1);
             this.slider.value = String(duration > 0 ? position : 0);
-            this.slider.disabled = duration === 0 || phase === 'loading';
+            this.slider.disabled = !playback.hasTrack || duration === 0 || phase === 'loading';
             this.slider.setAttribute('aria-valuetext', clock(position) + ' / ' + (duration > 0 ? clock(duration) : '未知'));
             this.slider.style.setProperty('--played', (duration ? position / duration * 100 : 0) + '%');
             this.playButton.setAttribute('aria-label', phase === 'playing' ? '暂停' : phase === 'loading'
                 ? '取消加载' : phase === 'error' ? '重试播放' : position > 0 ? '继续播放' : '播放');
             this.playButton.title = phase === 'error' ? note : '';
-            this.playButton.disabled = queueLoading;
-            for (const button of this.skipButtons) button.disabled = size < 2;
+            for (const button of this.skipButtons) button.disabled = !playback.hasTrack || size < 2 || phase === 'loading';
             this.index.textContent = size ? String(index + 1) + ' / ' + String(size) : '';
             if (this.status.textContent !== note) this.status.textContent = note;
         };
@@ -800,4 +534,5 @@ if (isPlaybackId(playlist) && !customElements.get(tag)) {
     }
     scheduleMount();
     document.addEventListener('swup:page:view', scheduleMount);
+    if (entry?.dataset.ncmResume === 'true') playback.resume();
 }

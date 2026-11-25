@@ -57,6 +57,37 @@ export function buttonPosition(point: Point, bounds: Bounds, size: Size): Point 
     return {x: clamp((point.x - bounds.left) / width, 0, 1), y: clamp((point.y - bounds.top) / height, 0, 1)};
 }
 
+export function avoidFloatingControls(point: Point, bounds: Bounds, size: Size, controls: Bounds[]): Point {
+    const gap = 8;
+    const overlaps = (candidate: Point) => controls.some(control =>
+        candidate.x < control.right + gap && candidate.x + size.width > control.left - gap
+        && candidate.y < control.bottom + gap && candidate.y + size.height > control.top - gap);
+    if (!overlaps(point)) return point;
+
+    let nearest = point;
+    let distance = Infinity;
+    for (const control of controls) {
+        const candidates = [
+            {x: point.x, y: control.top - gap - size.height},
+            {x: point.x, y: control.bottom + gap},
+            {x: control.left - gap - size.width, y: point.y},
+            {x: control.right + gap, y: point.y},
+        ];
+        for (const candidate of candidates) {
+            const available = {
+                x: clamp(candidate.x, bounds.left, bounds.right - size.width),
+                y: clamp(candidate.y, bounds.top, bounds.bottom - size.height),
+            };
+            const offset = Math.hypot(available.x - point.x, available.y - point.y);
+            if (offset < distance && !overlaps(available)) {
+                nearest = available;
+                distance = offset;
+            }
+        }
+    }
+    return nearest;
+}
+
 export function placePanel(anchor: Bounds, panel: Size, bounds: Bounds) {
     const gap = 10;
     const width = Math.min(panel.width, Math.max(1, bounds.right - bounds.left));

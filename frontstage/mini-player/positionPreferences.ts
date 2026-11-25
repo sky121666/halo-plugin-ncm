@@ -26,7 +26,7 @@ class RequestError extends Error {
 async function request(options?: RequestInit) {
     const result = await fetch(api, {
         ...options, cache: 'no-store', credentials: 'same-origin', redirect: 'manual',
-        signal: AbortSignal.timeout(9000),
+        signal: options?.signal ?? AbortSignal.timeout(9000),
     });
     if (!result.ok) throw new RequestError(result.type === 'opaqueredirect' ? 401 : result.status);
     return result.json();
@@ -37,9 +37,9 @@ function snapshot(value: Snapshot): Snapshot {
     return {...value, config: readPositions(value.config)};
 }
 
-async function readViewer(): Promise<Viewer | undefined> {
+async function readViewer(signal?: AbortSignal): Promise<Viewer | undefined> {
     try {
-        const viewer = await request() as Viewer;
+        const viewer = await request({signal}) as Viewer;
         if (!token.test(viewer?.profileKey)) throw new RequestError(422);
         return {profileKey: viewer.profileKey, snapshot: snapshot(viewer.snapshot)};
     } catch (error) {
@@ -53,7 +53,7 @@ export class PositionPreferences {
     private profile?: Profile;
     private settled = false;
     private waiting: PositionEdits = {};
-    private checking = false;
+    private checking?: Promise<void>;
     private saving = false;
     private refreshAfterSave = false;
     private lastChecked = 0;
@@ -81,23 +81,26 @@ export class PositionPreferences {
         this.changed();
     }
 
-    async refresh(force = false) {
+    async refresh(force = false, signal?: AbortSignal) {
         if (this.saving) {
             this.refreshAfterSave ||= force;
             return;
         }
-        if (this.checking || !force && Date.now() - this.lastChecked < 2000) return;
+        if (this.checking) return this.checking;
+        if (!force && Date.now() - this.lastChecked < 2000) return;
         this.lastChecked = Date.now();
-        this.checking = true;
-        try {
-            this.accept(await readViewer());
-        } catch {
-            // Local edits remain available while the connection recovers.
-            return;
-        } finally {
-            this.checking = false;
-        }
-        void this.save();
+        this.checking = (async () => {
+            try {
+                this.accept(await readViewer(signal));
+            } catch {
+                // Local edits remain available while the connection recovers.
+                return;
+            } finally {
+                this.checking = undefined;
+            }
+            void this.save();
+        })();
+        return this.checking;
     }
 
     private accept(viewer?: Viewer) {

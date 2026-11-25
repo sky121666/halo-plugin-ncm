@@ -1,4 +1,4 @@
-import type { FoliaFrame, FoliaPlayback, MiniPlayback, PlaybackPosition, PlaybackView } from './playbackSession.js';
+import type { FoliaFrame, FoliaPlayback, PlaybackPosition, PlaybackView } from './playbackSession.js';
 
 interface MusicVisit {
     to: { url: string; document?: Document };
@@ -12,6 +12,7 @@ interface MusicNavigation {
     hooks: {
         before(name: 'visit:transition', handler: (visit: MusicVisit) => void): void;
         on(name: 'visit:start' | 'page:view', handler: (visit: MusicVisit) => void): void;
+        once(name: 'disable', handler: () => void): void;
     };
 }
 
@@ -19,114 +20,130 @@ const musicPath = '/music';
 const isMusicHome = (url: string) => new URL(url, location.origin).pathname.replace(/\/$/, '') === musicPath;
 const pagePath = () => location.pathname + location.search + location.hash;
 
-export function acceptsSwup(value: unknown): value is MusicNavigation {
+function acceptsSwup(value: unknown): value is MusicNavigation {
     const candidate = value as MusicNavigation | undefined;
     return typeof candidate?.navigate === 'function' && typeof candidate.hooks?.on === 'function'
-        && typeof candidate.hooks.before === 'function' && typeof HTMLDialogElement !== 'undefined'
-        && typeof HTMLDialogElement.prototype.showModal === 'function';
+        && typeof candidate.hooks.before === 'function' && typeof candidate.hooks.once === 'function'
+        && typeof HTMLDialogElement !== 'undefined' && typeof HTMLDialogElement.prototype.showModal === 'function';
 }
 
-export class SwupFolia implements MiniPlayback {
+export class FoliaPlayer {
     private engine?: FoliaPlayback;
     private opening?: Promise<FoliaPlayback>;
     private unsubscribe?: () => void;
     private shell?: { dialog: HTMLDialogElement; status: HTMLDivElement };
+    private swup?: MusicNavigation;
     private returnTo = pagePath();
-    private pendingPlay?: symbol;
-    private failed = false;
+    private pendingPlay?: AbortController;
+    private failure?: string;
+    private selection;
 
-    constructor(private readonly swup: MusicNavigation,
-                private readonly preview: MiniPlayback & { selection(): PlaybackPosition; handoff(): void },
+    constructor(private readonly playlistId: string,
+                private readonly session: Pick<typeof import('./playbackSession.js'),
+                    'readPlaybackSession' | 'readResumablePlaybackSession'>,
                 private readonly update: () => void) {
-        swup.hooks.on('visit:start', visit => {
+        this.selection = this.readSelection();
+    }
+
+    private readSelection(): PlaybackPosition | null {
+        const saved = this.session.readPlaybackSession();
+        return saved && !('closed' in saved) ? saved : null;
+    }
+
+    attachSwup(value: unknown) {
+        if (this.swup || !acceptsSwup(value)) return;
+        this.swup = value;
+        value.hooks.on('visit:start', visit => {
             if (isMusicHome(visit.to.url)) visit.animation.wait = true;
         });
-        swup.hooks.before('visit:transition', visit => {
+        value.hooks.before('visit:transition', visit => {
             const incoming = visit.to.document;
             if (!isMusicHome(visit.to.url) || !incoming?.querySelector('#root[data-ncm-config]')) return;
-            // The dialog is outside the theme's replacement containers. Keep the theme's head
-            // assets in place while Swup updates the URL, title and browser history.
+            // The Folia frame stays outside every container Swup replaces.
             const title = incoming.title;
             incoming.head.replaceWith(document.head.cloneNode(true));
             incoming.title = title;
             visit.containers = [];
             visit.meta.ncmMusic = true;
         });
-        swup.hooks.on('page:view', visit => {
+        value.hooks.on('page:view', visit => {
             if (visit.meta.ncmMusic) this.show(visit.to.url);
             else {
                 this.returnTo = pagePath();
                 this.shell?.dialog.close();
             }
         });
+        value.hooks.once('disable', () => {
+            this.swup = undefined;
+            this.shell?.dialog.close();
+        });
     }
 
     openLyrics(event: MouseEvent, href: string) {
-        if (!this.engine?.view().track.id && !this.pendingPlay) this.preview.handoff();
-        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+        if (!this.swup || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
         event.preventDefault();
         this.swup.navigate(href);
     }
 
+    get hasTrack() { return Boolean(this.engine?.view().track.id); }
+
     view(): PlaybackView {
         const live = this.engine?.view();
-        const visible = live?.track.id ? live : this.preview.view();
-        if (this.pendingPlay) return {...visible, phase: 'loading', note: '正在打开播放器…'};
-        return this.failed ? {...visible, phase: 'error', note: '播放器加载失败，点击重试'} : visible;
+        const saved = this.selection;
+        const visible = live ?? {
+            track: saved?.queue[saved.index] ?? {id: '', title: '网抑云', artist: ''},
+            size: saved?.queue.length ?? 0, index: saved?.index ?? 0,
+            position: saved?.time ?? 0, duration: saved?.duration ?? 0,
+            phase: saved ? 'paused' as const : 'idle' as const, trial: false, note: '',
+        };
+        if (this.pendingPlay) return {...visible, phase: 'loading',
+            note: this.engine ? '正在加载歌单…' : '正在打开播放器…'};
+        return this.failure ? {...visible, phase: 'error', note: this.failure} : visible;
     }
 
-    loadQueue() {
-        if (!this.engine?.view().track.id) this.preview.loadQueue();
-    }
-
-    resume(readPosition: () => PlaybackPosition | null) {
-        if (this.pendingPlay || this.engine) return;
-        this.playWhenReady(readPosition);
+    resume() {
+        if (this.pendingPlay || this.engine || !this.session.readResumablePlaybackSession()) return;
+        this.playWhenReady(engine => {
+            const saved = this.session.readResumablePlaybackSession();
+            if (saved) engine.play(saved);
+        });
     }
 
     toggle() {
         if (this.pendingPlay) {
+            this.pendingPlay.abort();
             this.pendingPlay = undefined;
             this.update();
             return;
         }
-        if (this.engine?.view().track.id) {
+        if (this.engine?.view().track.id && !this.failure) {
             this.engine.toggle();
             return;
         }
-        if (!this.preview.view().size) {
-            this.loadQueue();
-            return;
-        }
-        this.playWhenReady(() => this.preview.selection());
+        this.selection = this.readSelection();
+        const selection = this.selection;
+        this.playWhenReady((engine, signal) => selection
+            ? engine.play(selection) : engine.playPlaylist(this.playlistId, signal));
     }
 
-    private playWhenReady(readPosition: () => PlaybackPosition | null) {
-        const request = this.pendingPlay = Symbol();
-        this.failed = false;
+    step(direction: -1 | 1) { this.engine?.step(direction); }
+    seek(position: number) { this.engine?.seek(position); }
+
+    private playWhenReady(start: (engine: FoliaPlayback, signal: AbortSignal) => void | Promise<void>) {
+        const request = this.pendingPlay = new AbortController();
+        this.failure = undefined;
         this.update();
         void this.ready().then(engine => {
+            if (!request.signal.aborted) return start(engine, request.signal);
+        }).catch((error: unknown) => {
+            if (!request.signal.aborted) {
+                this.failure = error instanceof Error ? error.message : '播放器加载失败，点击重试';
+            }
+        }).finally(() => {
             if (this.pendingPlay !== request) return;
             this.pendingPlay = undefined;
-            const position = readPosition();
-            if (position) engine.play(position);
-            this.update();
-        }).catch(() => {
-            if (this.pendingPlay !== request) return;
-            this.pendingPlay = undefined;
-            this.failed = true;
             this.update();
         });
-    }
-
-    step(direction: -1 | 1) {
-        if (this.engine?.view().track.id) this.engine.step(direction);
-        else this.preview.step(direction);
-    }
-
-    seek(position: number) {
-        if (this.engine?.view().track.id) this.engine.seek(position);
-        else this.preview.seek(position);
     }
 
     private createShell() {
@@ -139,6 +156,7 @@ export class SwupFolia implements MiniPlayback {
         status.setAttribute('role', 'status');
         dialog.append(status);
         dialog.addEventListener('cancel', event => {
+            if (!this.swup) return;
             event.preventDefault();
             this.swup.navigate(this.returnTo);
         });
@@ -151,7 +169,9 @@ export class SwupFolia implements MiniPlayback {
         const lyrics = new URL(url, location.origin).searchParams.get('view') === 'lyrics';
         const target = pagePath();
         const showLyrics = (engine: FoliaPlayback) => {
-            if (lyrics && shell.dialog.open && pagePath() === target) engine.openLyrics(this.preview.selection());
+            if (lyrics && shell.dialog.open && pagePath() === target) {
+                engine.openLyrics(this.pendingPlay ? null : this.readSelection());
+            }
         };
         if (!shell.dialog.open) shell.dialog.showModal();
         shell.status.hidden = !!this.engine;
@@ -181,12 +201,15 @@ export class SwupFolia implements MiniPlayback {
         frame.dataset.ncmFoliaFrame = '';
         frame.title = '网抑云';
         frame.src = musicPath;
-        frame.ncmReturnToBlog = () => this.swup.navigate('/');
+        frame.ncmReturnToBlog = () => {
+            if (this.swup) this.swup.navigate('/');
+            else location.assign('/');
+        };
         this.opening = new Promise((resolve, reject) => {
             const timeout = window.setTimeout(() => {
                 frame.remove();
                 this.opening = undefined;
-                reject(new Error('Folia did not initialize'));
+                reject(new Error('播放器加载失败，点击重试'));
             }, 20_000);
             frame.addEventListener('ncm:playback-ready', () => {
                 const engine = frame.ncmPlayback;
@@ -196,7 +219,7 @@ export class SwupFolia implements MiniPlayback {
                 this.engine = engine;
                 this.unsubscribe?.();
                 this.unsubscribe = engine.subscribe(this.update);
-                this.failed = false;
+                this.failure = undefined;
                 this.update();
                 resolve(engine);
             });

@@ -1,3 +1,5 @@
+ncm-mini-player:not([data-ready]) { visibility: hidden; }
+
 /* Keep the public attribute, Halo classes and legacy theme name independent. */
 :where(html, body)[data-theme="light"] { --_ncm-legacy-scheme: light; }
 :where(html, body)[data-theme="dark"] { --_ncm-legacy-scheme: dark; }

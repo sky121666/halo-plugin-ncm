@@ -14,7 +14,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.model.AttributeValueQuotes;
@@ -23,14 +22,11 @@ import org.thymeleaf.processor.element.IElementModelStructureHandler;
 import reactor.core.publisher.Mono;
 import run.halo.app.plugin.PluginContext;
 import run.halo.app.theme.dialect.TemplateHeadProcessor;
-import run.halo.app.theme.router.ModelConst;
 
 @Component
 public class MiniPlayerHeadProcessor implements TemplateHeadProcessor {
     private static final String RESOURCE_DIR = "/static/mini-player/";
     private static final String ASSETS = "/plugins/plugin-ncm/assets" + RESOURCE_DIR;
-    private static final Set<String> THEME_PAGES = Set.of("index", "archives", "post", "page",
-        "single-page", "category", "categories", "tag", "tags", "author");
     private final ToolSettingsService tools;
     private final FrontstageSettingsService frontstage;
     private final FeaturedService featured;
@@ -50,7 +46,7 @@ public class MiniPlayerHeadProcessor implements TemplateHeadProcessor {
         try {
             var digest = MessageDigest.getInstance("SHA-256");
             for (var name : List.of("theme.css", "player.js", "player.css", "lens.js", "playbackSession.js",
-                "swupFolia.js", "placement.js", "positionPreferences.js", "appearance.js")) {
+                "foliaPlayer.js", "placement.js", "positionPreferences.js", "appearance.js")) {
                 try (var resource = MiniPlayerHeadProcessor.class.getResourceAsStream(RESOURCE_DIR + name)) {
                     if (resource == null) {
                         // OpenAPI generation omits the frontend build.
@@ -69,8 +65,7 @@ public class MiniPlayerHeadProcessor implements TemplateHeadProcessor {
 
     @Override
     public Mono<Void> process(ITemplateContext context, IModel model, IElementModelStructureHandler handler) {
-        String template = Objects.toString(context.getVariable(ModelConst.TEMPLATE_ID), "");
-        if (!THEME_PAGES.contains(template)) return Mono.empty();
+        // Halo scopes this extension to the theme head, including plugin-provided pages.
         return frontstage.current().filter(page -> Boolean.TRUE.equals(page.enabled()))
             .doOnNext(page -> appendAppearance(context, model))
             .flatMap(page -> tools.current().map(NcmToolSettings::miniPlayer)

@@ -23,20 +23,16 @@ export interface PlaybackView {
     phase: 'idle' | 'paused' | 'loading' | 'playing' | 'error';
     trial: boolean;
     note: string;
-    queueLoading: boolean;
 }
 
-export interface MiniPlayback {
+export interface FoliaPlayback {
     view(): PlaybackView;
-    loadQueue(): void;
     toggle(): void;
     step(direction: -1 | 1): void;
     seek(position: number): void;
-}
-
-export interface FoliaPlayback extends Omit<MiniPlayback, 'loadQueue'> {
     play(position: PlaybackPosition): void;
-    openLyrics(selection: PlaybackPosition): void;
+    playPlaylist(id: string, signal: AbortSignal): Promise<void>;
+    openLyrics(selection: PlaybackPosition | null): void;
     subscribe(change: () => void): () => void;
 }
 

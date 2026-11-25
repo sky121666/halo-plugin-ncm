@@ -4,9 +4,12 @@ import {
 } from '../stores/usePlaybackStore';
 import { omni } from '../services/onlineMusic/omni';
 import { PlayerState, type SongResult } from '../types';
-import { toSong } from './haloApi';
+import { readPlaylist, toSong } from './haloApi';
 import { useHaloTrackFeedback } from './haloProvider';
-import { owningFoliaFrame, playbackTime, type FoliaPlayback, type PlaybackPosition, type PlaybackView } from './playbackSession';
+import {
+    isPlaybackId, owningFoliaFrame, playbackTime, readPlaybackSession,
+    type FoliaPlayback, type PlaybackPosition, type PlaybackView,
+} from './playbackSession';
 
 interface FoliaActions {
     time(): number;
@@ -36,8 +39,22 @@ function playbackView(time: number): PlaybackView {
         size: state.playQueue.length,
         index: Math.max(0, state.playQueue.findIndex(track => track.id === song?.id)),
         position: playbackTime(time), duration: playbackTime(selectDisplayDuration(state)),
-        phase, trial, note: loading ? '正在取址…' : note, queueLoading: false,
+        phase, trial, note: loading ? '正在取址…' : note,
     };
+}
+
+function readLegacySelection(playlist: string): { id: string; time: number } | null {
+    if (readPlaybackSession()) return null;
+    try {
+        const saved = JSON.parse(sessionStorage.getItem('ncm-mini-player:v1') ?? 'null');
+        if (saved?.version === 1 && saved.playlist === playlist && isPlaybackId(saved.id)
+            && typeof saved.position === 'number' && Number.isFinite(saved.position) && saved.position >= 0) {
+            return { id: saved.id, time: saved.position };
+        }
+    } catch {
+        // A blocked or invalid legacy session can start from the selected playlist.
+    }
+    return null;
 }
 
 export function useHaloEmbeddedPlayback(actions: FoliaActions) {
@@ -60,10 +77,20 @@ export function useHaloEmbeddedPlayback(actions: FoliaActions) {
             step: direction => current.current.step(direction),
             seek: time => current.current.seek(time),
             play: position => loadSelection(position, true),
+            async playPlaylist(id, signal) {
+                const playlist = await readPlaylist(id, 100, 0, signal);
+                signal.throwIfAborted();
+                const queue = (playlist.tracks ?? []).filter(track => isPlaybackId(track.id)).map(toSong);
+                if (!queue.length) throw new Error('歌单暂无曲目');
+                const legacy = readLegacySelection(id);
+                const index = legacy ? queue.findIndex(song => song.id === legacy.id) : -1;
+                const time = index >= 0 && legacy ? legacy.time : 0;
+                current.current.play(queue[Math.max(0, index)], queue, time, true);
+            },
             openLyrics: selection => {
                 current.current.openLyrics();
                 const state = usePlaybackStore.getState();
-                if (!selectDisplaySong(state) && !state.isLoadingToPlay) loadSelection(selection, false);
+                if (selection && !selectDisplaySong(state) && !state.isLoadingToPlay) loadSelection(selection, false);
             },
             subscribe: change => {
                 const stopPlayback = usePlaybackStore.subscribe(change);
