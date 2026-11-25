@@ -1,68 +1,51 @@
 # 网抑云 · Halo 插件
 
-网抑云为 Halo 提供独立的网易云音乐页。访客可以浏览公开内容、搜索和试听，登录 Halo 并绑定自己的网易云账号后可使用个人曲库。音乐页由 Folia Web 适配。博客主题可以接入站点小播放器、文章音乐卡片和公开音乐数据。
+网抑云为 Halo 提供基于 Folia Web 的独立音乐页。访问 `/music` 浏览公开歌单、搜索和试听，绑定网易云账号后可使用个人曲库。
 
-[项目源码](https://github.com/sky121666/halo-plugin-ncm) · [版本与下载](https://github.com/sky121666/halo-plugin-ncm/releases) · [问题反馈](https://github.com/sky121666/halo-plugin-ncm/issues) · [从源码构建](#构建与开发)
+**Halo 2.27.0+** · [下载 JAR](https://github.com/sky121666/halo-plugin-ncm/releases) · [使用文档](docs/站点管理.md) · [问题反馈](https://github.com/sky121666/halo-plugin-ncm/issues)
+
+![独立音乐页的 Folia 动态歌词和播放控制](docs/screenshots/music-lyrics.webp)
 
 ## 安装与快速开始
 
-1. 使用 **Halo 2.27.0 或更高版本**。取得插件 JAR，在 Halo「插件」上传并启用。可从版本页获取已发布版本，开发版本按构建指南打包。
-2. 打开站点的 `/music`，先以游客身份搜索并播放一首歌。游客会话状态可在「工具 → 网抑云 → 账号与游客」查看。可在 Halo 菜单添加 `/music` 作为音乐页入口。
-3. 在「工具 → 网抑云 → 精选歌单」预览并发布想推荐的歌单。歌单会按发布列表的顺序出现在音乐页「探索」中。
-4. 需要博客小播放器时，在精选歌单行点击「配置小播放器」，开启「在主题页面显示小播放器」并保存。
+1. 下载 `plugin-ncm-*.jar`，在 Halo 控制台「插件」中上传并启用。
+2. 打开站点的 `/music` 搜索和试听。插件会自动初始化游客会话。
 
-## 前台使用
+游客及未绑定用户使用游客权限，绑定后按本人账号权限播放。完整播放、试听和音质以网易云返回为准。
 
-| 你想做什么 | 在哪里操作 |
+## 站点小播放器
+
+**默认关闭。** 保持音乐页开启，在「工具 → 网抑云 → 精选歌单」发布游客可访问的歌单。点击对应歌单行的「配置小播放器」，开启「在主题页面显示小播放器」并保存。
+
+<p>
+  <img src="docs/screenshots/mini-player-light.webp" width="316" alt="浅色主题中的黑胶入口和展开面板">
+  <img src="docs/screenshots/mini-player-dark.webp" width="316" alt="深色主题中的黑胶入口和展开面板">
+</p>
+
+启用后，首页、文章等主题页面显示可拖动的黑胶入口。普通主题和 Swup 主题都由 Folia 播放，点击封面、歌名或歌手可进入当前歌曲的歌词页。
+
+| 实际导航方式 | 播放行为 |
 | --- | --- |
-| 点歌、试听、浏览公开内容 | 打开 `/music`，使用搜索或进入「探索」。完整播放、试听和不可播由网易云返回。 |
-| 绑定自己的网易云账号 | 在音乐首页或播放器的「音质」面板打开账号入口，先登录 Halo，再用网易云音乐 App 扫码。 |
-| 管理个人曲库 | 绑定后进入 `/music/library`，查看歌单、喜欢的歌、收藏和播放记录，也可管理自己创建的歌单。 |
-| 检查或解除绑定 | 打开「个人中心 → 网抑云」或 `/uc/ncm`。在后台绑定的站长账号由授权用户在「账号与游客」管理。 |
-| 分享音乐详情 | 可直接访问 `/music/playlist/{id}`、`/music/album/{id}`、`/music/artist/{id}` 和 `/music/song/{id}`。 |
+| 整页跳转或刷新 | 恢复公开队列、曲目和进度。开启自动续播后会尝试继续播放。浏览器要求交互时，点播放继续。 |
+| Swup 或 PJAX 仅替换博客正文 | 当前文档内保留音频。挂载元素随正文替换时，播放器界面自动重新挂载。 |
+| 同一标签页内在博客与 `/music` 间切换 | **无缝续播需要主题适配 Swup 4**。适配后博客和音乐页共用同一个 Folia 播放引擎。 |
 
-游客和未绑定网易云的 Halo 用户使用网易云游客权限。已绑定用户按自己的网易云权限取址。完成站长绑定的 Halo 账号本人可用该绑定播放和读取个人曲库。
+- **Swup 4 接入**　初始化后派发 `ncm:swup-ready` 提供现有实例，收到 `ncm:request-swup` 时再次派发。自定义导航钩子识别 `visit.meta.ncmMusic` 并保留主题容器。 [接入代码与验收方法](docs/站点小播放器接入.md#swup-4-共用-folia-引擎)
+- **位置与配色**　主题可用 `<ncm-mini-player>` 自定义挂载位置，通过 `data-color-scheme` 同步亮暗，使用 `--ncm-player-accent` 接入主题主色。 [挂载与配色说明](docs/站点小播放器接入.md#主题作者接入)
 
-登录 Halo 后，个人偏好默认同步，已保存的同步选择优先。超级管理员可在修改可发布设置后使用设置窗口底部的「保存为站点默认」。歌词、封面与歌曲缓存由浏览器管理。
+## 使用与开发
 
-## 后台管理
-
-| 入口 | 用途 |
-| --- | --- |
-| 工具 → 网抑云 → 音乐首页 | 调整标题、图标、搜索联想、探索内容、分享和播放。 |
-| 工具 → 网抑云 → 精选歌单 | 预览游客可播情况，试听抽查，保存草稿、发布和排序。 |
-| 工具 → 网抑云 → 账号与游客 | 管理站长绑定，读取游客会话状态。 |
-| 工具 → 网抑云 → 工具设置 | 设置站点小播放器和音乐 AI。 |
-| 插件 → 网抑云 | 管理入口、维护、接口调试以及网络与限流。 |
-
-音乐 AI 是可选能力。配置 AI Foundation 的可用模型后，可按 Halo 角色开放歌词分词和歌曲配色。完整设置、角色说明和常见问题见[站点管理与排障](docs/站点管理.md)。
-
-## 给主题和应用开发者
-
-| 文档 | 内容 |
-| --- | --- |
-| [站点小播放器接入](docs/站点小播放器接入.md) | 挂载位置、亮暗配色、普通主题与 Swup 续播。 |
-| [配置同步快速接入](docs/配置同步快速接入.md) | 客户端登记、个人偏好、站点默认和保存冲突处理。 |
-| [开发与接口](docs/开发与接口.md) | `ncmFinder`、文章音乐卡片、HTTP 接口及访问权限。 |
-| [构建与发布](docs/构建与发布.md) | 构建命令、升级与回退、发布清单和当前验收记录。 |
-
-## 构建与开发
-
-准备 JDK 21、Node.js 24 和 pnpm 10，在仓库根目录运行 `./gradlew build`。JAR 位于 `build/libs/`。仓库包含 Gradle Wrapper 和生成的 API Client，Folia Web 使用固定上游提交构建。开发调试和发布包的构建方法见[构建与发布](docs/构建与发布.md)。
-
-## 兼容范围与已知限制
-
-- 曲目播放范围由网易云决定，会员、音质和版权条件可能影响结果。
-- 普通整页跳转会恢复公开队列和进度，自动续播受浏览器策略影响。已接入 Swup 4 的主题可在博客与音乐页之间共用播放引擎。
-- 音乐 AI 依赖 AI Foundation 的默认模型。接口限流按单个 Halo 进程计数。上游移植范围见[开发与接口](docs/开发与接口.md)。
+- **个人曲库**　从音乐首页或「音质」面板登录 Halo，再扫码绑定网易云。进入 `/music/library` 查看歌单、喜欢的歌、收藏和播放记录。解绑入口在「个人中心 → 网抑云」。
+- **站点管理**　在「工具 → 网抑云」设置音乐页、精选歌单、小播放器和账号。歌词分词与歌曲配色可接入 AI Foundation，并按 Halo 角色开放。 [管理入口与排障](docs/站点管理.md)
+- **配置同步**　登录用户默认同步个人偏好，超级管理员可发布站点默认。歌词、封面和歌曲缓存留在当前浏览器。 [配置同步接入](docs/配置同步快速接入.md)
+- **主题与 API**　提供文章音乐卡片、`ncmFinder` 和按权限调用的 HTTP 接口。 [接口与权限](docs/开发与接口.md)
+- **本地构建**　使用 JDK 21、Node.js 24 和 pnpm 10 运行 `./gradlew build`，JAR 位于 `build/libs/`。 [开发调试与发布](docs/构建与发布.md)
 
 ## 开源来源与许可
 
-| 项目 | 用途 | 许可证 |
-| --- | --- | --- |
-| [Folia Web](https://github.com/folia-ce/folia-web/tree/095e7f84738e1a366be2dc0fec3960cbac1793dd) | 音乐页、播放器、歌词与交互 | [AGPL-3.0](licenses/folia-web.AGPL-3.0.txt) |
-| [NeteaseCloudMusicApiEnhanced](https://github.com/NeteaseCloudMusicApiEnhanced/api-enhanced/tree/v4.41.1) | 网易云请求协议、接口描述与 Java 移植参考 | [MIT](licenses/api-enhanced.MIT.txt) |
-| [Halo](https://github.com/halo-dev/halo) | 插件运行平台、开发工具与组件 | [GPL-3.0](https://github.com/halo-dev/halo/blob/main/LICENSE) |
-| [node-qrcode](https://github.com/soldair/node-qrcode/tree/v1.5.4) | 绑定弹窗的二维码渲染 | [MIT](licenses/node-qrcode.MIT.txt) |
+- 音乐页、播放器和歌词界面。 [Folia Web](https://github.com/folia-ce/folia-web/tree/095e7f84738e1a366be2dc0fec3960cbac1793dd) · [AGPL-3.0](licenses/folia-web.AGPL-3.0.txt)
+- 网易云请求协议与 Java 接口移植参考。 [NeteaseCloudMusicApiEnhanced](https://github.com/NeteaseCloudMusicApiEnhanced/api-enhanced/tree/v4.41.1) · [MIT](licenses/api-enhanced.MIT.txt)
+- 插件运行平台、开发工具和组件。 [Halo](https://github.com/halo-dev/halo) · [GPL-3.0](https://github.com/halo-dev/halo/blob/main/LICENSE)
+- 扫码绑定的二维码渲染。 [node-qrcode](https://github.com/soldair/node-qrcode/tree/v1.5.4) · [MIT](licenses/node-qrcode.MIT.txt)
 
-插件自有后端与管理端使用 [MIT](LICENSE)。Folia Web 衍生前端按 AGPL-3.0 提供。插件包内含第三方许可证。音乐页「设置 → 帮助 → 开源项目」提供对应版本的前端适配源码、补丁和构建说明。网抑云是社区适配插件，服务内容与账号权限由网易云提供。
+插件自有后端与管理端采用 MIT，Folia Web 衍生前端采用 AGPL-3.0。第三方许可证随 JAR 分发，前端适配源码和构建说明可从音乐页「设置 → 帮助 → 开源项目」获取。 [插件许可证](LICENSE)
